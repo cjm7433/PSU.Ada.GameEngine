@@ -108,7 +108,7 @@ package body Linear_Algebra is
 
    -- Component-wise addition
    function "+" (
-      V1, V2 : Vector2
+         V1, V2 : Vector2
    ) return Vector2 is
    begin
       return (X => V1.X + V2.X, Y => V1.Y + V2.Y);
@@ -117,7 +117,7 @@ package body Linear_Algebra is
 
    -- Component-wise subtraction
    function "-" (
-      V1, V2 : Vector2
+         V1, V2 : Vector2
    ) return Vector2 is
    begin
       return (X => V1.X - V2.X, Y => V1.Y - V2.Y);
@@ -126,7 +126,7 @@ package body Linear_Algebra is
 
    -- Negation
    function "-" (
-      V : Vector2
+         V : Vector2
    ) return Vector2 is
    begin
       return (X => -V.X, Y => -V.Y);
@@ -135,7 +135,7 @@ package body Linear_Algebra is
 
    -- Component-wise multiplication
    function "*" (
-      V1, V2 : Vector2
+         V1, V2 : Vector2
    ) return Vector2 is
    begin
       return (X => V1.X * V2.X, Y => V1.Y * V2.Y);
@@ -144,8 +144,8 @@ package body Linear_Algebra is
 
    -- Magnitude Integer multiplication
    function "*" (
-      V : Vector2;
-      S : Integer
+         V : Vector2;
+         S : Integer
    ) return Vector2 is
    begin
       return (X => V.X * S, Y => V.Y * S);
@@ -154,8 +154,8 @@ package body Linear_Algebra is
 
    -- Magnitude Float multiplication
    function "*" (
-      V : Vector2;
-      S : Float
+         V : Vector2;
+         S : Float
    ) return Vector2 is
    begin
       return (X => V.X * S, Y => V.Y * S);
@@ -164,7 +164,7 @@ package body Linear_Algebra is
 
    -- Component-wise division
    function "/" (
-      V1, V2 : Vector2
+         V1, V2 : Vector2
    ) return Vector2 is
    begin
       return (X => V1.X / V2.X, Y => V1.Y / V2.Y);
@@ -173,8 +173,8 @@ package body Linear_Algebra is
 
    -- Magnitude Integer division
    function "/" (
-      V : Vector2;
-      S : Integer
+         V : Vector2;
+         S : Integer
    ) return Vector2 is
    begin
       return (X => V.X / S, Y => V.Y / S);
@@ -183,8 +183,8 @@ package body Linear_Algebra is
 
    -- Magnitude Float division
    function "/" (
-      V : Vector2;
-      S : Float
+         V : Vector2;
+         S : Float
    ) return Vector2 is
    begin
       return (X => V.X / S, Y => V.Y / S);

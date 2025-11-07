@@ -88,59 +88,59 @@ package Linear_Algebra is
    -- ARITHMETIC
       -- Component-wise addition
       function "+" (
-         V1, V2 : Vector2
+            V1, V2 : Vector2
       ) return Vector2;
 
 
       -- Component-wise subtraction
       function "-" (
-         V1, V2 : Vector2
+            V1, V2 : Vector2
       ) return Vector2;
 
 
       -- Negation
       function "-" (
-         V : Vector2
+            V : Vector2
       ) return Vector2;
 
 
       -- Component-wise multiplication
       function "*" (
-         V1, V2 : Vector2
+            V1, V2 : Vector2
       ) return Vector2;
 
 
       -- Magnitude Integer multiplication
       function "*" (
-         V : Vector2;
-         S : Integer
+            V : Vector2;
+            S : Integer
       ) return Vector2;
 
 
       -- Magnitude Float multiplication
       function "*" (
-         V : Vector2;
-         S : Float
+            V : Vector2;
+            S : Float
       ) return Vector2;
 
 
       -- Component-wise division
       function "/" (
-         V1, V2 : Vector2
+            V1, V2 : Vector2
       ) return Vector2;
 
 
       -- Magnitude Integer division
       function "/" (
-         V : Vector2;
-         S : Integer
+            V : Vector2;
+            S : Integer
       ) return Vector2;
 
 
       -- Magnitude Float division
       function "/" (
-         V : Vector2;
-         S : Float
+            V : Vector2;
+            S : Float
       ) return Vector2;
 
 
