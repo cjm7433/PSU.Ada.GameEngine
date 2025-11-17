@@ -9,9 +9,6 @@ package Linear_Algebra is
    end record with Put_Image => Put_Image_Vector2;
 
 
-   Epsilon: Float := 1.0E-6;  -- Tolerance fidelity for vector approximation
-
-
    -- Pushes the Vector2 data onto the root buffer as a custom formatted String
    procedure Put_Image_Vector2 (
          Buffer  : in out Root_Buffer_Type'Class;
@@ -21,14 +18,8 @@ package Linear_Algebra is
 
 
    -- CONSTRUCTORS
-      -- Cartesian constructor
-      function Vector2 (
-            X, Y : Float := 0.0
-      ) return Vector2;
-
-
       -- Polar constructor (radians)
-      function Vector2_Polar (
+      function Vector2_From_Polar (
             Angle       : Float := 0.0;
             Magnitude   : Float := 1.0
       ) return Vector2;
@@ -42,21 +33,10 @@ package Linear_Algebra is
       ) return Boolean;
 
 
-      -- Exact inequality
-      function "/=" (
-            V1, V2 : Vector2
-      ) return Boolean;
-
-
       -- Approximate equality
-      function "==" (
-            V1, V2 : Vector2
-      ) return Boolean;
-
-
-      -- Approximate inequality
-      function "=/=" (
-            V1, V2 : Vector2
+      function Is_Equal_Approximate (
+            V1, V2 : Vector2;
+            Epsilon : Float := 1.0E-6
       ) return Boolean;
 
 
@@ -189,4 +169,4 @@ package Linear_Algebra is
       function Angle (
             V : Vector2
       ) return Float;
-end Linear_Algebra;
+end;

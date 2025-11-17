@@ -68,7 +68,7 @@ package ECS.Component is
 
    type Single_Animation_T is new Component_T with record
       OffsetX     : Integer   := 0;
-      OffsetY     : Integer   := 0;   
+      OffsetY     : Integer   := 0;
       Time        : Duration  := 0.0;
       Total_Time  : Duration  := 0.0;
       InitialX    : Integer   := 0;
@@ -79,7 +79,7 @@ package ECS.Component is
       TotFrame    : Integer   := 0;
    end record;
 
-   
+
 
    type Single_Animation_Access  is access all Single_Animation_T;
    type Texture_Access           is access all Texture_T;
