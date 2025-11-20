@@ -35,6 +35,13 @@ package Linear_Algebra is
 
       -- Approximate equality
       function Is_Equal_Approximate (
+            F1, F2 : Float;
+            Epsilon : Float := 1.0E-6
+      ) return Boolean;
+
+
+      -- Approximate equality
+      function Is_Equal_Approximate (
             V1, V2 : Vector2;
             Epsilon : Float := 1.0E-6
       ) return Boolean;
@@ -146,8 +153,15 @@ package Linear_Algebra is
 
       -- Rotation (radians)
       function Rotate (
+            F     : Float;
+            Angle : Float := 0.0
+      ) return Float;
+
+
+      -- Rotation (radians)
+      function Rotate (
             V     : Vector2;
-            Angle : Float
+            Angle : Float := 0.0
       ) return Vector2;
 
 
