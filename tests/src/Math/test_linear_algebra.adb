@@ -43,10 +43,11 @@ package body Test_Linear_Algebra is
 
    procedure Test_Comparison is
       Angle :        constant Float    := Random(G) * Pi * 2.0;
-      V :            constant Vector2  := Vector2_From_Polar(Angle);
+      Magnitude :    constant Float    := (Random(G) + 1.0) * 10.0;
+      V :            constant Vector2  := Vector2_From_Polar(Angle, Magnitude);
       V_Double :     constant Vector2  := V * 2.0;
       V_Half :       constant Vector2  := V / 2.0;
-      Inequality :   constant Boolean  := V_Half < V and V < V_Double;
+      Inequality :   constant Boolean  := V_Half < V and then V < V_Double;
       Status :       constant String   := (if Inequality then "PASS" else "FAIL");
    begin
       Put_Line(Status & "    Test_Comparison    " & V_Half.Length'Image & " < " & V.Length'Image & " < " & V_Double.Length'Image);
@@ -72,6 +73,17 @@ package body Test_Linear_Algebra is
       Is_Equal :  constant Boolean  := Is_Equal_Approximate(V_Rotated.Angle, Rotate(Angle, Offset));
       Status :    constant String   := (if Is_Equal then "PASS" else "FAIL");
    begin
-      Put_Line(Status & "    Test_Rotation    " & V.Angle'Image & " + " & Offset'Image & " = " & V_Rotated.Angle'Image);
+      Put_Line (Status & "    Test_Rotation    " & V.Angle'Image & " + " & Offset'Image & " = " & V_Rotated.Angle'Image);
+   end;
+
+
+   procedure Test_Arithmetic is
+      Angle :     constant Float    := Random(G) * Pi * 2.0;
+      Magnitude : constant Float    := (Random(G) + 1.0) * 10.0;
+      V :         constant Vector2  := Vector2_From_Polar(Angle, Magnitude);
+      Is_Equal :  constant Boolean  := Is_Equal_Approximate(V + V, V * 2.0) and then Is_Equal_Approximate(V - V, (0.0, 0.0));
+      Status :    constant String   := (if Is_Equal then "PASS" else "FAIL");
+   begin
+      Put_Line(Status & "    Test_Arithmetic    " & Vector2'(V + V)'Image & " = " & Vector2'(V * 2.0)'Image & " & " & Vector2'(V - V)'Image & " = " & Vector2'(X=> 0.0, Y=> 0.0)'Image);
    end;
 end Test_Linear_Algebra;

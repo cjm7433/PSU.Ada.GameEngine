@@ -6,4 +6,5 @@ package Test_Linear_Algebra is
    procedure Test_Comparison;
    procedure Test_Distance;
    procedure Test_Rotation;
+   procedure Test_Arithmetic;
 end Test_Linear_Algebra;

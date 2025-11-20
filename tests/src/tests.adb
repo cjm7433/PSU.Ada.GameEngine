@@ -9,4 +9,5 @@ begin
    Test_Comparison;
    Test_Distance;
    Test_Rotation;
+   Test_Arithmetic;
 end Tests;
