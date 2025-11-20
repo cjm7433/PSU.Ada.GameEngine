@@ -2,26 +2,26 @@ with Linear_Algebra; use Linear_Algebra;
 
 
 package Physics is
-   type AABB is tagged private;   -- Axis-Aligned Bounding Box
+   type PAABB is tagged private;   -- Padded Axis-Aligned Bounding Box
 
 
    type Vertex_Set is array (Natural range <>) of Vector2;
 
 
-   -- Computes a new AABB given a set of vertices
-    function Compute_AABB (
+   -- Computes new PAABB given a set of vertices; Assumes rotation around origin
+    function Compute_PAABB (
         Vertices : Vertex_Set
-    ) return AABB;
+    ) return PAABB;
 
 
-   -- Reports whether or not two AABBs are overlapped
+   -- Reports whether or not two PAABBs are overlapped
    function Is_Overlapping (
-        Box1 : AABB;
-        Box2 : AABB
+        Box1 : PAABB;
+        Box2 : PAABB
    ) return Boolean;
 private
-   -- Axis-Aligned Bounding Box type
-   type AABB is tagged record
+   -- Padded Axis-Aligned Bounding Box type
+   type PAABB is tagged record
         Min : Vector2;       -- Top-left corner
         Max : Vector2;       -- Bottom-right corner
    end record;
