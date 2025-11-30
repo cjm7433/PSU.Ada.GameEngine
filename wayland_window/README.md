@@ -2,12 +2,6 @@
 
 A complete Ada program that creates a window using the Wayland display protocol, properly configured with Alire.
 
-## Project Status
-
-✅ **Alire project initialized and building successfully**
-✅ **Wayland C library bindings created**  
-✅ **Build system configured with strict Ada style checks**
-
 ## Prerequisites
 
 ### System Requirements
@@ -105,13 +99,3 @@ To extend the program with actual Wayland window creation:
 
 MIT OR Apache-2.0 WITH LLVM-exception
 
-## Next Steps
-
-The current program is a minimal working example. To create an actual window:
-
-1. Implement registry callbacks to bind compositor globals
-2. Create surface and shell surface
-3. Set up shared memory and paint a buffer
-4. Implement event loop for window interaction
-
-See the Wayland documentation for detailed protocol information.
