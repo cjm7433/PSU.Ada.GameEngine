@@ -2,7 +2,7 @@ with Interfaces;
 with Ada.Streams;
 with Ada.Containers.Vectors;
 
--- EVENT PACKAGE ADDED 11/25/24
+--  EVENT PACKAGE ADDED 11/25/24
 package ECS.Event is
 
    -- Use Interfaces for low-level types

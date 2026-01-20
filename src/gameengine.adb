@@ -1,10 +1,10 @@
-with Ada.Text_IO; use Ada.Text_IO;
-with ecs.entity; use ecs.entity;
-with ecs.component; use ecs.component;
-with ecs.system; use ecs.system;
+--  with Ada.Text_IO; use Ada.Text_IO;
+--  with ECS.Entity; use ECS.Entity;
+--  with ECS.Component; use ECS.Component;
+--  with ECS.System; use ECS.System;
 
 procedure GameEngine is
 
 begin
-    null;
+   null;
 end GameEngine;
