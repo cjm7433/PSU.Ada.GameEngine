@@ -11,6 +11,7 @@ package GameMath is
 
    function New_Vec2 (X_In, Y_In : Float) return Vec2;
 
+   overriding
    function "=" (Lhs, Rhs : Vec2) return Boolean;
    function "+" (Lhs, Rhs : Vec2) return Vec2;
    function "-" (Lhs, Rhs : Vec2) return Vec2;
@@ -24,5 +25,6 @@ package GameMath is
 
    function Dot (Lhs, Rhs : Vec2) return Float;
    function Dist_Squared (Lhs, Rhs : Vec2) return Float;
-   function Nearly_Equals(A, B : Float; Epsilon : Float := 1.0E-6) return Boolean;
+   function Nearly_Equals (A, B : Float; Epsilon : Float := 1.0E-6)
+      return Boolean;
 end GameMath;
