@@ -14,8 +14,8 @@ project Psu_Ada_Gameengine is
    for Library_Dir use "lib";
 
    package Compiler is
-      --for Default_Switches ("Ada") use ("-Og" ,"-gnat2022", "-gnatX0");
-      for Default_Switches ("Ada") use psu_ada_gameengine_config.Ada_Compiler_Switches;
+      for Default_Switches ("Ada") use ("-Og" ,"-gnat2022", "-gnatX0");
+      --for Default_Switches ("Ada") use psu_ada_gameengine_config.Ada_Compiler_Switches;
    end Compiler;
 
    package Linker is 
