@@ -1,40 +1,37 @@
 with Linear_Algebra; use Linear_Algebra;
-with Ada.Numerics.Elementary_Functions; use Ada.Numerics.Elementary_Functions;
 
 
 package body Physics is
-   -- Computes new PAABB given a set of vertices; Assumes rotation around origin
-   function Compute_PAABB (
+   -- Computes a new AABB given a set of vertices
+   function Compute_AABB (
       Vertices : Vertex_Set
-   ) return PAABB with
+   ) return AABB with
       Refined_Post => (
-               Compute_PAABB'Result.Min.X <= Compute_PAABB'Result.Max.X
-         and   Compute_PAABB'Result.Min.Y <= Compute_PAABB'Result.Max.Y
+               Compute_AABB'Result.Min.X <= Compute_AABB'Result.Max.X
+         and   Compute_AABB'Result.Min.Y <= Compute_AABB'Result.Max.Y
       )
    is
-      Radius_Squared : Float := 0.0;
+      Min : Vector2 := (X => Float'Last, Y => Float'Last);
+      Max : Vector2 := (X => Float'First, Y => Float'First);
    begin
-      -- Determine the vertex furthest from the rotation point
       for V of Vertices loop
-         Radius_Squared := Float'Max(
-               Radius_Squared,
-               V.Distance_Squared(Vector2'(0.0, 0.0))
-         );
+         -- Update left and top edges
+         Min.X := Float'Min(Min.X, V.X);
+         Min.Y := Float'Min(Min.Y, V.Y);
+
+         -- Update right and bottom edges
+         Max.X := Float'Max(Max.X, V.X);
+         Max.Y := Float'Max(Max.Y, V.Y);
       end loop;
 
-      Radius : Float := Sqrt(Radius_Squared);
-
-      return (
-            Min => (-Radius, -Radius),
-            Max => ( Radius,  Radius)
-      );
+      return (Min, Max);
    end;
 
 
    -- Reports whether or not two AABBs are overlapped
    function Is_Overlapping (
-      Box1 : PAABB;
-      Box2 : PAABB
+      Box1 : AABB;
+      Box2 : AABB
    ) return Boolean is
    begin
       return (
