@@ -19,6 +19,8 @@ package Physics is
         Box1 : AABB;
         Box2 : AABB
    ) return Boolean;
+
+
 private
    -- Axis-Aligned Bounding Box type
    type AABB is tagged record
