@@ -1,8 +1,11 @@
 with System; use System;
 --  with Interfaces.C;
 --  with Interfaces.C.Strings;
+--  with Interfaces.C;
+--  with Interfaces.C.Strings;
 with Ada.Text_IO; use Ada.Text_IO;
 with ECS.Event_Manager; use ECS.Event_Manager;
+--  with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 --  with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with ECS.Event;
 with ECS;
@@ -14,7 +17,12 @@ package body Window is
 
    W_Instance   : Window_Access;
    --  Declare the event manager
+   --  Declare the event manager
    Manager : aliased ECS.Event_Manager.Platform_Event_Handler;
+
+   --  Return the lower 16 bits of LPARAM
+   function LOWORD (Value : LPARAM) return WORD is
+      use Interfaces;
 
    --  Return the lower 16 bits of LPARAM
    function LOWORD (Value : LPARAM) return WORD is
@@ -23,13 +31,22 @@ package body Window is
    begin
       return WORD (Unsigned_32 (Value) and 16#FFFF#);
    end LOWORD;
+      return WORD (Unsigned_32 (Value) and 16#FFFF#);
+   end LOWORD;
 
+   --  Return the upper 16 bits of LPARAM
+   function HIWORD (value : LPARAM) return WORD is
    --  Return the upper 16 bits of LPARAM
    function HIWORD (value : LPARAM) return WORD is
    begin
       return WORD (value / 2 ** 16);
+      return WORD (value / 2 ** 16);
    end HIWORD;
 
+   --  EDITED 11/26/24 to add WM_KEYDOWN and WM_LBUTTONDOWN
+   function Wnd_Proc (H_Wnd   : HWND;
+                     Msg     : IC.unsigned;
+                     W_Param : WPARAM;
    --  EDITED 11/26/24 to add WM_KEYDOWN and WM_LBUTTONDOWN
    function Wnd_Proc (H_Wnd   : HWND;
                      Msg     : IC.unsigned;
@@ -43,7 +60,11 @@ package body Window is
          when WM_PAINT =>
             null;
 
+
          when WM_SIZE =>
+            W_Instance.Current_Width   := IC.int (LOWORD (L_Param));
+            W_Instance.Current_Height  := IC.int (HIWORD (L_Param));
+            ECS.WindowWidth := Integer (LOWORD (L_Param));
             W_Instance.Current_Width   := IC.int (LOWORD (L_Param));
             W_Instance.Current_Height  := IC.int (HIWORD (L_Param));
             ECS.WindowWidth := Integer (LOWORD (L_Param));
@@ -52,20 +73,27 @@ package body Window is
          declare
             KeyCode : constant ECS.Event.Byte := ECS.Event.Byte (W_Param);
             Event : constant ECS.Event.Event_T :=
+            KeyCode : constant ECS.Event.Byte := ECS.Event.Byte (W_Param);
+            Event : constant ECS.Event.Event_T :=
             (Source    => 0,
              EventType => ECS.Event.KeyDown,
              Data      => (KeyCode   => KeyCode,
                            MouseX      => 0,
                            MouseY      => 0,
                            W_Width     => 0,
+                           W_Width     => 0,
                            W_Height    => 0,
                            Additional  => [others => 0]));
+                           Additional  => [others => 0]));
          begin
+            Emit_Event (Manager, Event);
             Emit_Event (Manager, Event);
          end;
 
          when WM_KEYUP =>
          declare
+            KeyCode : constant ECS.Event.Byte := ECS.Event.Byte (W_Param);
+            Event : constant ECS.Event.Event_T :=
             KeyCode : constant ECS.Event.Byte := ECS.Event.Byte (W_Param);
             Event : constant ECS.Event.Event_T :=
             (Source    => 0,
@@ -74,14 +102,20 @@ package body Window is
                            MouseX     => 0,
                            MouseY     => 0,
                            W_Width     => 0,
+                           W_Width     => 0,
                            W_Height    => 0,
                            Additional => [others => 0]));
+                           Additional => [others => 0]));
          begin
+            Emit_Event (Manager, Event);
             Emit_Event (Manager, Event);
          end;
 
          when WM_LBUTTONDOWN =>
          declare
+            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseEvent : constant ECS.Event.Event_T :=
             MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
             MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
             MouseEvent : constant ECS.Event.Event_T :=
@@ -91,14 +125,20 @@ package body Window is
                              MouseX     => MouseX,
                              MouseY     => MouseY,
                              W_Width     => 0,
+                             W_Width     => 0,
                              W_Height    => 0,
                              Additional => [others => 0]));
+                             Additional => [others => 0]));
          begin
+            Emit_Event (Manager, MouseEvent);
             Emit_Event (Manager, MouseEvent);
          end;
 
          when WM_LBUTTONUP =>
          declare
+            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseEvent : constant ECS.Event.Event_T :=
             MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
             MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
             MouseEvent : constant ECS.Event.Event_T :=
@@ -108,14 +148,22 @@ package body Window is
                              MouseX     => MouseX,
                              MouseY     => MouseY,
                              W_Width     => 0,
+                             W_Width     => 0,
                              W_Height    => 0,
                              Additional => [others => 0]));
+                             Additional => [others => 0]));
          begin
+            Emit_Event (Manager, MouseEvent);
             Emit_Event (Manager, MouseEvent);
          end;
 
          when WM_RBUTTONDOWN =>
+
+         when WM_RBUTTONDOWN =>
          declare
+            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseEvent : constant ECS.Event.Event_T :=
             MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
             MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
             MouseEvent : constant ECS.Event.Event_T :=
@@ -125,14 +173,20 @@ package body Window is
                              MouseX     => MouseX,
                              MouseY     => MouseY,
                              W_Width     => 0,
+                             W_Width     => 0,
                              W_Height    => 0,
                              Additional => [others => 0]));
+                             Additional => [others => 0]));
          begin
+            Emit_Event (Manager, MouseEvent);
             Emit_Event (Manager, MouseEvent);
          end;
 
          when WM_RBUTTONUP =>
          declare
+            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseEvent : constant ECS.Event.Event_T :=
             MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
             MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
             MouseEvent : constant ECS.Event.Event_T :=
@@ -142,18 +196,25 @@ package body Window is
                              MouseX     => MouseX,
                              MouseY     => MouseY,
                              W_Width     => 0,
+                             W_Width     => 0,
                              W_Height    => 0,
+                             Additional => [others => 0]));
                              Additional => [others => 0]));
          begin
             Emit_Event (Manager, MouseEvent);
+            Emit_Event (Manager, MouseEvent);
          end;
+
 
          when WM_MOUSEMOVE =>
          declare
             MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
             MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
          begin
                declare
+                  MouseEvent : constant ECS.Event.Event_T :=
                   MouseEvent : constant ECS.Event.Event_T :=
                   (Source    => 0,
                    EventType => ECS.Event.MouseMove,
@@ -161,13 +222,17 @@ package body Window is
                              MouseX     => MouseX,
                              MouseY     => MouseY,
                              W_Width     => 0,
+                             W_Width     => 0,
                              W_Height    => 0,
                              Additional => [others => 0]));
+                             Additional => [others => 0]));
                begin
+                  Emit_Event (Manager, MouseEvent);
                   Emit_Event (Manager, MouseEvent);
                end;
          end;
          when others =>
+            return Def_Window_Proc (H_Wnd, Msg, W_Param, L_Param);
             return Def_Window_Proc (H_Wnd, Msg, W_Param, L_Param);
       end case;
       return 0;
@@ -176,17 +241,26 @@ package body Window is
    --  Creates a new window instance and returns it to the caller
    function New_Window (Width : Interfaces.C.int; Height : Interfaces.C.int;
          Title : Unbounded_String) return Window_Access is
+   --  Creates a new window instance and returns it to the caller
+   function New_Window (Width : Interfaces.C.int; Height : Interfaces.C.int;
+         Title : Unbounded_String) return Window_Access is
       WC       : aliased WNDCLASS;
       Res_Atom : ATOM;
 
+
    begin
       W_Instance := new Window_T;
+      --  Initialize the WNDCLASS struct
       --  Initialize the WNDCLASS struct
       WC.Lp_fn_Wnd_Proc    := Wnd_Proc'Access;
       WC.H_Instance        := Get_H_Instance;
       WC.Lpsz_Class_Name   := TO_LPCSTR (ICS.New_String ("SampleWindowClass"));
       WC.H_br_Background   := HBRUSH (Get_Stock_Object (COLOR_BACKGROUND));
+      WC.Lpsz_Class_Name   := TO_LPCSTR (ICS.New_String ("SampleWindowClass"));
+      WC.H_br_Background   := HBRUSH (Get_Stock_Object (COLOR_BACKGROUND));
 
+      --  Register the window class with the win32 API
+      Res_Atom := Register_Class (WC'Access);
       --  Register the window class with the win32 API
       Res_Atom := Register_Class (WC'Access);
       if Res_Atom = 0 then
@@ -195,10 +269,14 @@ package body Window is
 
       --  Create the window
       W_Instance.Handle := Create_Window (
+      --  Create the window
+      W_Instance.Handle := Create_Window (
          Dw_Ex_Style    => 0,
          Lp_Class_Name  => WC.Lpsz_Class_Name,
          Lp_Window_Name => TO_LPCSTR (ICS.New_String (To_String (Title))),
+         Lp_Window_Name => TO_LPCSTR (ICS.New_String (To_String (Title))),
          Dw_Style       => WS_OVERLAPPEDWINDOW,
+         X              => 0,  --  defines the window start coordinate.
          X              => 0,  --  defines the window start coordinate.
          Y              => 0,
          Width          => Width,
@@ -209,6 +287,7 @@ package body Window is
          Lp_Param       => System.Null_Address
       );
 
+      --  Window properties
       --  Window properties
       W_Instance.Width := Width;
       W_Instance.Height := Height;
@@ -222,18 +301,24 @@ package body Window is
       begin
          SW_Result := Show_Window (W_Instance.Handle, SW_SHOW);
          UW_Result := Update_Window (W_Instance.Handle);
+      begin
+         SW_Result := Show_Window (W_Instance.Handle, SW_SHOW);
+         UW_Result := Update_Window (W_Instance.Handle);
       end;
       return W_Instance;
 
    end New_Window;
 
    procedure Draw_Buffer (Buffer : System.Address) is
+   procedure Draw_Buffer (Buffer : System.Address) is
       Bmi_Reset : Byte_Array (0 .. BITMAPINFO'Size / 8 - 1) := (others => 0);
       Bmi : aliased BITMAPINFO with Address => Bmi_Reset'Address;
       Result : Interfaces.C.int;
       Handle_DC : constant HDC := GetDC (W_Instance.Handle);
+      Handle_DC : constant HDC := GetDC (W_Instance.Handle);
    begin
       Bmi.bmiHeader.biSize            := BITMAPINFOHEADER'Size / 8;
+      Bmi.bmiHeader.biWidth           := W_Instance.Width;
       Bmi.bmiHeader.biWidth           := W_Instance.Width;
       Bmi.bmiHeader.biHeight          := -W_Instance.Height;
       Bmi.bmiHeader.biPlanes          := 1;
@@ -246,6 +331,7 @@ package body Window is
       Bmi.bmiHeader.biClrImportant    := 0;
 
       Result := Stretch_DIBits (
+      Result := Stretch_DIBits (
          H_Dc           => Handle_DC,
          X_Dest         => 0,
          Y_Dest         => 0,
@@ -253,6 +339,7 @@ package body Window is
          Dest_Height    => W_Instance.Current_Height,
          X_Src          => 0,
          Y_Src          => 0,
+         Src_Width      => W_Instance.Width,
          Src_Width      => W_Instance.Width,
          Src_Height     => W_Instance.Height,
          Bits           => Buffer,
@@ -262,12 +349,16 @@ package body Window is
       );
 
       --  Release the HDC to avoid memory leak
+      --  Release the HDC to avoid memory leak
       if Handle_DC /= Null_Address then
          declare
             Result_Release : constant Boolean :=
                ReleaseDC (W_Instance.Handle, Handle_DC);
+            Result_Release : constant Boolean :=
+               ReleaseDC (W_Instance.Handle, Handle_DC);
          begin
             if not Result_Release then
+               Put_Line ("Failed to release HDC.");
                Put_Line ("Failed to release HDC.");
             end if;
          end;
@@ -275,7 +366,10 @@ package body Window is
 
       --  Check for drawing failure, for debug only,
       --  remove or comment out for production or handle it more gracefully
+      --  Check for drawing failure, for debug only,
+      --  remove or comment out for production or handle it more gracefully
       if Result = 0 then
+         Put_Line ("StretchDIBits failed.");
          Put_Line ("StretchDIBits failed.");
       end if;
    end Draw_Buffer;
