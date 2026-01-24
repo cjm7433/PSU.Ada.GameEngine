@@ -1,7 +1,7 @@
-with Linear_Algebra; use Linear_Algebra;
+with Math.Linear_Algebra; use Math.Linear_Algebra;
 
 
-package body Physics is
+package body Math.Physics is
    -- Computes a new AABB given a set of vertices
    function Compute_AABB (
       Vertices : Vertex_Set

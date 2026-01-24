@@ -1,7 +1,7 @@
 with Ada.Strings.Text_Buffers; use Ada.Strings.Text_Buffers;
 
 
-package Linear_Algebra is
+package Math.Linear_Algebra is
    -- Two-dimensional vector type
    type Vector2 is tagged record
       X : Float;

@@ -3,7 +3,7 @@ with Ada.Numerics; use Ada.Numerics;
 with Ada.Numerics.Elementary_Functions; use Ada.Numerics.Elementary_Functions;
 
 
-package body Linear_Algebra is
+package body Math.Linear_Algebra is
    -- Pushes the Vector2 data onto the root buffer as a custom formatted String
    -- Formats as (X, Y)
    procedure Put_Image_Vector2 (
