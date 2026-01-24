@@ -9,9 +9,6 @@
 
 
 package ECS.Types is
-
-   type Entity_ID is new Natural;      -- Number used to identify an entity
-   
    subtype Index is Natural;           -- Number used to index into arrays
 
    type Component_Type is (      -- Types of components in the ECS system

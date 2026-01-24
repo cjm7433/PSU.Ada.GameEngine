@@ -19,23 +19,23 @@ with Ada.Containers;
 with Ada.Containers.Vectors;
 with Ada.Containers.Hashed_Maps;
 with ECS.Types;
-with ECS.Entities;
+with ECS.Entities; use ECS.Entities;
 with ECS.Components;    --use type ECS.Components.Transform_Component;
 
 package ECS.Store is
 
    -- Hash function for Entity_ID (has to be defined for Ada.Containers.Hashed_Maps)
    -- Needs to be before Entity_Maps for instantiation visibility.
-   function Hash_Entity_ID (ID : ECS.Types.Entity_ID) return Ada.Containers.Hash_Type;
+   function Hash_Entity_ID (ID : Entity_ID) return Ada.Containers.Hash_Type;
 
 
    -- Entity Map
-   use type ECS.Types.Entity_ID;             -- Make Entity_ID directly visible (for Key_Type)
-   use type ECS.Entities.Entity_Record;      -- Make Entity_Record directly visible (for Element_Type)
+   use type Entity_ID;             -- Make Entity_ID directly visible (for Key_Type)
+   use type Entity;      -- Make Entity_Record directly visible (for Element_Type)
 
    package Entity_Maps is new Ada.Containers.Hashed_Maps (
-      Key_Type        => ECS.Types.Entity_ID,               -- Entity ID as key
-      Element_Type    => ECS.Entities.Entity_Record,        -- Entity record as value
+      Key_Type        => Entity_ID,               -- Entity ID as key
+      Element_Type    => Entity,        -- Entity record as value
       Hash            => Hash_Entity_ID,                    -- Hash function
       Equivalent_Keys => "="                                -- Key equivalence function
    );
@@ -64,10 +64,10 @@ package ECS.Store is
 
 
    -- Lookup Maps
-   use type ECS.Types.Entity_ID;       -- Make Entity_ID directly visible
+   use type Entity_ID;       -- Make Entity_ID directly visible
 
    package Lookup_Maps is new Ada.Containers.Hashed_Maps (
-      Key_Type        => ECS.Types.Entity_ID,               -- Entity ID as key
+      Key_Type        => Entity_ID,               -- Entity ID as key
       Element_Type    => ECS.Types.Index,                   -- Index into component table as value
       Hash            => Hash_Entity_ID,                    -- Hash function
       Equivalent_Keys => "="                                -- Key equivalence function
@@ -79,7 +79,7 @@ package ECS.Store is
 
       -- Entities
       Entities : Entity_Maps.Map;                  -- Map of all entities
-      Next_Entity_ID : ECS.Types.Entity_ID := 0;   -- Next available entity ID
+      Next_Entity_ID : Entity_ID := 0;   -- Next available entity ID
 
 
       -- Component tables
@@ -100,17 +100,17 @@ package ECS.Store is
    procedure Initialize (S : in out Store);  -- Initializes the ECS store
 
    -- ENTITY OPERATIONS: For manipulating entities in the entity map
-   function Create_Entity (S : in out Store) return ECS.Types.Entity_ID;      -- Creates a new entity and returns its ID
+   function Create_Entity (S : in out Store) return Entity_ID;      -- Creates a new entity and returns its ID
    
-   procedure Destroy_Entity (S : in out Store; ID : ECS.Types.Entity_ID);     -- Destroys an entity by ID
+   procedure Destroy_Entity (S : in out Store; ID : Entity_ID);     -- Destroys an entity by ID
    
-   function Has_Entity (S : Store; ID : ECS.Types.Entity_ID) return Boolean;  -- Checks if an entity exists by its ID
+   function Has_Entity (S : Store; ID : Entity_ID) return Boolean;  -- Checks if an entity exists by its ID
    
 
    -- TRANSFORM COMPONENT OPERATIONS: For manipulating Transform components in the component table and lookup
    procedure Add_Transform_Component (
       S  : in out Store;               -- The ECS store
-      ID : ECS.Types.Entity_ID;        -- The entity ID to add the component to
+      ID : Entity_ID;        -- The entity ID to add the component to
       X  : Float;                      -- Position X
       Y  : Float;                      -- Position Y
       R  : Float;                      -- Rotation
@@ -119,18 +119,18 @@ package ECS.Store is
 
    function Has_Transform_Component (
       S  : Store;
-      ID : ECS.Types.Entity_ID
+      ID : Entity_ID
    ) return Boolean;  -- Checks if an entity has a Transform component
 
    procedure Get_Transform_Component (
       S  : in out Store;
-      ID : ECS.Types.Entity_ID;
+      ID : Entity_ID;
       Ref: out ECS.Components.Transform_Component  -- Component reference so we can access it (Ada Rule: No raw pointers to container elements)
    ); -- Gets a Transform component for an entity
 
    procedure Remove_Transform_Component (
       S  : in out Store;
-      ID : ECS.Types.Entity_ID
+      ID : Entity_ID
    );  -- Removes a Transform component from an entity
 
    -- This pattern should repeat for other component types (e.g., Velocity, Health, etc.)

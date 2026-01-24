@@ -16,7 +16,7 @@
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Ordered_Maps;
 with ECS.Types;
-with ECS.Entities;
+with ECS.Entities; use ECS.Entities;
 with ECS.Components;
 with Ada.Containers.Hashed_Maps;
 
@@ -25,7 +25,7 @@ package body ECS.Store is
    -- Hash function for Entity_ID
    -- Simple hash function that converts Entity_ID to Hash_Type
    -- Used (and needed) for Ada.Containers.Hashed_Maps
-   function Hash_Entity_ID (ID : ECS.Types.Entity_ID) return Ada.Containers.Hash_Type is
+   function Hash_Entity_ID (ID : Entity_ID) return Ada.Containers.Hash_Type is
    
    begin
    
@@ -63,20 +63,18 @@ package body ECS.Store is
 --    - Initializes the entity record
 --    - Inserts the entity into the entity map
 --    - Returns the new entity ID
-   function Create_Entity (S : in out Store) return ECS.Types.Entity_ID is
-   
-   New_ID : ECS.Types.Entity_ID;             -- New entity ID
-   ER     : ECS.Entities.Entity_Record;      -- New entity record
+function Create_Entity (S : in out Store) return Entity_ID is
+   New_ID      : Entity_ID;
+   New_Entity  : Entity;
 
    begin
    -- 'Succ' (Successor) is a built-in attribute for discrete types (like integers, characters, or enumerated types) that returns the value immediately following the given input, essentially input + 1 in sequence
-      S.Next_Entity_ID := ECS.Types.Entity_ID'Succ (S.Next_Entity_ID);  -- Increment the next available entity ID
-      New_ID := S.Next_Entity_ID;                                       -- Assign the new entity ID
+      S.Next_Entity_ID := Entity_ID'Succ (S.Next_Entity_ID);  -- Increment the next available entity ID
+      New_ID := S.Next_Entity_ID;                             -- Assign the new entity ID
 
-      ER.ID := New_ID;                             -- Set the entity ID
-      ER.Tags := (others => False);                -- Initialize component presence set
+      New_Entity.ID := New_ID;                                -- Set the entity ID
 
-      S.Entities.Insert (Key => New_ID, New_Item => ER);    -- Insert the new entity into the entity map
+      S.Entities.Insert (Key => New_ID, New_Item => New_Entity);    -- Insert the new entity into the entity map
 
       return New_ID;                -- Return the new entity ID
 
@@ -88,7 +86,7 @@ package body ECS.Store is
 --    - Removes the entity from the entity map
 --    - Removes associated components from component tables and lookups
 --    - Note: Component removal logic will be added later.
-procedure Destroy_Entity (S : in out Store; ID : ECS.Types.Entity_ID) is
+procedure Destroy_Entity (S : in out Store; ID : Entity_ID) is
    
    begin
 
@@ -108,7 +106,7 @@ procedure Destroy_Entity (S : in out Store; ID : ECS.Types.Entity_ID) is
 
 
 -- Function to check if an entity exists in the ECS store
-function Has_Entity (S : Store; ID : ECS.Types.Entity_ID) return Boolean is
+function Has_Entity (S : Store; ID : Entity_ID) return Boolean is
 
    begin
 
@@ -132,7 +130,7 @@ function Has_Entity (S : Store; ID : ECS.Types.Entity_ID) return Boolean is
    procedure Add_Transform_Component (
       
       S  : in out Store;         -- ECS store that holds entities and components 
-      ID : ECS.Types.Entity_ID;  -- Entity ID of the entity to add the component to
+      ID : Entity_ID;  -- Entity ID of the entity to add the component to
 
       X  : Float;    -- Position coordinates
       Y  : Float;
@@ -191,7 +189,7 @@ function Has_Entity (S : Store; ID : ECS.Types.Entity_ID) return Boolean is
    -- This is what systems will use to check for component presence (filter)
    function Has_Transform_Component (
       S  : Store;                -- ECS store
-      ID : ECS.Types.Entity_ID   -- Entity ID
+      ID : Entity_ID   -- Entity ID
    ) return Boolean is
 
       begin
@@ -211,7 +209,7 @@ function Has_Entity (S : Store; ID : ECS.Types.Entity_ID) return Boolean is
    -- Note: Similar procedures can be created for other component types.
    procedure Get_Transform_Component (
       S  : in out Store;         -- ECS store
-      ID : ECS.Types.Entity_ID;   -- Entity ID
+      ID : Entity_ID;   -- Entity ID
       Ref: out ECS.Components.Transform_Component  -- Component reference so we can access it (Ada Rule: No raw pointers to container elements)
    )is
 
@@ -251,12 +249,12 @@ function Has_Entity (S : Store; ID : ECS.Types.Entity_ID) return Boolean is
    -- Note: Similar procedures can be created for other component types.
    procedure Remove_Transform_Component (
       S  : in out Store;         -- ECS store
-      ID : ECS.Types.Entity_ID   -- Entity ID   
+      ID : Entity_ID   -- Entity ID   
    ) is
 
       Remove_Index : ECS.Types.Index;        -- Index to remove
       Last_Index   : ECS.Types.Index;        -- Last index in the component table
-      Last_EID     : ECS.Types.Entity_ID;    -- Entity ID of the last component
+      Last_EID     : Entity_ID;    -- Entity ID of the last component
 
    begin
 
