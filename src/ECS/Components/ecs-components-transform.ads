@@ -1,7 +1,10 @@
+with Math.Linear_Algebra; use Math.Linear_Algebra;
+
+
 package ECS.Components.Transform is
    type Transform is record
-      Position : Float;    --TODO: Replace with Vector
+      Position : Vector2;
       Rotation : Float;    -- Radians
-      Scale    : Float;    --TODO: Replace with Vector
+      Scale    : Vector2;
    end record;
 end;
