@@ -1,0 +1,15 @@
+name = "tests"
+description = ""
+version = "0.1.0-dev"
+
+authors = ["Grant"]
+maintainers = ["Grant <example@example.com>"]
+maintainers-logins = ["endgrant"]
+licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
+website = ""
+tags = []
+
+executables = ["tests"]
+
+[[pins]]
+psu_ada_gameengine = { path='../' }
