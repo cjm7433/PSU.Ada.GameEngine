@@ -1,7 +1,7 @@
-with Linear_Algebra; use Linear_Algebra;
+with Math.Linear_Algebra; use Math.Linear_Algebra;
 
 
-package Physics is
+package Math.Physics is
    type AABB is tagged private;   -- Axis-Aligned Bounding Box
 
 
