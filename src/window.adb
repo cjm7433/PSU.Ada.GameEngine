@@ -1,11 +1,8 @@
 with System; use System;
 --  with Interfaces.C;
 --  with Interfaces.C.Strings;
---  with Interfaces.C;
---  with Interfaces.C.Strings;
 with Ada.Text_IO; use Ada.Text_IO;
 with ECS.Event_Manager; use ECS.Event_Manager;
---  with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 --  with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with ECS.Event;
 with ECS;
@@ -45,7 +42,6 @@ package body Window is
 
          when WM_PAINT =>
             null;
-
 
          when WM_SIZE =>
             W_Instance.Current_Width   := IC.int (LOWORD (L_Param));
@@ -152,7 +148,6 @@ package body Window is
             Emit_Event (Manager, MouseEvent);
          end;
 
-
          when WM_MOUSEMOVE =>
          declare
             MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
@@ -183,7 +178,6 @@ package body Window is
          Title : Unbounded_String) return Window_Access is
       WC       : aliased WNDCLASS;
       Res_Atom : ATOM;
-
 
    begin
       W_Instance := new Window_T;
