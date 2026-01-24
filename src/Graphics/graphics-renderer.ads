@@ -18,43 +18,43 @@ package Graphics.Renderer is
    type Char_Array is array (Max_String_Length) of Character;
 
    procedure Clear_Screen
-      (img : in out Byte_Array; c : Graphics.Color.Color; Screen_Width : Natural; Screen_Height : Natural);
+      (Img : in out Byte_Array; C : Graphics.Color.Color; Screen_Width : Natural; Screen_Height : Natural);
 
    procedure set_pixel_color
-     (img : in out Byte_Array; x : Integer; y : Integer; c : Graphics.Color.Color; Screen_Width : Natural; Screen_Height : Natural);
+     (Img : in out Byte_Array; X : Integer; Y : Integer; C : Graphics.Color.Color; Screen_Width : Natural; Screen_Height : Natural);
 
-   function Get_Pixel_Color (img : in out Byte_Array; x,y : Integer; Screen_Width, Screen_Height : Natural) return Graphics.Color.Color;
+   function Get_Pixel_Color (Img : in out Byte_Array; X, Y : Integer; Screen_Width, Screen_Height : Natural) return Graphics.Color.Color;
 
    procedure line
-     (x0  : in out Integer;
-      y0  : in out Integer;
-      x1  : in out Integer;
-      y1  : in out Integer;
-      c   : Graphics.Color.Color;
-      img : in out Byte_Array;
+     (X0  : in out Integer;
+      Y0  : in out Integer;
+      X1  : in out Integer;
+      Y1  : in out Integer;
+      C   : Graphics.Color.Color;
+      Img : in out Byte_Array;
       Screen_Width : Natural;
       Screen_Height : Natural);
 
    procedure Draw_Regular_Polygon
-     (img      : in out Byte_Array;
+     (Img      : in out Byte_Array;
       Sides    : Positive;
       Radius   : Positive;
       Center_X : Float;
       Center_Y : Float;
-      c        : Graphics.Color.Color;
+      C        : Graphics.Color.Color;
       Screen_Width    : Natural;
       Screen_Height   : Natural);
 
-   procedure Draw_Filled_Triangle(img : in out Byte_Array; V1, V2, V3 : in out Vec2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
-   procedure Draw_Filled_Quad(img : in out Byte_Array; X,Y,Width,Height : Float; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
-   procedure Draw_Character(img : in out Byte_Array; X,Y,Width,Height : Integer; Char : Character; color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
-   procedure Draw_String(img : in out Byte_Array; X,Y : Integer; Width, Height : Integer; S : in String; Color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
-   procedure Draw_Image_To_Buffer(buffer : in out Byte_Array; img: in out Storage_Array_Access; X,Y,Width,Height : Integer; Screen_Width, Screen_Height : Natural);
-   procedure Draw_Image_To_Buffer(buffer : in out Byte_Array; img: in out Storage_Array_Access; X,Y,Width,Height,StartX,StartY : Integer; Screen_Width, Screen_Height,Image_Width : Natural);
+   procedure Draw_Filled_Triangle(Img : in out Byte_Array; V1, V2, V3 : in out Vec2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
+   procedure Draw_Filled_Quad(Img : in out Byte_Array; X,Y,Width,Height : Float; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
+   procedure Draw_Character(Img : in out Byte_Array; X,Y,Width,Height : Integer; Char : Character; color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
+   procedure Draw_String(Img : in out Byte_Array; X,Y : Integer; Width, Height : Integer; S : in String; Color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
+   procedure Draw_Image_To_Buffer(buffer : in out Byte_Array; Img: in out Storage_Array_Access; X,Y,Width,Height : Integer; Screen_Width, Screen_Height : Natural);
+   procedure Draw_Image_To_Buffer(buffer : in out Byte_Array; Img: in out Storage_Array_Access; X,Y,Width,Height,StartX,StartY : Integer; Screen_Width, Screen_Height,Image_Width : Natural);
 
 
    generic
-      type t is private;
-   procedure generic_swap (x, y : in out t);
+      type T is private;
+   procedure generic_swap (X, Y : in out T);
 
 end Graphics.Renderer;

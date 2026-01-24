@@ -11,6 +11,6 @@ with ECS.System.Collision;    use ECS.System.Collision;
 
 package ECS.Config_Loader is
 
-   procedure Load_Config(Manager : in out ECS.Entity_Manager.Entity_Manager_T; File_Name : String);
+   procedure Load_Config (Manager : in out ECS.Entity_Manager.Entity_Manager_T; File_Name : String);
 
 end ECS.Config_Loader;

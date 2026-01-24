@@ -215,6 +215,7 @@ package body Window is
       W_Instance.Title := Title;
 
       --  Show the window
+      --  Not used anywhere yet, but might be needed later
       declare
          SW_Result : Boolean;
          UW_Result : Boolean;
