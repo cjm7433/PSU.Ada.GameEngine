@@ -14,24 +14,36 @@ package body ECS.Component_Table is
       -- Steps to Remove_Component:
          --    Find index of component to remove
          --    Swap last element into that index
-         --    Update the swapped entity’s index
+         --    Update the swapped Entity’s index
          --    Remove last vector element
          --    Remove entity from lookup
-         --    This is O(1) and cache-friendly
 
+      --    Find index of component to remove
       Remove_Index : constant Index := T.Lookup (E);
+
+      -- Find the last element
       Last_Index   : constant Index := Index (T.Data.Last_Index);
 
+      -- Tracker for which Entity gets swapped
       Swapped_Entity : Entity_ID;
 
    begin
+      
+      -- Swap last element into that index
 
       -- If not last element, swap last element and element to be removed
       if Remove_Index /= Last_Index then
+
+         -- Overwrite removed Component with last Component
+         -- This keeps the Component vector dense (contiguous)
          T.Data (Remove_Index) := T.Data (Last_Index);
 
-         -- Find which entity owned the last component
+         -- Find which entity owned the last Component
+         -- Reverse search (Index -> Entity_ID)
+         -- This is not O(1) but O(n)
          for Cursor in T.Lookup.Iterate loop
+            -- Cursor gives the index
+            -- If Cursor == Last_Index, we have found the owner
             if Lookups.Element (Cursor) = Last_Index then
                Swapped_Entity := Lookups.Key (Cursor);
                exit;

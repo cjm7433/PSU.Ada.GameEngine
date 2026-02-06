@@ -139,6 +139,12 @@ package body ECS.Store is
 
       -- Runtime Component_Type Checks
 
+      -- The following each add a Component to Component Vector and Lookup like:
+      -- If the Tag matches the Component type:
+      --    If the Lookup does not contain the Entity_ID:
+      --       Add it to the end
+      --       Add the Component data to the vector of Components
+
       if Tag = Transform'Tag then
          if not S.Transform.Lookup.Contains (E) then
             S.Transform.Lookup.Insert
@@ -188,9 +194,14 @@ package body ECS.Store is
 
       -- Runtime Component_Type Checks
 
-      -- Learning this:
+      -- A fun fact I am learning (aka trying to learn) about Ada:
       --    Rule of thumb:
       --    Whenever you pass a record aggregate to a container operation, qualify it with Type'(...).
+
+      -- The following each remove a Component from its Lookup and Component Vector like:
+      -- If the Tag matches the Component type:
+      --    If the Entity_ID is present in the Lookup
+      --       Remove the Component from Component vector and Lookup (using Component_Table Remove())
 
       if Tag = Transform'Tag then
          if S.Transform.Lookup.Contains (E) then
@@ -221,6 +232,9 @@ package body ECS.Store is
 
       -- Runtime Component_Type Checks
 
+      -- The following each return a Boolean as if it were:
+      -- Boolean := Does this Entity_ID exist within the Lookup?
+
       if Tag = Transform'Tag then
          return S.Transform.Lookup.Contains (E);
 
@@ -246,13 +260,14 @@ package body ECS.Store is
 
       -- Runtime Component_Type Checks
       
+      -- The following each return a Component as if it were:
+      -- Component := Component_Vector(Index of Entity in Lookup)
+
       if Tag = Transform'Tag then
-         return S.Transform.Data
-         (S.Transform.Lookup (E));
+         return S.Transform.Data(S.Transform.Lookup (E));
 
       elsif Tag = Motion'Tag then
-         return S.Motion.Data
-         (S.Motion.Lookup (E));
+         return S.Motion.Data(S.Motion.Lookup (E));
 
       -- TODO: Add other Component types here!
 
