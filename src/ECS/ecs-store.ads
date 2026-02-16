@@ -58,6 +58,16 @@ package ECS.Store is
    -- (  Component_Type => [Component_Type],
    --    Hash           => Hash_Entity_ID);
 
+    ----------------------------------------------------------------
+   -- TODO: NEW: Entity ID array support
+   ----------------------------------------------------------------
+   
+   -- Array of Entity_IDs for Systems to query
+   type Entity_ID_Array is array (Natural range <>) of Entity_ID;
+
+   -- Access type for Entity_ID_Array (for returning from Get_Entity_IDs)
+   type Entity_ID_Array_Access is access Entity_ID_Array;
+
    ----------------------------------------------------------------------------------------------------------------------------
    -- The ECS Store
    ----------------------------------------------------------------------------------------------------------------------------
@@ -121,17 +131,29 @@ package ECS.Store is
       Tag : Component_Tag  );
 
 
--- Checks if an entity has a Component of type Tag
+   -- Checks if an entity has a Component of type Tag
    function Has_Component
   (   S   : Store;
       E   : Entity_ID;
       Tag : Component_Tag  ) return Boolean;
 
 
--- Gets a Component for type Tag for an Entity
+   -- Gets a Component for type Tag for an Entity
    function Get_Component
   (   S   : Store;
       E   : Entity_ID;
       Tag : Component_Tag  ) return Component'Class;
+      
+
+   -- Gets an array of Entity IDs that have all the specified component tags
+   function Get_Entities_With
+  (   S    : Store;
+      Tags : Component_Tag_Array) return Entity_ID_Array_Access;
+
+
+   -- Return a dynamically allocated array containing all entity IDs that own a specific component type.
+   function Get_Entity_IDs
+   (  S   : Store;
+      Tag : Component_Tag) return Entity_ID_Array_Access;
    
 end ECS.Store;

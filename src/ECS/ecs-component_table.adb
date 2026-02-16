@@ -6,60 +6,111 @@
 
 package body ECS.Component_Table is
 
-    -- Generic Component Table: Remove Utility
-   procedure Remove
-     (T : in out Table;             -- Component table to remove Component from
-      E : Entity_ID) is
-
-      -- Steps to Remove_Component:
-         --    Find index of component to remove
-         --    Swap last element into that index
-         --    Update the swapped Entity’s index
-         --    Remove last vector element
-         --    Remove entity from lookup
-
-      --    Find index of component to remove
-      Remove_Index : constant Index := T.Lookup (E);
-
-      -- Find the last element
-      Last_Index   : constant Index := Index (T.Data.Last_Index);
-
-      -- Tracker for which Entity gets swapped
-      Swapped_Entity : Entity_ID;
-
+   ------------------------------------------------------------
+   -- Add
+   -- Add a component to the table for an entity
+   ------------------------------------------------------------
+    procedure Add
+     (T : in out Table;
+      E : Entity_ID;
+      C : Component_Type)
+   is
+      Index : Natural;
    begin
-      
-      -- Swap last element into that index
 
-      -- If not last element, swap last element and element to be removed
-      if Remove_Index /= Last_Index then
-
-         -- Overwrite removed Component with last Component
-         -- This keeps the Component vector dense (contiguous)
-         T.Data (Remove_Index) := T.Data (Last_Index);
-
-         -- Find which entity owned the last Component
-         -- Reverse search (Index -> Entity_ID)
-         -- This is not O(1) but O(n)
-         for Cursor in T.Lookup.Iterate loop
-            -- Cursor gives the index
-            -- If Cursor == Last_Index, we have found the owner
-            if Lookups.Element (Cursor) = Last_Index then
-               Swapped_Entity := Lookups.Key (Cursor);
-               exit;
-            end if;
-         end loop;
-
-         -- Update swapped entity index
-         T.Lookup.Replace (Swapped_Entity, Remove_Index);
+      if T.Lookup.Contains (E) then
+         return;
       end if;
 
-      -- Remove last element
+      T.Data.Append (C);
+
+      Index := T.Data.Last_Index;
+
+      T.Lookup.Insert (E, Index);
+
+   end Add;
+
+
+   ------------------------------------------------------------
+   -- Remove (swap remove)
+   -- Remove a component from the table for an entity
+   ------------------------------------------------------------
+   procedure Remove
+     (T : in out Table;
+      E : Entity_ID)
+   is
+      Index      : Natural;
+      Last_Index : Natural;
+      Cursor     : Lookup_Map.Cursor;
+   begin
+
+      if not T.Lookup.Contains (E) then
+         return;
+      end if;
+
+      Index      := T.Lookup.Element (E);
+      Last_Index := T.Data.Last_Index;
+
+      -- Swap last element into removed slot
+      T.Data (Index) := T.Data (Last_Index);
+
+      -- Update lookup for moved element
+      Cursor := T.Lookup.First;
+
+      while Lookup_Map.Has_Element (Cursor) loop
+         if Lookup_Map.Element (Cursor) = Last_Index then
+            T.Lookup.Replace
+              (Lookup_Map.Key (Cursor), Index);
+            exit;
+         end if;
+
+         Cursor := Lookup_Map.Next (Cursor);
+      end loop;
+
       T.Data.Delete_Last;
 
-      -- Remove Entity mapping
       T.Lookup.Delete (E);
-      
+
    end Remove;
+
+
+   ------------------------------------------------------------
+   -- Has
+   -- Check if an entity has a component in the table
+   ------------------------------------------------------------
+   function Has
+     (T : Table;
+      E : Entity_ID) return Boolean
+   is
+   begin
+      return T.Lookup.Contains (E);
+   end Has;
+
+   ------------------------------------------------------------
+   -- Get
+   -- Get the component for an entity
+   ------------------------------------------------------------
+   function Get
+     (T : Table;
+      E : Entity_ID) return Component_Type
+   is
+      Index : Natural;
+   begin
+      Index := T.Lookup.Element (E);
+      return T.Data (Index);
+   end Get;
+
+
+   ------------------------------------------------------------
+   -- Lookup_Index
+   -- Get the index of the component for an entity (for iteration)
+   ------------------------------------------------------------
+   function Lookup_Index
+     (T : Table;
+      E : Entity_ID) return Natural
+   is
+   begin
+      return T.Lookup.Element (E);
+   end Lookup_Index;
 
 end ECS.Component_Table;

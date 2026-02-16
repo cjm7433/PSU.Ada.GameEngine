@@ -44,10 +44,10 @@ package body ECS.Store is
       Entity_Maps.Clear (S.Entities);
 
       Transform_Table.Vectors.Clear (S.Transform.Data);
-      Transform_Table.Lookups.Clear (S.Transform.Lookup);
+      Transform_Table.Lookup_Map.Clear (S.Transform.Lookup);
 
       Motion_Table.Vectors.Clear (S.Motion.Data);
-      Motion_Table.Lookups.Clear (S.Motion.Lookup);
+      Motion_Table.Lookup_Map.Clear (S.Motion.Lookup);
 
       S.Next_Entity_ID := 0;
 
@@ -174,7 +174,6 @@ package body ECS.Store is
    end Add_Component;
 
 
-
    -- Removes Component of type Tag from Entity of Entity_ID E
    -- This procedure uses Component_Table's Remove()
    procedure Remove_Component
@@ -276,5 +275,139 @@ package body ECS.Store is
       end if;
    
    end Get_Component;
+
+
+   -- Gets an array of Entity IDs that have all the specified component tags
+   function Get_Entities_With
+  (   S    : Store;
+      Tags : Component_Tag_Array) return Entity_ID_Array_Access
+   is
+      Base_List : Entity_ID_Array_Access;
+   begin
+
+      if Tags'Length = 0 then
+         return null;
+      end if;
+
+      -- Use first tag as base
+      Base_List :=
+      Get_Entity_IDs (S, Tags (Tags'First));
+
+      if Base_List = null then
+         return null;
+      end if;
+
+      declare
+         Temp : Entity_ID_Array
+         (0 .. Base_List'Length - 1);
+
+         Count : Natural := 0;
+      begin
+
+         for I in Base_List'Range loop
+
+            declare
+               E : constant Entity_ID :=
+               Base_List (I);
+
+               Match : Boolean := True;
+            begin
+
+               -- Check remaining tags
+               for J in Tags'First + 1
+                        .. Tags'Last
+               loop
+                  if not Has_Component
+                  (S, E, Tags (J))
+                  then
+                     Match := False;
+                     exit;
+                  end if;
+               end loop;
+
+               if Match then
+                  Temp (Count) := E;
+                  Count := Count + 1;
+               end if;
+
+            end;
+
+         end loop;
+
+         if Count = 0 then
+            return null;
+         end if;
+
+         declare Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+         begin
+            for K in 0 .. Count - 1 loop
+               Result (K) := Temp (K);
+            end loop;
+
+            return Result;
+         end;
+      end;
+
+   end Get_Entities_With;
+
+
+   -- Return a dynamically allocated array containing all entity IDs that own a specific component type.
+   function Get_Entity_IDs
+  (   S   : Store;
+      Tag : Component_Tag) return Entity_ID_Array_Access
+   is
+      Count  : Natural := 0;
+      Cursor : Entity_Maps.Cursor := S.Entities.First;
+
+   begin
+
+      -- First pass: count matches
+      while Entity_Maps.Has_Element (Cursor) loop
+         declare
+            E : constant Entity_ID :=
+            Entity_Maps.Key (Cursor);
+         begin
+            if Has_Component (S, E, Tag) then
+               Count := Count + 1;
+            end if;
+         end;
+
+         Cursor := Entity_Maps.Next (Cursor);
+      end loop;
+
+      if Count = 0 then
+         return null;
+      end if;
+
+      -- Allocate result array
+      declare
+         Result : Entity_ID_Array_Access :=
+         new Entity_ID_Array (0 .. Count - 1);
+
+         Index  : Natural := 0;
+
+         Cursor2 : Entity_Maps.Cursor :=
+         S.Entities.First;
+      begin
+
+         -- Second pass: fill array
+         while Entity_Maps.Has_Element (Cursor2) loop
+            declare
+               E : constant Entity_ID :=
+               Entity_Maps.Key (Cursor2);
+            begin
+               if Has_Component (S, E, Tag) then
+                  Result (Index) := E;
+                  Index := Index + 1;
+               end if;
+            end;
+
+            Cursor2 := Entity_Maps.Next (Cursor2);
+         end loop;
+
+         return Result;
+      end;
+
+   end Get_Entity_IDs;
 
 end ECS.Store;

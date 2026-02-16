@@ -4,6 +4,7 @@
 
 with ECS.Systems;       use ECS.Systems;
 with ECS.Store;
+with ECS.Components;
 
 package ECS.Systems_Movement is
 
@@ -14,5 +15,10 @@ package ECS.Systems_Movement is
      (Self : in out Movement_System;
       S    : in out ECS.Store.Store;
       DT   : Float);
+
+
+   overriding 
+   function Components_Needed (Self : Movement_System) 
+      return ECS.Components.Component_Tag_Array;
 
 end ECS.Systems_Movement;

@@ -7,7 +7,7 @@
 with Ada.Containers;
 with Ada.Containers.Vectors;
 with Ada.Containers.Hashed_Maps;
-with ECS.Entities; use ECS.Entities;
+with ECS.Entities;                  use ECS.Entities;
 
 -- Generic component table: A vector of components per component type
    -- (So each component type table doesnt need its own package)
@@ -32,7 +32,7 @@ package ECS.Component_Table is
 
    -- Maps Entity_ID --> Index
    -- Not contiguous in memory.
-   package Lookups is new Ada.Containers.Hashed_Maps
+   package Lookup_Map is new Ada.Containers.Hashed_Maps
      (Key_Type        => Entity_ID,
       Element_Type    => Index,
       Hash            => Hash,
@@ -41,12 +41,39 @@ package ECS.Component_Table is
    -- This is the table: Vector of Components and Entity_ID --> Index map
    type Table is record
       Data   : Vectors.Vector;
-      Lookup : Lookups.Map;
+      Lookup : Lookup_Map.Map;
    end record;
 
-   -- Generic Remove Component Utility (for Remove_Component())
+
+   -- Add a component to the table for an entity
+   procedure Add
+     (T : in out Table;
+      E : Entity_ID;
+      C : Component_Type);
+
+
+   -- Remove a component from the table for an entity
    procedure Remove
      (T : in out Table;
       E : Entity_ID);
+
+
+   -- Check if an entity has a component in the table
+   function Has
+     (T : Table;
+      E : Entity_ID) return Boolean;
+
+
+   -- Get the component for an entity
+   function Get
+     (T : Table;
+      E : Entity_ID) return Component_Type;
+
+
+   -- Get the index of the component for an entity (for iteration)
+   function Lookup_Index
+     (T : Table;
+      E : Entity_ID) return Natural;
+
 
 end ECS.Component_Table;
