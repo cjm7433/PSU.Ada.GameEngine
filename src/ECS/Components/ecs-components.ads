@@ -19,6 +19,7 @@ package ECS.Components is
    -- Array of component tags for filtering
    -- A list of component type identities.
    -- A dynamic-length list of component tags.
+   -- Systems declare these and the Store uses that list to filter Components.
    type Component_Tag_Array is array (Natural range <>) of Component_Tag;
 
 end ECS.Components;

@@ -1,6 +1,7 @@
 --  ecs-systems_movement.adb
 
 -- Concrete behavior for Movement System
+-- Some of these with/use might not be needed (lookin at you, numerics)
 
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
@@ -11,6 +12,8 @@ with Ada.Numerics;                  use Ada.Numerics;
 
 package body ECS.Systems_Movement is
 
+   -- Components_Needed is the list of required components 
+   -- (Transform and Motion)
    overriding
    function Components_Needed
      (Self : Movement_System)
@@ -21,6 +24,8 @@ package body ECS.Systems_Movement is
               1 => ECS.Components_Motion.Motion'Tag);
    end Components_Needed;
 
+
+   -- Update will execute logic for the system
    overriding
    procedure Update
      (Self : in out Movement_System;
@@ -38,6 +43,7 @@ package body ECS.Systems_Movement is
       -- Get entities with the required components (Transform and Motion)
       Entities := S.Get_Entities_With (Self.Components_Needed);
 
+      -- If there are no entities with that component type set, do nothing
       if Entities = null then
          return;
       end if;
@@ -46,8 +52,10 @@ package body ECS.Systems_Movement is
 
          declare
 
+            -- Get the entity ID from the array of entities returned by the store's filtering function
             E : constant Entity_ID := Entities (I);
 
+            -- Get the components for the entity (Transform and Motion )
             Index_T : constant Transform_Table.Index := S.Transform.Lookup (E);
             T : Transform renames S.Transform.Data (Index_T);
 

@@ -167,6 +167,8 @@ package body ECS.Store is
                  (others => (0.0, 0.0)));
          end if;
 
+      -- TODO: Add Component Types here
+
       else
          raise Program_Error with "Unknown component tag";
       end if;
@@ -285,32 +287,32 @@ package body ECS.Store is
       Base_List : Entity_ID_Array_Access;
    begin
 
+      -- If list is empty, do nothing
       if Tags'Length = 0 then
          return null;
       end if;
 
       -- Use first tag as base
-      Base_List :=
-      Get_Entity_IDs (S, Tags (Tags'First));
+      Base_List := Get_Entity_IDs (S, Tags (Tags'First));
 
+      -- If list is empty, do nothing
       if Base_List = null then
          return null;
       end if;
 
       declare
-         Temp : Entity_ID_Array
-         (0 .. Base_List'Length - 1);
-
+         Temp : Entity_ID_Array(0 .. Base_List'Length - 1);
          Count : Natural := 0;
+      
       begin
 
+         -- For each entity in the base list, check if it has all the other tags
          for I in Base_List'Range loop
 
             declare
-               E : constant Entity_ID :=
-               Base_List (I);
-
+               E : constant Entity_ID := Base_List (I);
                Match : Boolean := True;
+            
             begin
 
                -- Check remaining tags
@@ -334,10 +336,12 @@ package body ECS.Store is
 
          end loop;
 
+         -- If there are no matches, return null, do nothing
          if Count = 0 then
             return null;
          end if;
 
+         -- Create a new array of the correct size and return it
          declare Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
          begin
             for K in 0 .. Count - 1 loop
@@ -352,10 +356,12 @@ package body ECS.Store is
 
 
    -- Return a dynamically allocated array containing all entity IDs that own a specific component type.
+    -- This function iterates through all entities in the store and checks if they have the specified component tag.
    function Get_Entity_IDs
   (   S   : Store;
       Tag : Component_Tag) return Entity_ID_Array_Access
    is
+     
       Count  : Natural := 0;
       Cursor : Entity_Maps.Cursor := S.Entities.First;
 
@@ -375,6 +381,7 @@ package body ECS.Store is
          Cursor := Entity_Maps.Next (Cursor);
       end loop;
 
+      -- If there are no matches, return null, do nothing
       if Count = 0 then
          return null;
       end if;
@@ -382,12 +389,13 @@ package body ECS.Store is
       -- Allocate result array
       declare
          Result : Entity_ID_Array_Access :=
-         new Entity_ID_Array (0 .. Count - 1);
+            new Entity_ID_Array (0 .. Count - 1);
 
          Index  : Natural := 0;
 
          Cursor2 : Entity_Maps.Cursor :=
          S.Entities.First;
+      
       begin
 
          -- Second pass: fill array

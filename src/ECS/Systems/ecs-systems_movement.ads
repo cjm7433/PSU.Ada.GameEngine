@@ -10,6 +10,11 @@ package ECS.Systems_Movement is
 
    type Movement_System is new System with null record;
 
+   -- Update will execute logic for the system
+
+   -- Components_Needed is the list of required components 
+   -- (Transform and Motion)
+
    overriding 
    procedure Update
      (Self : in out Movement_System;
