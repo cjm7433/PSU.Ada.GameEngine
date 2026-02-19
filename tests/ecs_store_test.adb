@@ -49,16 +49,19 @@ procedure ECS_Store_Test is
       end if;
    end Assert;
 
+
    ------------------------------------------------------------
    -- Test fixture: ECS Store instance
    ------------------------------------------------------------
    S : Store;
+
 
 begin
    Put_Line ("========================================");
    Put_Line ("ECS Store Test Suite");
    Put_Line ("========================================");
    New_Line;
+
 
    ------------------------------------------------------------
    -- TEST 1: Initialize store
@@ -428,10 +431,10 @@ begin
 
 
    ------------------------------------------------------------
-   -- Final Test Summary
+   -- Final Test Result Summary Readout
    ------------------------------------------------------------
    Put_Line ("========================================");
-   Put_Line ("Test Summary:");
+   Put_Line ("ECS-Store Test Summary:");
    Put_Line ("  Total Tests:  " & Natural'Image (Total_Tests));
    Put_Line ("  Passed:       " & Natural'Image (Passed_Tests));
    Put_Line ("  Failed:       " & Natural'Image (Failed_Tests));

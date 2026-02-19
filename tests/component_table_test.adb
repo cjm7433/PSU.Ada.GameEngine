@@ -25,6 +25,7 @@ procedure Component_Table_Test is
    
    end record;
 
+
    ------------------------------------------------------------
    -- Hash function required for Component_Table instantiation
    ------------------------------------------------------------
@@ -35,6 +36,7 @@ procedure Component_Table_Test is
    
    end Hash_Entity_ID;
 
+
    ------------------------------------------------------------
    -- Instantiate Component_Table with our Mock_Component
    ------------------------------------------------------------
@@ -42,12 +44,14 @@ procedure Component_Table_Test is
      (Component_Type => Mock_Component,
       Hash           => Hash_Entity_ID);
 
+
    ------------------------------------------------------------
    -- Test state tracking
    ------------------------------------------------------------
    Total_Tests  : Natural := 0;
    Passed_Tests : Natural := 0;
    Failed_Tests : Natural := 0;
+
 
    ------------------------------------------------------------
    -- Helper procedure to report test results
@@ -70,6 +74,7 @@ procedure Component_Table_Test is
    
    end Assert;
 
+
    ------------------------------------------------------------
    -- Test fixture: reusable table instance
    ------------------------------------------------------------
@@ -80,6 +85,7 @@ begin
    Put_Line ("Component_Table Test Suite");
    Put_Line ("========================================");
    New_Line;
+
 
    ------------------------------------------------------------
    -- TEST 1: Add component and verify it exists
@@ -265,10 +271,10 @@ begin
 
 
    ------------------------------------------------------------
-   -- Test Result Summary Readout
+   -- Final Test Result Summary Readout
    ------------------------------------------------------------
    Put_Line ("========================================");
-   Put_Line ("Test Summary:");
+   Put_Line ("Component Table Test Summary:");
 
    Put_Line ("  Total Tests:  " & Natural'Image (Total_Tests));
    Put_Line ("  Passed:       " & Natural'Image (Passed_Tests));

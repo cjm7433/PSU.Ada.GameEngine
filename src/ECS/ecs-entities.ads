@@ -1,8 +1,12 @@
 -- ecs-entities.ads
+--
+-- Entity type definition for the ECS system.
+--    - An Entity is just an ID (unique integer). 
+--    - Entities have no behavior or data themselves:
+--       * all data lives in components 
+--       * all behavior lives in systems. 
+--    - The entity ID is the key that ties components together.
 
--- This file is part of the ECS (Entity Component System) framework.
--- This file defines the entity record type used in the ECS system.
--- An Entity is just a Record that holds an ID of type Entity_ID
 
 package ECS.Entities is
 

@@ -10,6 +10,8 @@
 --
 -- This validates that all ECS components work together correctly
 -- in a real-world usage scenario.
+--
+-- (These are initial integration tests written when the only System in ECS was Movement)
 
 with Ada.Text_IO;                      use Ada.Text_IO;
 with ECS.Entities;                     use ECS.Entities;
@@ -27,6 +29,7 @@ procedure ECS_Integration_Test is
    Total_Tests  : Natural := 0;
    Passed_Tests : Natural := 0;
    Failed_Tests : Natural := 0;
+
 
    ------------------------------------------------------------
    -- Helper procedure to report test results
@@ -53,13 +56,15 @@ procedure ECS_Integration_Test is
    ------------------------------------------------------------
    World : Store;
 
+
    ------------------------------------------------------------
-   -- Entity IDs for our game objects
+   -- Entity IDs for game objects
    ------------------------------------------------------------
    Player_ID        : Entity_ID;
    Enemy1_ID        : Entity_ID;
    Enemy2_ID        : Entity_ID;
    Static_Wall_ID   : Entity_ID;
+
 
 begin
    Put_Line ("========================================");
@@ -71,8 +76,10 @@ begin
    Put_Line ("  - 1 Static Wall (Transform only)");
    New_Line;
 
+
    ------------------------------------------------------------
    -- SCENARIO 1: Initialize game world
+   -- Store.Initialize()
    ------------------------------------------------------------
    Put_Line ("=== Scenario 1: Initialize Game World ===");
    
@@ -84,6 +91,7 @@ begin
 
    ------------------------------------------------------------
    -- SCENARIO 2: Create game entities
+   -- Store.Create_Entity()
    ------------------------------------------------------------
    Put_Line ("=== Scenario 2: Create Game Entities ===");
    
@@ -111,6 +119,7 @@ begin
 
    ------------------------------------------------------------
    -- SCENARIO 3: Attach components to entities
+   -- Store.Add_Component()
    -- This defines what properties each game object has
    ------------------------------------------------------------
    Put_Line ("=== Scenario 3: Attach Components ===");
@@ -146,6 +155,7 @@ begin
 
    ------------------------------------------------------------
    -- SCENARIO 4: Query entities by component signature
+   -- Store.Get_Entity_IDs()
    -- This simulates how game systems would find relevant entities
    ------------------------------------------------------------
    Put_Line ("=== Scenario 4: Query Entities for Systems ===");
@@ -218,6 +228,7 @@ begin
 
    ------------------------------------------------------------
    -- SCENARIO 5: Simulate game frame (read/write components)
+   -- Store.Get_Entities_With()
    -- This simulates what a movement system would do each frame
    ------------------------------------------------------------
    Put_Line ("=== Scenario 5: Simulate Game Frame ===");
@@ -262,6 +273,7 @@ begin
 
    ------------------------------------------------------------
    -- SCENARIO 6: Dynamic gameplay - Enemy defeated
+   -- Store.Destroy_Entity()
    -- Simulates removing an enemy during gameplay
    ------------------------------------------------------------
    Put_Line ("=== Scenario 6: Enemy Defeated (Remove Entity) ===");
@@ -297,6 +309,7 @@ begin
 
    ------------------------------------------------------------
    -- SCENARIO 7: Remove component (make enemy static)
+   -- Store.Remove_Component()
    -- Simulates changing entity behavior at runtime
    ------------------------------------------------------------
    Put_Line ("=== Scenario 7: Freeze Enemy2 (Remove Motion) ===");
@@ -330,8 +343,10 @@ begin
    end;
    New_Line;
 
+
    ------------------------------------------------------------
    -- SCENARIO 8: Game over - clean up all entities
+   -- Store.Destroy_Entity() + Store.Get_Entity_IDs()
    ------------------------------------------------------------
    Put_Line ("=== Scenario 8: Game Over (Cleanup) ===");
    
@@ -345,16 +360,17 @@ begin
    
    -- Verify queries return empty
    declare
-      Renderables : Entity_ID_Array_Access := 
-         Get_Entity_IDs (World, Transform'Tag);
+      Renderables : Entity_ID_Array_Access := Get_Entity_IDs (World, Transform'Tag);
    
    begin
       Assert (Renderables = null, "No entities remain");
    end;
    New_Line;
 
+
    ------------------------------------------------------------
    -- SCENARIO 9: Restart game (re-initialize)
+   -- Store.Initialize() + Store.Create_Entity() + Store.Add_Component()
    ------------------------------------------------------------
    Put_Line ("=== Scenario 9: Restart Game ===");
    Initialize (World);
@@ -382,7 +398,7 @@ begin
 
 
    ------------------------------------------------------------
-   -- Final Test Summary
+   -- Final Test Result Summary Readout
    ------------------------------------------------------------
    Put_Line ("========================================");
    Put_Line ("Integration Test Summary:");

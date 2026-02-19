@@ -8,7 +8,11 @@ licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
 website = ""
 tags = []
 
-executables = ["component_table_test", "ecs_store_test", "ecs_integration_test"]
+executables = [ "component_table_test",
+                  "ecs_systems_test", 
+                  "ecs_store_test", 
+                  "ecs_integration_test",
+                  "arkanoid_ecs_test"   ]
 
 [[depends-on]]
 qoi = "~0.1.0"
@@ -23,8 +27,16 @@ command = ["bin/component_table_test"]
 
 [[actions]]
 type = "test"
+command = ["bin/ecs_systems_test"]
+
+[[actions]]
+type = "test"
 command = ["bin/ecs_store_test"]
 
 [[actions]]
 type = "test"
 command = ["bin/ecs_integration_test"]
+
+[[actions]]
+type = "test"
+command = ["bin/arkanoid_ecs_test"]

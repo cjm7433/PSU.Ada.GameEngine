@@ -1,21 +1,21 @@
 -- ecs-component_table.adb
 
--- This file is part of the ECS (Entity Component System) framework.
--- This file defines a generic template for Component tables used in ECS-Store for dense Component storage.
--- This .adb file specifically defines the Remove() subprogram used in ECS-Store: Remove_Component().
+-- Implementation of component table operations.
+--    - This .adb file specifically defines the Remove() subprogram used in ECS-Store: Remove_Component().
 
 package body ECS.Component_Table is
 
-   ------------------------------------------------------------
+   -----------------------------------------------------------------
    -- Add
    -- Add a component to the table for an entity
-   ------------------------------------------------------------
+   -----------------------------------------------------------------
     procedure Add
      (T : in out Table;
       E : Entity_ID;
-      C : Component_Type)
-   is
+      C : Component_Type) is
+      
       Index : Natural;
+   
    begin
 
       if T.Lookup.Contains (E) then
@@ -31,17 +31,18 @@ package body ECS.Component_Table is
    end Add;
 
 
-   ------------------------------------------------------------
+   -----------------------------------------------------------------
    -- Remove (swap remove)
    -- Remove a component from the table for an entity
-   ------------------------------------------------------------
+   -----------------------------------------------------------------
    procedure Remove
      (T : in out Table;
-      E : Entity_ID)
-   is
+      E : Entity_ID) is
+
       Index      : Natural;
       Last_Index : Natural;
       Cursor     : Lookup_Map.Cursor;
+
    begin
 
       if not T.Lookup.Contains (E) then
@@ -74,41 +75,44 @@ package body ECS.Component_Table is
    end Remove;
 
 
-   ------------------------------------------------------------
+   -----------------------------------------------------------------
    -- Has
    -- Check if an entity has a component in the table
-   ------------------------------------------------------------
+   -----------------------------------------------------------------
    function Has
      (T : Table;
-      E : Entity_ID) return Boolean
-   is
+      E : Entity_ID) return Boolean is
+   
    begin
       return T.Lookup.Contains (E);
    end Has;
 
-   ------------------------------------------------------------
+
+   -----------------------------------------------------------------
    -- Get
    -- Get the component for an entity
-   ------------------------------------------------------------
+   -----------------------------------------------------------------
    function Get
      (T : Table;
-      E : Entity_ID) return Component_Type
-   is
+      E : Entity_ID) return Component_Type is
       Index : Natural;
+   
    begin
+   
       Index := T.Lookup.Element (E);
       return T.Data (Index);
+   
    end Get;
 
 
-   ------------------------------------------------------------
+   -----------------------------------------------------------------
    -- Lookup_Index
    -- Get the index of the component for an entity (for iteration)
-   ------------------------------------------------------------
+   -----------------------------------------------------------------
    function Lookup_Index
      (T : Table;
-      E : Entity_ID) return Natural
-   is
+      E : Entity_ID) return Natural is
+
    begin
       return T.Lookup.Element (E);
    end Lookup_Index;

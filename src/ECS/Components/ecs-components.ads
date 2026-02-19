@@ -1,9 +1,9 @@
 -- ecs-components.ads
-
--- This file is part of the ECS (Entity Component System) framework.
--- This file defines the various component types used in the ECS system.
--- Each component type is defined as a separate record type.7
--- Add component types here
+--
+-- Root component types and infrastructure for the ECS system.
+--    - All component types must inherit from Component
+--    - Component'Tag is used to identify component types at runtime
+--    - Systems declare their required components using Component_Tag_Array
 
 with Ada.Tags;
 

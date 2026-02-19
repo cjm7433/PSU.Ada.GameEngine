@@ -1,6 +1,17 @@
---  ecs-systems.ads
+-- ecs-systems.ads
+--
+-- Abstract base type for all ECS systems.
+--    - Defines the System interface that all concrete systems implement.
+--    - Every system must provide:
+--          1. Update procedure - processes entities each frame
+--          2. Components_Needed function - declares required component types
+--
+-- System lifecycle:
+--   Systems are stateless (null record), stored in the ECS Manager,
+--   and called in a fixed order each frame. The Manager passes the
+--   Store and delta time to Update, which queries for matching entities
+--   and performs logic.
 
---  Abstract base type and behavior for all ECS systems.
 
 with ECS.Store;
 with ECS.Components;
