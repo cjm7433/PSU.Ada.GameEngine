@@ -8,7 +8,7 @@ with ECS.Components;                use ECS.Components;
 with ECS.Component_Table;
 
 -- Component Types
-with ECS.Components_Transform;      use ECS.Components_Transform;
+with ECS.Components.Transform;      use ECS.Components.Transform;
 with ECS.Components_Motion;         use ECS.Components_Motion;
 with ECS.Components_Collision;      use ECS.Components_Collision;
 with ECS.Components_Paddle;         use ECS.Components_Paddle;
@@ -34,7 +34,7 @@ package ECS.Store is
 
    -- Dense storage for Components
    package Transform_Table is new Component_Table
-      (Component_Type => Transform,
+      (Component_Type => Transform_Component,
       Hash           => Hash_Entity_ID);
 
    package Motion_Table is new Component_Table

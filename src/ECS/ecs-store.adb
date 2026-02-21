@@ -149,13 +149,13 @@ package body ECS.Store is
       --       Add the Component data to the vector of Components
 
       --TODO: This looks rough... also remove default values from factory. Defaults should live in definition.
-      if Tag = Transform'Tag then
+      if Tag = Transform_Component'Tag then
          if not S.Transform.Lookup.Contains (E) then
             S.Transform.Lookup.Insert
                (E, Transform_Table.Index (S.Transform.Data.Length));
 
             S.Transform.Data.Append
-              (Transform'
+              (Transform_Component'
                  (   Position => (0.0, 0.0),
                      Rotation => 0.0,
                      Scale    => (1.0, 1.0)));
@@ -295,7 +295,7 @@ package body ECS.Store is
       --    If the Entity_ID is present in the Lookup
       --       Remove the Component from Component vector and Lookup (using Component_Table Remove())
 
-      if Tag = Transform'Tag then
+      if Tag = Transform_Component'Tag then
          if S.Transform.Lookup.Contains (E) then
             Transform_Table.Remove (S.Transform, E);
          end if;
@@ -351,7 +351,7 @@ package body ECS.Store is
       -- The following each return a Boolean as if it were:
       -- Boolean := Does this Entity_ID exist within the Lookup?
 
-      if Tag = Transform'Tag then
+      if Tag = Transform_Component'Tag then
          return S.Transform.Lookup.Contains (E);
 
       elsif Tag = Motion'Tag then
@@ -393,7 +393,7 @@ package body ECS.Store is
       -- The following each return a Component as if it were:
       -- Component := Component_Vector(Index of Entity in Lookup)
 
-      if Tag = Transform'Tag then
+      if Tag = Transform_Component'Tag then
          return S.Transform.Data(S.Transform.Lookup (E));
 
       elsif Tag = Motion'Tag then
