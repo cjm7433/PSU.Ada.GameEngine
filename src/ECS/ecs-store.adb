@@ -1,137 +1,90 @@
---  ecs-store.adb
---
 -- Implementation of Store operations.
 
---  This file defines the main ECS store structure that holds entities and their associated components.
---  It uses Ada.Containers to manage dynamic collections of Entities and Components.
+-- This file defines the main ECS store structure that holds entities and their associated components.
 
---  The store contains:
---    - An Entity map to hold all entities.
---    - A Table which includes:
---       - Component tables for each component type.
---       - Lookup maps to associate Entities with their Components.
+-- The store contains:
+--   - An Entity map to hold all entities.
+--   - A Table which includes:
+--      - Component tables for each component type.
+--      - Lookup maps to associate Entities with their Components.
 
---  This structure allows for efficient storage and retrieval of entities and their components.
---  "No logic" is implemented here -- only the data structure definitions.
---    - "The Store can have *a little* logic, as a treat." (Add, Remove, Has, Get)
---  Additional Component types and their corresponding tables + lookups can be added as needed.
---    - Search for "TODO" to find where!
+-- Additional Component types and their corresponding tables + lookups can be added as needed.
+--   - Search for "TODO" to find where!
 
-with Ada.Tags;                      use type Ada.Tags.Tag;
+with Ada.Tags; use type Ada.Tags.Tag;
 
--- Component Types
-with ECS.Components_Transform;      use ECS.Components_Transform;
-with ECS.Components_Motion;         use ECS.Components_Motion;
 
 package body ECS.Store is
-
-   -- Hash function for Entity_ID
-   -- Simple hash function that converts Entity_ID to Hash_Type
-   -- Used (and needed) for Ada.Containers.Hashed_Maps
-   function Hash_Entity_ID (ID : Entity_ID) return Ada.Containers.Hash_Type is
-   
+   -- Converts Entity_ID to Hash_Type
+   function Hash_Entity_ID (
+      ID : Entity_ID
+   ) return Ada.Containers.Hash_Type is
    begin
       return Ada.Containers.Hash_Type(ID);
    end Hash_Entity_ID;
 
-   -------------------------------------------------------------------------
-   -- Initialize
-   -- Procedure to initialize the ECS store
-   --    - Clears all entities and component tables
-   --    - Resets the next available entity ID
-   --    - This procedure should be called before using the ECS store.
-   -- TODO: Component Types need to be manually added here!
-   -------------------------------------------------------------------------
-   procedure Initialize (S : in out Store) is   -- Initialize the ECS store
 
+   -- Initializes the ECS store
+   -- NOTE: This procedure should be called before using the ECS store
+   procedure Initialize (
+      S : in out Store
+   ) is
    begin
+      S.Entities.Clear;
 
-      -- Spring cleaning!
-      Entity_Maps.Clear (S.Entities);
+      S.Transform.Data.Clear;
+      S.Transform.Lookup.Clear;
 
-      Transform_Table.Vectors.Clear (S.Transform.Data);
-      Transform_Table.Lookup_Map.Clear (S.Transform.Lookup);
+      S.Motion.Data.Clear;
+      S.Motion.Lookup.Clear;
 
-      Motion_Table.Vectors.Clear (S.Motion.Data);
-      Motion_Table.Lookup_Map.Clear (S.Motion.Lookup);
+      S.Collision.Data.Clear;
+      S.Collision.Lookup.Clear;
 
-      Collision_Table.Vectors.Clear (S.Collision.Data);
-      Collision_Table.Lookup_Map.Clear (S.Collision.Lookup);
+      S.Paddle.Data.Clear;
+      S.Paddle.Lookup.Clear;
 
-      Paddle_Table.Vectors.Clear (S.Paddle.Data);
-      Paddle_Table.Lookup_Map.Clear (S.Paddle.Lookup);
+      S.Ball.Data.Clear;
+      S.Ball.Lookup.Clear;
 
-      Ball_Table.Vectors.Clear (S.Ball.Data);
-      Ball_Table.Lookup_Map.Clear (S.Ball.Lookup);
+      S.Brick.Data.Clear;
+      S.Brick.Lookup.Clear;
 
-      Brick_Table.Vectors.Clear (S.Brick.Data);
-      Brick_Table.Lookup_Map.Clear (S.Brick.Lookup);
+      S.Renderable.Data.Clear;
+      S.Renderable.Lookup.Clear;
 
-      Renderable_Table.Vectors.Clear (S.Renderable.Data);
-      Renderable_Table.Lookup_Map.Clear (S.Renderable.Lookup);
-
-      -- *************************************************************************
       -- TODO: Add Component Types here
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
-      -- *************************************************************************
 
       S.Next_Entity_ID := 0;
-
    end Initialize;
 
 
---~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- Entity Storage Subprograms
---~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
--------------------------------------------------------------------------
--- Create_Entity
--- Function to create a new entity in the ECS store
--- This function creates an entity with unique ID and no associated components.
---    - Initializes the entity
---    - Assigns a unique entity ID
---    - Inserts the entity into the entity map
---    - Returns the new entity ID
--------------------------------------------------------------------------
-   function Create_Entity (S : in out Store) return Entity_ID is
-
-   E        : Entity;                  -- New Entity
-   New_ID   : Entity_ID;               -- New entity ID
-
+   -- Creates a new entity in the ECS store and returns its Entity_ID
+   function Create_Entity (
+      S : in out Store
+   ) return Entity_ID is
+      E : Entity;
    begin
-      
-      -- Dev note: 'Succ' (Successor) is a built-in attribute for discrete types 
-      --  (like integers, characters, or enumerated types) that returns the value 
-      --  immediately following the given input, essentially input + 1 in sequence
-      S.Next_Entity_ID := Entity_ID'Succ (S.Next_Entity_ID);      -- Increment the next available entity ID
-      New_ID := S.Next_Entity_ID;                                 -- Assign the new entity ID
+      -- Increment Next_Entity_ID
+      S.Next_Entity_ID := Entity_ID'Succ (S.Next_Entity_ID);
 
-      E.ID := New_ID;                             -- Set the entity ID
+      E.ID := S.Next_Entity_ID;
+      S.Entities.Insert (E.ID, E);
 
-      -- Insert the new Entity into the Entity map
-      S.Entities.Insert (New_ID, E);     
-
-      return New_ID;                -- Return the new entity ID
-
+      return E.ID;
    end Create_Entity;
 
 
--------------------------------------------------------------------------
--- Destroy_Entity
--- Procedure to destroy an entity in the ECS store
--- This procedure removes an Entity and its associated Components from the ECS store.
---    - Removes the Entity from the Entity map
---    - Removes associated Components from Component tables and lookups
--- TODO: Component Types need to be manually added here!
--------------------------------------------------------------------------
-   procedure Destroy_Entity (S : in out Store; ID : Entity_ID) is
-
+   -- Removes an Entity from the ECS Store
+   procedure Destroy_Entity (
+      S  : in out Store;
+      ID :        Entity_ID
+   ) is
    begin
-
-      if not S.Entities.Contains (ID) then
-
-         return;        -- Entity does not exist, do nothing
-
+      -- Guard if non-existent
+      if not S.Has_Entity (ID) then
+         return;
       end if;
 
       -- Component Removal
@@ -163,45 +116,30 @@ package body ECS.Store is
          Renderable_Table.Remove (S.Renderable, ID);
       end if;
 
-      -- *************************************************************************
       -- TODO: Add Component Types here
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
-      -- *************************************************************************
 
-      S.Entities.Delete (ID);    -- -- Remove the entity from the entity map
-   
+      S.Entities.Delete (ID);
    end Destroy_Entity;
 
 
-   -------------------------------------------------------------------------------
-   -- Has_Entity
-   -- Checks if an Entity of given Entity_ID exists in the ECS store
-   -------------------------------------------------------------------------------
-   function Has_Entity (S : Store; ID : Entity_ID) return Boolean is
-
+   -- Returns whether or not the ECS Store contains an Entity of the given Entity_ID
+   function Has_Entity (
+      S  : Store;
+      ID : Entity_ID
+   ) return Boolean is
    begin
-
-      return S.Entities.Contains (ID);    -- Check if the entity map contains the given entity ID (True or False)
-
+      return S.Entities.Contains (ID);
    end Has_Entity;
 
 
-   --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   -- Component Storage Subprograms
-   --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   
-   --------------------------------------------------------------------------------
-   -- Add_Component
-   -- Adds Component of Component type Tag to Entity with Entity_ID E
-   -- TODO: Component Types need to be manually added here!
-   --------------------------------------------------------------------------------
-   procedure Add_Component
-  (   S   : in out Store;
-      E   : Entity_ID;
-      Tag : Component_Tag) is
-   
+   -- Creates a new component of the passed type and attaches it to the given Entity_ID
+   procedure Add_Component (
+      S   : in out Store;
+      E   :        Entity_ID;
+      Tag :        Component_Tag
+   ) is
    begin
-
       -- Runtime Component_Type Checks
 
       -- The following each add a Component to Component Vector and Lookup like:
@@ -210,6 +148,7 @@ package body ECS.Store is
       --       Add it to the end
       --       Add the Component data to the vector of Components
 
+      --TODO: This looks rough... also remove default values from factory. Defaults should live in definition.
       if Tag = Transform'Tag then
          if not S.Transform.Lookup.Contains (E) then
             S.Transform.Lookup.Insert
@@ -236,7 +175,7 @@ package body ECS.Store is
          if not S.Collision.Lookup.Contains (E) then
             S.Collision.Lookup.Insert
                (E, Collision_Table.Index (S.Collision.Data.Length));
-            
+
             S.Collision.Data.Append
             (Collision'
                (  Half_Width  => 0.5,
@@ -250,7 +189,7 @@ package body ECS.Store is
          if not S.Paddle.Lookup.Contains (E) then
             S.Paddle.Lookup.Insert
                (E, Paddle_Table.Index (S.Paddle.Data.Length));
-            
+
             S.Paddle.Data.Append
             (Paddle'
                (  Move_Speed => 500.0,
@@ -264,7 +203,26 @@ package body ECS.Store is
          if not S.Ball.Lookup.Contains (E) then
             S.Ball.Lookup.Insert
                (E, Ball_Table.Index (S.Ball.Data.Length));
-            
+                  S.Transform.Data.Clear;
+      S.Transform.Lookup.Clear;
+
+      S.Motion.Data.Clear;
+      S.Motion.Lookup.Clear;
+
+      S.Collision.Data.Clear;
+      S.Collision.Lookup.Clear;
+
+      S.Paddle.Data.Clear;
+      S.Paddle.Lookup.Clear;
+
+      S.Ball.Data.Clear;
+      S.Ball.Lookup.Clear;
+
+      S.Brick.Data.Clear;
+      S.Brick.Lookup.Clear;
+
+      S.Renderable.Data.Clear;
+      S.Renderable.Lookup.Clear;
             S.Ball.Data.Append
             (Ball'
                (  Min_Speed        => 200.0,
@@ -279,7 +237,7 @@ package body ECS.Store is
          if not S.Brick.Lookup.Contains (E) then
             S.Brick.Lookup.Insert
                (E, Brick_Table.Index (S.Brick.Data.Length));
-            
+
             S.Brick.Data.Append
             (Brick'
                (  Brick_Kind  => Normal,
@@ -294,7 +252,7 @@ package body ECS.Store is
          if not S.Renderable.Lookup.Contains (E) then
             S.Renderable.Lookup.Insert
                (E, Renderable_Table.Index (S.Renderable.Data.Length));
-            
+
             S.Renderable.Data.Append
             (Renderable'
                (  Shape   => Rectangle,
@@ -303,31 +261,22 @@ package body ECS.Store is
                   Visible => True));
          end if;
 
-      -- *************************************************************************
       -- TODO: Add Component Types here
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
-      -- *************************************************************************
 
       else
-         raise Program_Error with "Unknown component tag";
+         raise Program_Error with "Unknown component tag"; --TODO: raise with info on which tag caused the exception
       end if;
-   
    end Add_Component;
 
 
-   -------------------------------------------------------------------------------
-   -- Remove_Component
-   -- Removes Component of type Tag from Entity of Entity_ID E
-   -- This procedure uses Component_Table's Remove()
-   -- TODO:Component Types need to be manually added here!
-   -------------------------------------------------------------------------------
-   procedure Remove_Component
-   (S   : in out Store;
+   -- Removes a component of the passed type from the given Entity_ID
+   procedure Remove_Component (
+      S   : in out Store;
       E   : Entity_ID;
-      Tag : Component_Tag) is
-      
+      Tag : Component_Tag
+   ) is
    begin
-
       -- Steps to Remove_Component: --> These are handled in Component_Table's Remove()
             --  Find index of component to remove
             --  Swap last element into that index
@@ -381,31 +330,22 @@ package body ECS.Store is
             Renderable_Table.Remove (S.Renderable, E);
          end if;
 
-
-      -- *************************************************************************
       -- TODO: Add other Component types here!
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
-      -- *************************************************************************
 
       else
-         raise Program_Error with "Unknown component tag";
+         raise Program_Error with "Unknown component tag"; --TODO: raise with info on which tag caused the exception
       end if;
-      
    end Remove_Component;
 
 
-   --------------------------------------------------------------------------------
-   -- Has_Component
-   -- Checks Entity of Entity_ID E of Component type Tag
-   -- TODO:Component Types need to be manually added here!
-   --------------------------------------------------------------------------------
-   function Has_Component
-  (   S   : Store;
+   -- Returns whether or not the given Entity_ID contains an instance of the passed component type
+   function Has_Component (
+      S   : Store;
       E   : Entity_ID;
-      Tag : Component_Tag  ) return Boolean is
-   
+      Tag : Component_Tag
+   ) return Boolean is
    begin
-
       -- Runtime Component_Type Checks
 
       -- The following each return a Boolean as if it were:
@@ -432,33 +372,24 @@ package body ECS.Store is
       elsif Tag = Renderable'Tag then
          return S.Renderable.Lookup.Contains (E);
 
-
-      -- *************************************************************************
       -- TODO: Add other Component types here!
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
-      -- *************************************************************************
 
       else
          return False;
       end if;
-   
    end Has_Component;
 
 
-   -------------------------------------------------------------------------------
-   -- Get_Component
-   -- Returns Component of type Tag of Entity with Entity_ID E
-   -- TODO:Component Types need to be manually added here!
-   --------------------------------------------------------------------------------
-   function Get_Component
-  (   S   : Store;
+   -- Returns an instance of the passed component type on the given Entity_ID
+   function Get_Component (
+      S   : Store;
       E   : Entity_ID;
-      Tag : Component_Tag) return Component'Class is
-   
+      Tag : Component_Tag
+   ) return Component'Class is
    begin
-
       -- Runtime Component_Type Checks
-      
+
       -- The following each return a Component as if it were:
       -- Component := Component_Vector(Index of Entity in Lookup)
 
@@ -483,16 +414,12 @@ package body ECS.Store is
       elsif Tag = Renderable'Tag then
          return S.Renderable.Data(S.Renderable.Lookup (E));
 
-
-      -- *************************************************************************
       -- TODO: Add other Component types here!
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
-      -- *************************************************************************
 
       else
-         raise Program_Error with "Unknown Component tag";
+         raise Program_Error with "Unknown Component tag"; --TODO: raise with info on which tag caused the exception
       end if;
-   
    end Get_Component;
 
 
@@ -505,7 +432,7 @@ package body ECS.Store is
       Tags : Component_Tag_Array) return Entity_ID_Array_Access is
 
       Base_List : Entity_ID_Array_Access;
-   
+
    begin
 
       -- If list is empty, do nothing
@@ -524,7 +451,7 @@ package body ECS.Store is
       declare
          Temp : Entity_ID_Array(0 .. Base_List'Length - 1);
          Count : Natural := 0;
-      
+
       begin
 
          -- For each entity in the base list, check if it has all the other tags
@@ -533,7 +460,7 @@ package body ECS.Store is
             declare
                E : constant Entity_ID := Base_List (I);
                Match : Boolean := True;
-            
+
             begin
 
                -- Check remaining tags
@@ -571,9 +498,9 @@ package body ECS.Store is
             end loop;
 
             return Result;
-         
+
          end;
-      
+
       end;
 
    end Get_Entities_With;
@@ -581,15 +508,15 @@ package body ECS.Store is
 
    -------------------------------------------------------------------------------
    -- Get_Entity_IDs
-   -- Return a dynamically allocated array containing all entity IDs 
+   -- Return a dynamically allocated array containing all entity IDs
    --    that own a specific component type.
-   -- This function iterates through all entities in the store and 
+   -- This function iterates through all entities in the store and
    --    checks if they have the specified component tag.
    -------------------------------------------------------------------------------
    function Get_Entity_IDs
   (   S   : Store;
       Tag : Component_Tag) return Entity_ID_Array_Access is
-     
+
       Count  : Natural := 0;
       Cursor : Entity_Maps.Cursor := S.Entities.First;
 
@@ -598,11 +525,11 @@ package body ECS.Store is
       -- First pass: count matches
       -- While there are entities in Entity_Map ...
       while Entity_Maps.Has_Element (Cursor) loop
-         
+
          declare
             -- E is the entity cursor points to
             E : constant Entity_ID := Entity_Maps.Key (Cursor);
-         
+
          begin
             if Has_Component (S, E, Tag) then
                Count := Count + 1;
@@ -610,7 +537,7 @@ package body ECS.Store is
          end;
 
          Cursor := Entity_Maps.Next (Cursor);
-      
+
       end loop;
 
       -- If there are no matches, return null, do nothing
@@ -626,16 +553,16 @@ package body ECS.Store is
          Index  : Natural := 0;
 
          Cursor2 : Entity_Maps.Cursor := S.Entities.First;
-      
+
       begin
 
          -- Second pass: fill array
          while Entity_Maps.Has_Element (Cursor2) loop
-            
+
             declare
                -- E is the entity cursor points to
                E : constant Entity_ID := Entity_Maps.Key (Cursor2);
-            
+
             begin
                if Has_Component (S, E, Tag) then
                   Result (Index) := E;
