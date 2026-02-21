@@ -8,14 +8,14 @@ with ECS.Components;                use ECS.Components;
 with ECS.Component_Table;
 
 -- Component Types
+-- TODO: This monolithic implementation will not scale with external component types
 with ECS.Components.Transform;      use ECS.Components.Transform;
-with ECS.Components_Motion;         use ECS.Components_Motion;
-with ECS.Components_Collision;      use ECS.Components_Collision;
-with ECS.Components_Paddle;         use ECS.Components_Paddle;
-with ECS.Components_Ball;           use ECS.Components_Ball;
-with ECS.Components_Brick;          use ECS.Components_Brick;
-with ECS.Components_Renderable;     use ECS.Components_Renderable;
--- TODO: Add component types here
+with ECS.Components.Motion;         use ECS.Components.Motion;
+with ECS.Components.Collider;       use ECS.Components.Collider;
+with ECS.Components.Render;         use ECS.Components.Render;
+with ECS.Components.Paddle;         use ECS.Components.Paddle;
+with ECS.Components.Ball;           use ECS.Components.Ball;
+with ECS.Components.Brick;          use ECS.Components.Brick;
 
 
 package ECS.Store is
@@ -38,27 +38,27 @@ package ECS.Store is
       Hash           => Hash_Entity_ID);
 
    package Motion_Table is new Component_Table
-     (Component_Type => Motion,
+     (Component_Type => Motion_Component,
       Hash           => Hash_Entity_ID);
 
-   package Collision_Table is new Component_Table
-      (Component_Type => Collision,
+   package Collider_Table is new Component_Table
+      (Component_Type => Collider_Component,
+      Hash           => Hash_Entity_ID);
+
+   package Render_Table is new Component_Table
+      (Component_Type   => Render_Component,
       Hash           => Hash_Entity_ID);
 
    package Paddle_Table is new Component_Table
-      (Component_Type   => Paddle,
+      (Component_Type   => Paddle_Component,
       Hash           => Hash_Entity_ID);
 
    package Ball_Table is new Component_Table
-      (Component_Type   => Ball,
+      (Component_Type   => Ball_Component,
       Hash           => Hash_Entity_ID);
 
    package Brick_Table is new Component_Table
-      (Component_Type   => Brick,
-      Hash           => Hash_Entity_ID);
-
-   package Renderable_Table is new Component_Table
-      (Component_Type   => Renderable,
+      (Component_Type   => Brick_Component,
       Hash           => Hash_Entity_ID);
 
    -- Tables for each Component type need to be added here
@@ -80,11 +80,11 @@ package ECS.Store is
       -- Component tables (Vectors and Lookups)
       Transform   : Transform_Table.Table;
       Motion      : Motion_Table.Table;
-      Collision   : Collision_Table.Table;
+      Collider   : Collider_Table.Table;
+      Render  : Render_Table.Table;
       Paddle      : Paddle_Table.Table;
       Ball        : Ball_Table.Table;
       Brick       : Brick_Table.Table;
-      Renderable  : Renderable_Table.Table;
 
       -- TODO: Add Component tables for each Component type!
    end record;

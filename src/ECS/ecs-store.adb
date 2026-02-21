@@ -38,8 +38,11 @@ package body ECS.Store is
       S.Motion.Data.Clear;
       S.Motion.Lookup.Clear;
 
-      S.Collision.Data.Clear;
-      S.Collision.Lookup.Clear;
+      S.Collider.Data.Clear;
+      S.Collider.Lookup.Clear;
+
+      S.Render.Data.Clear;
+      S.Render.Lookup.Clear;
 
       S.Paddle.Data.Clear;
       S.Paddle.Lookup.Clear;
@@ -49,9 +52,6 @@ package body ECS.Store is
 
       S.Brick.Data.Clear;
       S.Brick.Lookup.Clear;
-
-      S.Renderable.Data.Clear;
-      S.Renderable.Lookup.Clear;
 
       -- TODO: Add Component Types here
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
@@ -96,8 +96,8 @@ package body ECS.Store is
          Motion_Table.Remove (S.Motion, ID);
       end if;
 
-      if S.Collision.Lookup.Contains (ID) then
-         Collision_Table.Remove (S.Collision, ID);
+      if S.Collider.Lookup.Contains (ID) then
+         Collider_Table.Remove (S.Collider, ID);
       end if;
 
       if S.Paddle.Lookup.Contains (ID) then
@@ -112,8 +112,8 @@ package body ECS.Store is
          Brick_Table.Remove (S.Brick, ID);
       end if;
 
-      if S.Renderable.Lookup.Contains (ID) then
-         Renderable_Table.Remove (S.Renderable, ID);
+      if S.Render.Lookup.Contains (ID) then
+         Render_Table.Remove (S.Render, ID);
       end if;
 
       -- TODO: Add Component Types here
@@ -161,37 +161,31 @@ package body ECS.Store is
                      Scale    => (1.0, 1.0)));
          end if;
 
-      elsif Tag = Motion'Tag then
+      elsif Tag = Motion_Component'Tag then
          if not S.Motion.Lookup.Contains (E) then
             S.Motion.Lookup.Insert
               (E, Motion_Table.Index (S.Motion.Data.Length));
 
             S.Motion.Data.Append
-              (Motion'
+              (Motion_Component'
                  (   others => (0.0, 0.0)));
          end if;
 
-      elsif Tag = Collision'Tag then
-         if not S.Collision.Lookup.Contains (E) then
-            S.Collision.Lookup.Insert
-               (E, Collision_Table.Index (S.Collision.Data.Length));
+      elsif Tag = Collider_Component'Tag then
+         if not S.Collider.Lookup.Contains (E) then
+            S.Collider.Lookup.Insert
+               (E, Collider_Table.Index (S.Collider.Data.Length));
 
-            S.Collision.Data.Append
-            (Collision'
-               (  Half_Width  => 0.5,
-                  Half_Height => 0.5,
-                  Layer       => Layer_None,
-                  Mask        => No_Mask,
-                  Is_Trigger  => False));
+            S.Collider.Data.Append(Collider_Component'(others => <>));
          end if;
 
-      elsif Tag = Paddle'Tag then
+      elsif Tag = Paddle_Component'Tag then
          if not S.Paddle.Lookup.Contains (E) then
             S.Paddle.Lookup.Insert
                (E, Paddle_Table.Index (S.Paddle.Data.Length));
 
             S.Paddle.Data.Append
-            (Paddle'
+            (Paddle_Component'
                (  Move_Speed => 500.0,
                   Min_X      => 50.0,
                   Max_X      => 750.0,
@@ -199,7 +193,7 @@ package body ECS.Store is
                   Move_Right => False));
          end if;
 
-      elsif Tag = Ball'Tag then
+      elsif Tag = Ball_Component'Tag then
          if not S.Ball.Lookup.Contains (E) then
             S.Ball.Lookup.Insert
                (E, Ball_Table.Index (S.Ball.Data.Length));
@@ -209,8 +203,8 @@ package body ECS.Store is
       S.Motion.Data.Clear;
       S.Motion.Lookup.Clear;
 
-      S.Collision.Data.Clear;
-      S.Collision.Lookup.Clear;
+      S.Collider.Data.Clear;
+      S.Collider.Lookup.Clear;
 
       S.Paddle.Data.Clear;
       S.Paddle.Lookup.Clear;
@@ -221,10 +215,10 @@ package body ECS.Store is
       S.Brick.Data.Clear;
       S.Brick.Lookup.Clear;
 
-      S.Renderable.Data.Clear;
-      S.Renderable.Lookup.Clear;
+      S.Render.Data.Clear;
+      S.Render.Lookup.Clear;
             S.Ball.Data.Append
-            (Ball'
+            (Ball_Component'
                (  Min_Speed        => 200.0,
                   Max_Speed        => 800.0,
                   Base_Speed       => 400.0,
@@ -233,13 +227,13 @@ package body ECS.Store is
                   Attach_Offset_X  => 0.0));
          end if;
 
-      elsif Tag = Brick'Tag then
+      elsif Tag = Brick_Component'Tag then
          if not S.Brick.Lookup.Contains (E) then
             S.Brick.Lookup.Insert
                (E, Brick_Table.Index (S.Brick.Data.Length));
 
             S.Brick.Data.Append
-            (Brick'
+            (Brick_Component'
                (  Brick_Kind  => Normal,
                   Health      => 1,
                   Max_Health  => 1,
@@ -248,13 +242,13 @@ package body ECS.Store is
                   Death_Timer => 0.0));
          end if;
 
-      elsif Tag = Renderable'Tag then
-         if not S.Renderable.Lookup.Contains (E) then
-            S.Renderable.Lookup.Insert
-               (E, Renderable_Table.Index (S.Renderable.Data.Length));
+      elsif Tag = Render_Component'Tag then
+         if not S.Render.Lookup.Contains (E) then
+            S.Render.Lookup.Insert
+               (E, Render_Table.Index (S.Render.Data.Length));
 
-            S.Renderable.Data.Append
-            (Renderable'
+            S.Render.Data.Append
+            (Render_Component'
                (  Shape   => Rectangle,
                   Tint    => (1.0, 1.0, 1.0, 1.0),
                   Layer   => 0,
@@ -300,34 +294,34 @@ package body ECS.Store is
             Transform_Table.Remove (S.Transform, E);
          end if;
 
-      elsif Tag = Motion'Tag then
+      elsif Tag = Motion_Component'Tag then
          if S.Motion.Lookup.Contains (E) then
             Motion_Table.Remove (S.Motion, E);
          end if;
 
-      elsif Tag = Collision'Tag then
-         if S.Collision.Lookup.Contains (E) then
-            Collision_Table.Remove (S.Collision, E);
+      elsif Tag = Collider_Component'Tag then
+         if S.Collider.Lookup.Contains (E) then
+            Collider_Table.Remove (S.Collider, E);
          end if;
 
-      elsif Tag = Paddle'Tag then
+      elsif Tag = Paddle_Component'Tag then
          if S.Paddle.Lookup.Contains (E) then
             Paddle_Table.Remove (S.Paddle, E);
          end if;
 
-      elsif Tag = Ball'Tag then
+      elsif Tag = Ball_Component'Tag then
          if S.Ball.Lookup.Contains (E) then
             Ball_Table.Remove (S.Ball, E);
          end if;
 
-      elsif Tag = Brick'Tag then
+      elsif Tag = Brick_Component'Tag then
          if S.Brick.Lookup.Contains (E) then
             Brick_Table.Remove (S.Brick, E);
          end if;
 
-      elsif Tag = Renderable'Tag then
-         if S.Renderable.Lookup.Contains (E) then
-            Renderable_Table.Remove (S.Renderable, E);
+      elsif Tag = Render_Component'Tag then
+         if S.Render.Lookup.Contains (E) then
+            Render_Table.Remove (S.Render, E);
          end if;
 
       -- TODO: Add other Component types here!
@@ -354,23 +348,23 @@ package body ECS.Store is
       if Tag = Transform_Component'Tag then
          return S.Transform.Lookup.Contains (E);
 
-      elsif Tag = Motion'Tag then
+      elsif Tag = Motion_Component'Tag then
          return S.Motion.Lookup.Contains (E);
 
-      elsif Tag = Collision'Tag then
-         return S.Collision.Lookup.Contains (E);
+      elsif Tag = Collider_Component'Tag then
+         return S.Collider.Lookup.Contains (E);
 
-      elsif Tag = Paddle'Tag then
+      elsif Tag = Paddle_Component'Tag then
          return S.Paddle.Lookup.Contains (E);
 
-      elsif Tag = Ball'Tag then
+      elsif Tag = Ball_Component'Tag then
          return S.Ball.Lookup.Contains (E);
 
-      elsif Tag = Brick'Tag then
+      elsif Tag = Brick_Component'Tag then
          return S.Brick.Lookup.Contains (E);
 
-      elsif Tag = Renderable'Tag then
-         return S.Renderable.Lookup.Contains (E);
+      elsif Tag = Render_Component'Tag then
+         return S.Render.Lookup.Contains (E);
 
       -- TODO: Add other Component types here!
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
@@ -396,23 +390,23 @@ package body ECS.Store is
       if Tag = Transform_Component'Tag then
          return S.Transform.Data(S.Transform.Lookup (E));
 
-      elsif Tag = Motion'Tag then
+      elsif Tag = Motion_Component'Tag then
          return S.Motion.Data(S.Motion.Lookup (E));
 
-      elsif Tag = Collision'Tag then
-         return S.Collision.Data(S.Collision.Lookup (E));
+      elsif Tag = Collider_Component'Tag then
+         return S.Collider.Data(S.Collider.Lookup (E));
 
-      elsif Tag = Paddle'Tag then
+      elsif Tag = Paddle_Component'Tag then
          return S.Paddle.Data(S.Paddle.Lookup (E));
 
-      elsif Tag = Ball'Tag then
+      elsif Tag = Ball_Component'Tag then
          return S.Ball.Data(S.Ball.Lookup (E));
 
-      elsif Tag = Brick'Tag then
+      elsif Tag = Brick_Component'Tag then
          return S.Brick.Data(S.Brick.Lookup (E));
 
-      elsif Tag = Renderable'Tag then
-         return S.Renderable.Data(S.Renderable.Lookup (E));
+      elsif Tag = Render_Component'Tag then
+         return S.Render.Data(S.Render.Lookup (E));
 
       -- TODO: Add other Component types here!
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)

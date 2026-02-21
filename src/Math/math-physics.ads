@@ -22,9 +22,9 @@ package Math.Physics is
 
 
 private
-   -- Axis-Aligned Bounding Box type
+   -- Axis-Aligned Bounding Box; Half-extent implementation
    type AABB is tagged record
-        Min : Vector2;       -- Top-left corner
-        Max : Vector2;       -- Bottom-right corner
+        Center    : Vector2;
+        Half_Size : Vector2;
    end record;
 end;
