@@ -197,26 +197,7 @@ package body ECS.Store is
          if not S.Ball.Lookup.Contains (E) then
             S.Ball.Lookup.Insert
                (E, Ball_Table.Index (S.Ball.Data.Length));
-                  S.Transform.Data.Clear;
-      S.Transform.Lookup.Clear;
 
-      S.Motion.Data.Clear;
-      S.Motion.Lookup.Clear;
-
-      S.Collider.Data.Clear;
-      S.Collider.Lookup.Clear;
-
-      S.Paddle.Data.Clear;
-      S.Paddle.Lookup.Clear;
-
-      S.Ball.Data.Clear;
-      S.Ball.Lookup.Clear;
-
-      S.Brick.Data.Clear;
-      S.Brick.Lookup.Clear;
-
-      S.Render.Data.Clear;
-      S.Render.Lookup.Clear;
             S.Ball.Data.Append
             (Ball_Component'
                (  Min_Speed        => 200.0,
