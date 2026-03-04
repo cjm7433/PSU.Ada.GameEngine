@@ -1,4 +1,16 @@
+-- ecs-store.ads
+
 -- Central ECS storage structure - holds all entities and components.
+--    - The Store is the "database" of the ECS.
+--    - Everything the game knows about entities lives here:
+--       * Entity map (ID → Entity record)
+--       * Component tables (one per component type). Includes:
+--          - Component tables for each component type.
+--          - Lookup maps to associate Entities with their Components.
+--       * Query functions (find entities with specific components)
+--    - This structure allows for efficient storage and retrieval of entities and their components.
+--    - No logic is implemented here -- only the data structure definitions.
+--
 -- * Additional component types and their corresponding tables and lookups can be added as needed.
 
 with Ada.Containers;
@@ -8,7 +20,6 @@ with ECS.Components;                use ECS.Components;
 with ECS.Component_Table;
 
 -- Component Types
--- TODO: This monolithic implementation will not scale with external component types
 with ECS.Components.Transform;      use ECS.Components.Transform;
 with ECS.Components.Motion;         use ECS.Components.Motion;
 with ECS.Components.Collider;       use ECS.Components.Collider;
