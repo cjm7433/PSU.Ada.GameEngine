@@ -20,6 +20,9 @@ package ECS.Systems is
 
    type System is abstract tagged null record;
 
+   -- Access type for storing systems polymorphically
+   type System_Access is access all System'Class;
+
    -- Every system must implement Update
    procedure Update
      (Self : in out System;

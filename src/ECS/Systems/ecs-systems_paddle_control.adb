@@ -5,9 +5,9 @@
 
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
-with ECS.Components_Transform;      use ECS.Components_Transform;
-with ECS.Components_Motion;         use ECS.Components_Motion;
-with ECS.Components_Paddle;         use ECS.Components_Paddle;
+with ECS.Components.Transform;      use ECS.Components.Transform;
+with ECS.Components.Motion;         use ECS.Components.Motion;
+with ECS.Components.Paddle;         use ECS.Components.Paddle;
 with Math.Linear_Algebra;           use Math.Linear_Algebra;
 
 package body ECS.Systems_Paddle_Control is

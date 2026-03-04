@@ -18,7 +18,7 @@
 
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
-with ECS.Components_Brick;          use ECS.Components_Brick;
+with ECS.Components.Brick;          use ECS.Components.Brick;
 
 package body ECS.Systems_Brick_Destruction is
 

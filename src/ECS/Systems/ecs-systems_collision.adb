@@ -5,11 +5,11 @@
 
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
-with ECS.Components_Transform;      use ECS.Components_Transform;
-with ECS.Components_Motion;         use ECS.Components_Motion;
-with ECS.Components_Collision;      use ECS.Components_Collision;
-with ECS.Components_Ball;           use ECS.Components_Ball;
-with ECS.Components_Brick;          use ECS.Components_Brick;
+with ECS.Components.Transform;      use ECS.Components.Transform;
+with ECS.Components.Motion;         use ECS.Components.Motion;
+with ECS.Components.Collider;       use ECS.Components.Collider;
+with ECS.Components.Ball;           use ECS.Components.Ball;
+with ECS.Components.Brick;          use ECS.Components.Brick;
 with Math.Linear_Algebra;           use Math.Linear_Algebra;
 
 package body ECS.Systems_Collision is

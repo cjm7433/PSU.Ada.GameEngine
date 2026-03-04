@@ -14,8 +14,8 @@
 
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
-with ECS.Components_Transform;      use ECS.Components_Transform;
-with ECS.Components_Motion;         use ECS.Components_Motion;
+with ECS.Components.Transform;      use ECS.Components.Transform;
+with ECS.Components.Motion;         use ECS.Components.Motion;
 with Math.Linear_Algebra;           use Math.Linear_Algebra;
 with Ada.Numerics;                  use Ada.Numerics;
 
