@@ -40,4 +40,15 @@ package body Math.Physics is
          and abs(Box1.Center.Y - Box2.Center.Y) <= (Box1.Half_Size.Y + Box2.Half_Size.Y)
       );
    end;
-end;
+
+   -- Get the center of an AABB
+   function Get_Center (Box : AABB) return Vector2 is
+   begin
+      return Box.Center;
+   end;
+
+   -- Get the half-size of an AABB
+   function Get_Half_Size (Box : AABB) return Vector2 is
+   begin
+      return Box.Half_Size;
+   end;

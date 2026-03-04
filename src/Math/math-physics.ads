@@ -20,6 +20,12 @@ package Math.Physics is
         Box2 : AABB
    ) return Boolean;
 
+   -- Get the center of an AABB
+   function Get_Center (Box : AABB) return Vector2;
+
+   -- Get the half-size of an AABB
+   function Get_Half_Size (Box : AABB) return Vector2;
+
 
 private
    -- Axis-Aligned Bounding Box; Half-extent implementation

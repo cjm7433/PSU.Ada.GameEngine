@@ -2,7 +2,7 @@
 --
 -- ECS Manager Implementation
 
-with ECS.Store;
+with ECS.Store; use ECS.Store;
 with ECS.Systems;
 with ECS.Components;
 

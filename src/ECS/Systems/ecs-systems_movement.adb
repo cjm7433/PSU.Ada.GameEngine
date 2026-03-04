@@ -32,8 +32,8 @@ package body ECS.Systems_Movement is
       return ECS.Components.Component_Tag_Array
    is
    begin
-      return (0 => ECS.Components_Transform.Transform'Tag,
-              1 => ECS.Components_Motion.Motion'Tag);
+      return (0 => ECS.Components.Transform.Transform_Component'Tag,
+              1 => ECS.Components.Motion.Motion_Component'Tag);
    end Components_Needed;
 
 
@@ -72,10 +72,10 @@ package body ECS.Systems_Movement is
 
             -- Get the components for the entity (Transform and Motion )
             Index_T : constant Transform_Table.Index := S.Transform.Lookup (E);
-            T : Transform renames S.Transform.Data (Index_T);
+            T : Transform_Component renames S.Transform.Data (Index_T);
 
             Index_M : constant Motion_Table.Index := S.Motion.Lookup (E);
-            M : Motion renames S.Motion.Data (Index_M);
+            M : Motion_Component renames S.Motion.Data (Index_M);
          
          begin
 

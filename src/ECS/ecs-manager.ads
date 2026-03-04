@@ -13,7 +13,7 @@
 
 with Ada.Containers.Vectors;
 with ECS.Store;
-with ECS.Systems;
+with ECS.Systems; use ECS.Systems;
 
 package ECS.Manager is
 
@@ -23,7 +23,7 @@ package ECS.Manager is
    ------------------------------------------------------------
    
    -- Equality for System_Access (needed for Vector instantiation)
-   function System_Access_Equal (Left, Right : ECS.Systems.System_Access) return Boolean
+   function System_Access_Equal (Left, Right : System_Access) return Boolean
       is (Left = Right);
    
    package System_Vectors is new Ada.Containers.Vectors

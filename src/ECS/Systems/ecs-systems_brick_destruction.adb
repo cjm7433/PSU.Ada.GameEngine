@@ -33,7 +33,7 @@ package body ECS.Systems_Brick_Destruction is
       return ECS.Components.Component_Tag_Array
    is
    begin
-      return (0 => ECS.Components_Brick.Brick'Tag);
+      return (0 => ECS.Components.Brick.Brick_Component'Tag);
    end Components_Needed;
 
 
@@ -80,7 +80,7 @@ package body ECS.Systems_Brick_Destruction is
             declare
                E : constant Entity_ID := Entities (I);
                Idx : constant Natural := S.Brick.Lookup (E);
-               B : Brick renames S.Brick.Data (Idx);
+               B : Brick_Component renames S.Brick.Data (Idx);
             
             begin
                if B.Is_Dying then

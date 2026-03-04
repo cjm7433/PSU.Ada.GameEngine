@@ -25,9 +25,9 @@ package body ECS.Systems_Ball_Physics is
    
    begin
       -- Ball Physics System requires: Ball, Transform, Motion
-      return (0 => ECS.Components_Ball.Ball'Tag,
-              1 => ECS.Components_Transform.Transform'Tag,
-              2 => ECS.Components_Motion.Motion'Tag);
+      return (0 => ECS.Components.Ball.Ball_Component'Tag,
+              1 => ECS.Components.Transform.Transform_Component'Tag,
+              2 => ECS.Components.Motion.Motion_Component'Tag);
    end Components_Needed;
 
 
@@ -55,8 +55,8 @@ package body ECS.Systems_Ball_Physics is
       -- Get paddle entity (for attachment logic)
       -- Query for entities with Paddle + Transform
       Paddle_Entities := S.Get_Entities_With (
-         (0 => ECS.Components_Paddle.Paddle'Tag,
-          1 => ECS.Components_Transform.Transform'Tag));
+         (0 => ECS.Components.Paddle.Paddle_Component'Tag,
+          1 => ECS.Components.Transform.Transform_Component'Tag));
 
       -- Process each ball
       for I in Entities'Range loop
@@ -65,13 +65,13 @@ package body ECS.Systems_Ball_Physics is
             E : constant Entity_ID := Entities (I);
 
             Index_Ball : constant Natural := S.Ball.Lookup (E);
-            B : Ball renames S.Ball.Data (Index_Ball);
+            B : Ball_Component renames S.Ball.Data (Index_Ball);
 
             Index_Transform : constant Natural := S.Transform.Lookup (E);
-            T : Transform renames S.Transform.Data (Index_Transform);
+            T : Transform_Component renames S.Transform.Data (Index_Transform);
 
             Index_Motion : constant Natural := S.Motion.Lookup (E);
-            M : Motion renames S.Motion.Data (Index_Motion);
+            M : Motion_Component renames S.Motion.Data (Index_Motion);
 
          begin
 
@@ -87,7 +87,7 @@ package body ECS.Systems_Ball_Physics is
                      Paddle_E : constant Entity_ID := Paddle_Entities (0);
                      Index_Paddle_Transform : constant Natural := 
                         S.Transform.Lookup (Paddle_E);
-                     Paddle_T : Transform renames S.Transform.Data (Index_Paddle_Transform);
+                     Paddle_T : Transform_Component renames S.Transform.Data (Index_Paddle_Transform);
                   
                   begin
                      -- Position ball above paddle center (with offset)

@@ -51,7 +51,7 @@ package body ECS.Systems_Collision is
    --    is in the other's mask.
    ------------------------------------------------------------
    -- This allows for one-way collisions (e.g. ball triggers on paddle but not vice versa).
-   function Entities_Can_Collide (C1, C2 : Collision) return Boolean is
+   function Entities_Can_Collide (C1, C2 : Collider_Component) return Boolean is
    
    begin
       -- TODO: Do we need to worry about Layer_None here?
@@ -98,17 +98,17 @@ package body ECS.Systems_Collision is
    -- Has_M1/Has_M2 control whether velocity is actually changed.
    ------------------------------------------------------------
    procedure Resolve_Collision
-     (T1 : in out Transform; C1 : Collision;
-      T2 : in out Transform; C2 : Collision;
-      Has_M1 : Boolean; M1 : in out Motion;
-      Has_M2 : Boolean; M2 : in out Motion) is
+     (T1 : in out Transform_Component; C1 : Collider_Component;
+      T2 : in out Transform_Component; C2 : Collider_Component;
+      Has_M1 : Boolean; M1 : in out Motion_Component;
+      Has_M2 : Boolean; M2 : in out Motion_Component) is
 
       -- Calculate overlap on each axis (positive means penetration)
       Overlap_X : constant Float :=
-         (C1.Half_Width + C2.Half_Width) - abs (T1.Position.X - T2.Position.X);
+         (Get_Half_Size(C1.Bounding_Box).X + Get_Half_Size(C2.Bounding_Box).X) - abs (T1.Position.X - T2.Position.X);
       
       Overlap_Y : constant Float :=
-         (C1.Half_Height + C2.Half_Height) - abs (T1.Position.Y - T2.Position.Y);
+         (Get_Half_Size(C1.Bounding_Box).Y + Get_Half_Size(C2.Bounding_Box).Y) - abs (T1.Position.Y - T2.Position.Y);
    
    begin
       
@@ -162,7 +162,7 @@ package body ECS.Systems_Collision is
    procedure Apply_Brick_Damage (S : in out Store.Store; Brick_Entity : Entity_ID) is
       
       Index_B : constant Natural := S.Brick.Lookup (Brick_Entity);
-      B : Brick renames S.Brick.Data (Index_B);
+      B : Brick_Component renames S.Brick.Data (Index_B);
    
    begin
       
@@ -188,12 +188,12 @@ package body ECS.Systems_Collision is
    ------------------------------------------------------------
    procedure Resolve_With_Motion
      (S  : in out Store.Store;
-      E1 : Entity_ID; T1 : in out Transform; C1 : Collision;
-      E2 : Entity_ID; T2 : in out Transform; C2 : Collision) is
+      E1 : Entity_ID; T1 : in out Transform_Component; C1 : Collider_Component;
+      E2 : Entity_ID; T2 : in out Transform_Component; C2 : Collider_Component) is
 
       -- Check for Motion component on each entity. We have to do this before renaming
-      Has_M1 : constant Boolean := S.Has_Component (E1, Motion'Tag);
-      Has_M2 : constant Boolean := S.Has_Component (E2, Motion'Tag);
+      Has_M1 : constant Boolean := S.Has_Component (E1, Motion_Component'Tag);
+      Has_M2 : constant Boolean := S.Has_Component (E2, Motion_Component'Tag);
 
       -- Dummy records stand in when entity has no Motion component.
       -- Resolve_Collision only writes to them when Has_M1/Has_M2 is True,
@@ -255,9 +255,9 @@ package body ECS.Systems_Collision is
 
    begin
 
-      -- Collision needs Collision and Transform Components
-      return (0 => ECS.Components_Collision.Collision'Tag,
-              1 => ECS.Components_Transform.Transform'Tag);
+      -- Collision needs Collider and Transform Components
+      return (0 => ECS.Components.Collider.Collider_Component'Tag,
+              1 => ECS.Components.Transform.Transform_Component'Tag);
    
    end Components_Needed;
 
@@ -292,41 +292,41 @@ package body ECS.Systems_Collision is
                E2 : constant Entity_ID := Entities (J);
 
                -- Who doesn't like a nickname?
-               Index_C1 : constant Natural := S.Collision.Lookup (E1);
-               C1 : Collision renames S.Collision.Data (Index_C1);
+               Index_C1 : constant Natural := S.Collider.Lookup (E1);
+               C1 : Collider_Component renames S.Collider.Data (Index_C1);
                
                Index_T1 : constant Natural := S.Transform.Lookup (E1);
-               T1 : Transform renames S.Transform.Data (Index_T1);
+               T1 : Transform_Component renames S.Transform.Data (Index_T1);
 
-               Index_C2 : constant Natural := S.Collision.Lookup (E2);
-               C2 : Collision renames S.Collision.Data (Index_C2);
+               Index_C2 : constant Natural := S.Collider.Lookup (E2);
+               C2 : Collider_Component renames S.Collider.Data (Index_C2);
                
                Index_T2 : constant Natural := S.Transform.Lookup (E2);
-               T2 : Transform renames S.Transform.Data (Index_T2);
+               T2 : Transform_Component renames S.Transform.Data (Index_T2);
 
             begin
 
                -- Short-circuit: only check for AABB overlap if layers/masks allow collision
                if Entities_Can_Collide (C1, C2) and then AABB_Overlap (          
-                  T1.Position, (C1.Half_Width, C1.Half_Height),
-                  T2.Position, (C2.Half_Width, C2.Half_Height))
+                  T1.Position, Get_Half_Size(C1.Bounding_Box),
+                  T2.Position, Get_Half_Size(C2.Bounding_Box))
                
                then
                   
                   -- Separate and bounce (triggers are detected but not resolved)
-                  if not C1.Is_Trigger and not C2.Is_Trigger then
+                  if C1.Collider_Form = Solid and C2.Collider_Form = Solid then
                      Resolve_With_Motion (S, E1, T1, C1, E2, T2, C2);
                   end if;
 
                   -- Apply brick damage when ball is one of the colliders
-                  if S.Has_Component (E1, Ball'Tag) and
-                     S.Has_Component (E2, Brick'Tag)
+                  if S.Has_Component (E1, Ball_Component'Tag) and
+                     S.Has_Component (E2, Brick_Component'Tag)
                   
                   then
                      Apply_Brick_Damage (S, E2);
 
-                  elsif S.Has_Component (E2, Ball'Tag) and
-                        S.Has_Component (E1, Brick'Tag)
+                  elsif S.Has_Component (E2, Ball_Component'Tag) and
+                        S.Has_Component (E1, Brick_Component'Tag)
                   then
                      Apply_Brick_Damage (S, E1);
                   end if;

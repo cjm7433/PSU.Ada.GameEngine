@@ -24,9 +24,9 @@ package body ECS.Systems_Paddle_Control is
    
    begin
       -- Paddle Control System requires: Paddle, Transform, Motion
-      return (0 => ECS.Components_Paddle.Paddle'Tag,
-              1 => ECS.Components_Transform.Transform'Tag,
-              2 => ECS.Components_Motion.Motion'Tag);
+      return (0 => ECS.Components.Paddle.Paddle_Component'Tag,
+              1 => ECS.Components.Transform.Transform_Component'Tag,
+              2 => ECS.Components.Motion.Motion_Component'Tag);
    end Components_Needed;
 
    ------------------------------------------------------------
@@ -58,13 +58,13 @@ package body ECS.Systems_Paddle_Control is
 
             -- Get components for this paddle entity
             Index_Paddle : constant Natural := S.Paddle.Lookup (E);
-            P : Paddle renames S.Paddle.Data (Index_Paddle);
+            P : Paddle_Component renames S.Paddle.Data (Index_Paddle);
 
             Index_Transform : constant Natural := S.Transform.Lookup (E);
-            T : Transform renames S.Transform.Data (Index_Transform);
+            T : Transform_Component renames S.Transform.Data (Index_Transform);
 
             Index_Motion : constant Natural := S.Motion.Lookup (E);
-            M : Motion renames S.Motion.Data (Index_Motion);
+            M : Motion_Component renames S.Motion.Data (Index_Motion);
 
          begin
          
