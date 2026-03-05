@@ -1,6 +1,7 @@
 with Custom_Components; use Custom_Components;
 with ECS.Entity; use ECS.Entity;
 with GameMath;
+with Wave_Player;
 package body ECS.System.Arkanoid is 
 
 
@@ -36,6 +37,7 @@ package body ECS.System.Arkanoid is
    begin
 
       if B_S.Ball_Launched and B_C.Collision_Occurred and E_C.Prev_Frame_Collision then
+      Wave_Player.Play_Wav("C:\Users\lolgh\OneDrive\Desktop\Classes\Semester 9\SWENG 480\AdaGameEngine\PSU.Ada.GameEngine-greg-sound-playback\Demos\arkanoid_game\sfx\Arkanoid SFX (2).wav");
          if abs(B_A.Top - E_A.Bottom) < 0.5 or abs(B_A.Bottom - E_A.Top) < 0.5 then
             B_T.Position := B_S.Previous_Pos;
             B_T.Velocity.Y := -B_T.Velocity.Y;
