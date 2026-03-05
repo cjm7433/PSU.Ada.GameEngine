@@ -35,7 +35,7 @@ package body ECS.System.Arkanoid is
       E_A renames AABB_T(AABB.all);
    begin
 
-      if B_S.Ball_Launched and B_C.Collision_Occurred and E_C.Prev_Frame_Collision then
+      if B_S.Ball_Launched and B_C.Collision_Occurred and not E_C.Prev_Frame_Collision then
          if abs(B_A.Top - E_A.Bottom) < 0.5 or abs(B_A.Bottom - E_A.Top) < 0.5 then
             B_T.Position := B_S.Previous_Pos;
             B_T.Velocity.Y := -B_T.Velocity.Y;

@@ -1,12 +1,16 @@
 with Interfaces;
 with Interfaces.C;
-with Win32; use Win32;
 with Graphics.Color; use Graphics.Color;
 with GameMath; use GameMath;
 with System; use System;
 with System.Storage_Elements; use System.Storage_Elements;
 with System.Address_To_Access_Conversions;
 package Graphics.Renderer is
+
+   --  Byte type for pixel data (ARGB8888 format)
+   type Byte is mod 2**8 with Size => 8;
+   type Byte_Array is array (Natural range <>) of Byte;
+   type Byte_Array_Access is access Byte_Array;
 
    type Storage_Array_Access is access all Storage_Array;
 

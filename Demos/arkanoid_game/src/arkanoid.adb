@@ -2,8 +2,7 @@
 with Ada.Real_Time;           use Ada.Real_Time;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;             use Ada.Text_IO;
-with Interfaces.C;
-with System;
+with Interfaces.C;            use Interfaces.C;
 -- Game Engine ECS modules
 with ECS;                     use ECS;
 with ECS.Component;           use ECS.Component;
@@ -22,8 +21,7 @@ with GameMath;                use GameMath;
 with Graphics.Color;          use Graphics.Color;
 with Graphics.Renderer;       use Graphics.Renderer;
 with Graphics.Texture_Loader; use Graphics.Texture_Loader;
--- win32 interface
-with Win32;                   use Win32;
+-- Window interface (platform-agnostic)
 with Window;                  use Window;
 -- User defined modules
 with Arkanoid_Inputs;         use Arkanoid_Inputs;
@@ -38,7 +36,7 @@ procedure Arkanoid is
    Height                : Integer                 := 240;
    Title                 : Unbounded_String        := To_Unbounded_String ("Arkanoid Clone");
    GameWindow            : Window_Access;
-   Buffer                : Win32.Byte_Array_Access := new Win32.Byte_Array (0 .. Width * Height * 4);
+   Buffer                : Graphics.Renderer.Byte_Array_Access := new Graphics.Renderer.Byte_Array (0 .. Width * Height * 4);
    Start_Time, Stop_Time : Time;
    Elapsed_Time          : Duration;
    -- Entity Manager and Entities
@@ -56,9 +54,9 @@ procedure Arkanoid is
    Arkanoid             : Arkanoid_T;
 
    -- Textures
-   bkgrd                : constant String       := "Data\bkgrd.qoi";
-   Vaus_File            : constant String       := "Data\vaus.qoi";
-   Bricks_File          : constant String       := "Data\bricks.qoi";
+   bkgrd                : constant String       := "Data/bkgrd.qoi";
+   Vaus_File            : constant String       := "Data/vaus.qoi";
+   Bricks_File          : constant String       := "Data/bricks.qoi";
    Vaus_Texture         : Texture_Access;
    Bricks_Texture       : Texture_Access;
 
@@ -169,13 +167,11 @@ begin
    -- Used to calculate the frame time
    Start_Time := Clock;
    Stop_Time  := Clock;
-   GameWindow := New_Window (IC.int (Width), IC.int (Height), Title);
+   GameWindow := New_Window (Interfaces.C.int (Width), Interfaces.C.int (Height), Title);
    declare
-      Message           : MSG_Access := new MSG;
-      Has_Msg           : Boolean    := True;
-      Lp_Result         : LRESULT;
       Background_Image  : QOI_Image_Data;
       Texture_Image     : QOI_Image_Data;
+      Running           : Boolean := True;
    begin
 
       -- Texures provided by Superjustinbros via https://www.spriters-resource.com/arcade/arkanoid/
@@ -195,13 +191,15 @@ begin
       Add_Wall (Manager, 225.0, 7.0, (0.0,   0.0), "TWall");
 
 
-         -- Windows message loop (game loop)
-      while Has_Msg loop
+         -- Platform-agnostic game loop
+      while Running loop
          Stop_Time    := Clock;
          Elapsed_Time := To_Duration(Stop_Time - Start_Time);
          Start_Time   := Stop_Time;
-         Lp_Result    := Dispatch_Message (Message);
-         Has_Msg      := Get_Message (Message, System.Null_Address, 0, 0);
+         
+         --  Process platform events (Windows MSG or Wayland events)
+         Window.Process_Events;
+         
          Manager.all.Update;
          Draw_Image_To_Buffer (Buffer.all, Background_Image.Data, 0, 0, Integer(Width), Integer(Height), 0,0, Width, Height,Natural(Background_Image.Desc.Width));
          UserInput.Execute (Elapsed_Time, Manager);
@@ -213,6 +211,9 @@ begin
          Draw_String(Buffer.all,10,10,0,0,"SCORE:" & Integer'Image(Score),(255,255,255,255),Width,Height);
          Render.Execute (Elapsed_Time, Manager);
          Draw_Buffer (Buffer.all'Address);
+         
+         --  Frame rate limiting (~60 FPS)
+         delay until Start_Time + Milliseconds(16);
       end loop;
    end;
 end Arkanoid;

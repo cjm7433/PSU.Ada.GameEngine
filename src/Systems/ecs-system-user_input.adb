@@ -17,41 +17,47 @@ package body ECS.System.User_Input is
                        Manager   : access Entity_Manager_T'Class) is
    Trans    : Component_Access := Self.Player_Entity.all.Get_Component(Transform_T'Tag);
    T renames Transform_T(Trans.all);
-   Event : Event_T := Get_Next_Event(Self.Handler.all);
+   Event : Event_T;
    begin
-      case Event.EventType is
-         when ECS.Event.KeyDown =>
-            if Key_Callbacks(Integer(Event.Data.KeyCode)) /= null then
-               Key_Callbacks(Integer(Event.Data.KeyCode)).all(Manager, Dt, True);
-            end if;
-         when ECS.Event.KeyUp =>
-            if Key_Callbacks(Integer(Event.Data.KeyCode)) /= null then
-               Key_Callbacks(Integer(Event.Data.KeyCode)).all(Manager, Dt, False);
-            end if;
-         when ECS.Event.L_MouseDown =>  
-            if Mouse_Callbacks(16#201#) /= null then
-               Mouse_Callbacks(16#201#).all(Manager, Dt, True);
-            end if;
-         when ECS.Event.L_MouseUp =>
-            if Mouse_Callbacks(16#202#) /= null then
-               Mouse_Callbacks(16#202#).all(Manager, Dt, False);
-            end if;
-         when ECS.Event.R_MouseDown =>
-            if Mouse_Callbacks(16#204#) /= null then
-               Mouse_Callbacks(16#204#).all(Manager, Dt, True);
-            end if;
-         when ECS.Event.R_MouseUp =>
-            if Mouse_Callbacks(16#205#) /= null then
-               Mouse_Callbacks(16#205#).all(Manager, Dt, True);
-            end if;
-         when ECS.Event.MouseMove =>
-            MousePos.PreviousPos := MousePos.CurrentPos;
-            MousePos.CurrentPos := (Float(Event.Data.MouseX), Float(Event.Data.MouseY));
-            if Mouse_Callbacks(16#200#) /= null then
-               Mouse_Callbacks(16#200#).all(Manager, Dt, False);
-            end if;
-         when others =>
-            null;
-      end case;
+      -- Process all pending events, not just one
+      loop
+         Event := Get_Next_Event(Self.Handler.all);
+         exit when Event.EventType = ECS.Event.NoEvent;
+         
+         case Event.EventType is
+            when ECS.Event.KeyDown =>
+               if Key_Callbacks(Integer(Event.Data.KeyCode)) /= null then
+                  Key_Callbacks(Integer(Event.Data.KeyCode)).all(Manager, Dt, True);
+               end if;
+            when ECS.Event.KeyUp =>
+               if Key_Callbacks(Integer(Event.Data.KeyCode)) /= null then
+                  Key_Callbacks(Integer(Event.Data.KeyCode)).all(Manager, Dt, False);
+               end if;
+            when ECS.Event.L_MouseDown =>  
+               if Mouse_Callbacks(16#201#) /= null then
+                  Mouse_Callbacks(16#201#).all(Manager, Dt, True);
+               end if;
+            when ECS.Event.L_MouseUp =>
+               if Mouse_Callbacks(16#202#) /= null then
+                  Mouse_Callbacks(16#202#).all(Manager, Dt, False);
+               end if;
+            when ECS.Event.R_MouseDown =>
+               if Mouse_Callbacks(16#204#) /= null then
+                  Mouse_Callbacks(16#204#).all(Manager, Dt, True);
+               end if;
+            when ECS.Event.R_MouseUp =>
+               if Mouse_Callbacks(16#205#) /= null then
+                  Mouse_Callbacks(16#205#).all(Manager, Dt, True);
+               end if;
+            when ECS.Event.MouseMove =>
+               MousePos.PreviousPos := MousePos.CurrentPos;
+               MousePos.CurrentPos := (Float(Event.Data.MouseX), Float(Event.Data.MouseY));
+               if Mouse_Callbacks(16#200#) /= null then
+                  Mouse_Callbacks(16#200#).all(Manager, Dt, False);
+               end if;
+            when others =>
+               null;
+         end case;
+      end loop;
    end Execute;
 end ECS.System.User_Input;

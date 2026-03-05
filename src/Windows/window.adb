@@ -6,6 +6,7 @@ with ECS.Event_Manager; use ECS.Event_Manager;
 --  with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with ECS.Event;
 with ECS;
+with Win32; use Win32;
 
 package body Window is
 
@@ -279,4 +280,16 @@ package body Window is
          Put_Line ("StretchDIBits failed.");
       end if;
    end Draw_Buffer;
+
+   --  =========================================================
+   --  Process_Events
+   --  =========================================================
+   --  On Windows, event processing is handled by the message loop
+   --  This is a no-op stub for compatibility with Linux
+   --  =========================================================
+   procedure Process_Events is
+   begin
+      null;  --  Windows processes events through Get_Message/Dispatch_Message
+   end Process_Events;
+
 end Window;
