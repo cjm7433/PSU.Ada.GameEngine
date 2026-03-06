@@ -40,7 +40,7 @@ package ECS.Manager is
    ------------------------------------------------------------
    type ECS_Manager is tagged limited record
       
-      -- Component/Entity storage
+      -- Component/Entity storage (a Store)
       World : aliased ECS.Store.Store;
 
       -- Dynamic system list (no size limit!)

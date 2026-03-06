@@ -13,7 +13,7 @@ package ECS.Components is
    type Component is abstract tagged null record;
 
    -- Runtime tag type
-   -- ???The runtime identity of a component type.???
+   -- The runtime identity of a component type.
    subtype Component_Tag is Ada.Tags.Tag;
 
    -- Array of component tags for filtering

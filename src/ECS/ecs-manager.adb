@@ -104,6 +104,7 @@ package body ECS.Manager is
    -- any system won't find matching entities.
    ------------------------------------------------------------
    function Validate_Systems (M : ECS_Manager) return Boolean is
+      use ECS.Components;
       Entities : ECS.Store.Entity_ID_Array_Access;
    begin
       -- Check each registered system

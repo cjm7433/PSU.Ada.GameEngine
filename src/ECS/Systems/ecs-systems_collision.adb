@@ -11,6 +11,7 @@ with ECS.Components.Collider;       use ECS.Components.Collider;
 with ECS.Components.Ball;           use ECS.Components.Ball;
 with ECS.Components.Brick;          use ECS.Components.Brick;
 with Math.Linear_Algebra;           use Math.Linear_Algebra;
+with Math.Physics;                  use Math.Physics;
 
 package body ECS.Systems_Collision is
 
@@ -198,8 +199,8 @@ package body ECS.Systems_Collision is
       -- Dummy records stand in when entity has no Motion component.
       -- Resolve_Collision only writes to them when Has_M1/Has_M2 is True,
       -- so no incorrect state is ever saved.
-      Dummy_M1 : Motion;
-      Dummy_M2 : Motion;
+      Dummy_M1 : Motion_Component;
+      Dummy_M2 : Motion_Component;
 
    begin
 
@@ -207,8 +208,8 @@ package body ECS.Systems_Collision is
       if Has_M1 and Has_M2 then
          
          declare
-            M1 : Motion renames S.Motion.Data (S.Motion.Lookup (E1));
-            M2 : Motion renames S.Motion.Data (S.Motion.Lookup (E2));
+            M1 : Motion_Component renames S.Motion.Data (S.Motion.Lookup (E1));
+            M2 : Motion_Component renames S.Motion.Data (S.Motion.Lookup (E2));
          
          begin
             -- Both entities have Motion; resolve with full velocity updates
@@ -218,7 +219,7 @@ package body ECS.Systems_Collision is
       elsif Has_M1 and not Has_M2 then
          
          declare
-            M1 : Motion renames S.Motion.Data (S.Motion.Lookup (E1));
+            M1 : Motion_Component renames S.Motion.Data (S.Motion.Lookup (E1));
          
          begin
             -- Entity 1 has Motion but Entity 2 doesn't; only update Entity 1's velocity
@@ -228,7 +229,7 @@ package body ECS.Systems_Collision is
       elsif not Has_M1 and Has_M2 then
          
          declare
-            M2 : Motion renames S.Motion.Data (S.Motion.Lookup (E2));
+            M2 : Motion_Component renames S.Motion.Data (S.Motion.Lookup (E2));
          
          begin
             -- Entity 2 has Motion but Entity 1 doesn't; only update Entity 2's velocity

@@ -51,4 +51,6 @@ package body Math.Physics is
    function Get_Half_Size (Box : AABB) return Vector2 is
    begin
       return Box.Half_Size;
-   end;
+   end Get_Half_Size;
+
+end Math.Physics;
