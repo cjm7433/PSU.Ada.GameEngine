@@ -48,6 +48,38 @@ package body Math.Physics.AABBs is
    end;
 
 
+   -- Returns the axis-aligned normal vector between two AABBs
+   function Get_Aligned_Normal (
+         Box_From : AABB;
+         Box_To   : AABB
+   ) return Vector2 is
+      Delta_Vector      : Vector2 := Box_To.Center - Box_From.Center;
+      Separation_Vector : Vector2 := (
+            abs(Delta_Vector.X) - (Box_From.Half_Size.X + Box_To.Half_Size.X),
+            abs(Delta_Vector.Y) - (Box_From.Half_Size.Y + Box_To.Half_Size.Y)
+      );
+      Normal : Vector2;
+   begin
+      if Separation_Vector.X > Separation_Vector.Y then
+         -- Dominant X axis
+         if Delta_Vector.X > 0.0 then
+            Normal := (1.0, 0.0);
+         else
+            Normal := (-1.0, 0.0);
+         end if;
+      else
+         -- Dominant Y axis
+         if Delta_Vector.Y > 0.0 then
+            Normal := (0.0, 1.0);
+         else
+            Normal := (0.0, -1.0);
+         end if;
+      end if;
+
+      return Normal;
+   end;
+
+
    -- Reports whether or not two AABBs are overlapped
    function Is_Overlapping (
       Box1 : AABB;

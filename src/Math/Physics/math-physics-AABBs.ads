@@ -28,6 +28,13 @@ package Math.Physics.AABBs is
    function Get_Max (Box : AABB) return Vector2;
 
 
+   -- Returns the axis-aligned normal vector between two AABBs
+   function Get_Aligned_Normal (
+         Box_From : AABB;
+         Box_To   : AABB
+   ) return Vector2;
+
+
    -- Reports whether or not two AABBs are overlapped
    function Is_Overlapping (
         Box1 : AABB;
