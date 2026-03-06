@@ -121,7 +121,7 @@ package body Graphics.Renderer is
          declare
             Angle : constant Float := 2.0 * Ada.Numerics.Pi / Float (Sides) * Float (I);
             X_Pos : Float := Float(Center_X) + Float(Radius) * Ada.Numerics.Elementary_Functions.Cos(Angle);
-            Y_Pos : Float := Float(Center_Y) + Float(Radius) * Ada.Numerics.Elementary_Functions.Sin(Angle); 
+            Y_Pos : Float := Float(Center_Y) + Float(Radius) * Ada.Numerics.Elementary_Functions.Sin(Angle);
          begin
             Vertices(I).X := Integer(X_Pos);
             Vertices(I).Y := Integer(Y_Pos);
