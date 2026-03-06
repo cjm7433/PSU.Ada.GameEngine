@@ -1,0 +1,13 @@
+name = "audio_api_tests"
+description = "Tests for the built-in Alire test runner"
+version = "0.0.0-test"
+
+[[depends-on]]
+audio_api = "*"
+
+[[pins]]
+audio_api = { path = ".." }
+
+[build-profiles]
+audio_api       = "validation"
+audio_api_tests = "validation"
