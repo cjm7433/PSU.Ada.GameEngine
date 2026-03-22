@@ -434,7 +434,7 @@ begin
         (Voice => Voice,
          Audio => Audio));
 
-end Play_Wav;
+end Play_Audio;
 
    procedure Update is
       State : XAUDIO2_VOICE_STATE;
