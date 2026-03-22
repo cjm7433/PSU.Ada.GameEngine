@@ -1,10 +1,11 @@
 with Custom_Components; use Custom_Components;
 with ECS.Entity; use ECS.Entity;
-with GameMath;
+--with GameMath;
+with Math.Linear_Algebra;
 package body ECS.System.Arkanoid is 
 
 
-   BallPreviousPos : GameMath.Vec2;
+   BallPreviousPos : Math.Linear_Algebra.Vector2;
    
    procedure Animate_Hit(Col,An,Br : Component_Access) is      
       C renames Collision_Params_T(Col.all);

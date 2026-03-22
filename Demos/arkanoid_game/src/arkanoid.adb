@@ -16,7 +16,8 @@ with ECS.System.Collision;    use ECS.System.Collision;
 with ECS.System.Movement;     use ECS.System.Movement;
 with ECS.System.Render;       use ECS.System.Render;
 with ECS.System.User_Input;   use ECS.System.User_Input;
-with GameMath;                use GameMath;
+--with GameMath;                use GameMath;
+with Math.Linear_Algebra;     use Math.Linear_Algebra;
 -- Game Engine Graphics modules
 with Graphics.Color;          use Graphics.Color;
 with Graphics.Renderer;       use Graphics.Renderer;
