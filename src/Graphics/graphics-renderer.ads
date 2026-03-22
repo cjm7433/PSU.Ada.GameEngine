@@ -1,7 +1,9 @@
 with Interfaces;
 with Interfaces.C;
 with Graphics.Color; use Graphics.Color;
-with GameMath; use GameMath;
+--  with GameMath; use GameMath;
+with Math.Linear_Algebra; use Math.Linear_Algebra;
+with Interfaces; use Interfaces;
 with System; use System;
 with System.Storage_Elements; use System.Storage_Elements;
 with System.Address_To_Access_Conversions;
@@ -48,15 +50,17 @@ package Graphics.Renderer is
       Screen_Width    : Natural;
       Screen_Height   : Natural);
 
-   procedure Draw_Filled_Triangle (Img : in out Byte_Array; V1, V2, V3 : in out Vec2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
-   procedure Draw_Filled_Quad (Img : in out Byte_Array; X, Y, Width, Height : Float; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
-   procedure Draw_Character (Img : in out Byte_Array; X, Y, Width, Height : Integer; Char : Character; Color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
-   procedure Draw_String (Img : in out Byte_Array; X, Y : Integer; Width, Height : Integer; S : String; Color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
-   procedure Draw_Image_To_Buffer (Buffer : in out Byte_Array; Img : in out Storage_Array_Access; X, Y, Width, Height : Integer; Screen_Width, Screen_Height : Natural);
-   procedure Draw_Image_To_Buffer (Buffer : in out Byte_Array; Img : in out Storage_Array_Access; X, Y, Width, Height, StartX, StartY : Integer; Screen_Width, Screen_Height, Image_Width : Natural);
+   procedure Draw_Filled_Triangle(img : in out Byte_Array; V1, V2, V3 : in out Vector2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
+   procedure Draw_Filled_Quad(img : in out Byte_Array; X,Y,Width,Height : Float; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
+   procedure Draw_Character(img : in out Byte_Array; X,Y,Width,Height : Integer; Char : Character; color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
+   procedure Draw_String(img : in out Byte_Array; X,Y : Integer; Width, Height : Integer; S : in String; Color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
+   procedure Draw_Image_To_Buffer(buffer : in out Byte_Array; img: in out Storage_Array_Access; X,Y,Width,Height : Integer; Screen_Width, Screen_Height : Natural);
+   procedure Draw_Image_To_Buffer(buffer : in out Byte_Array; img: in out Storage_Array_Access; X,Y,Width,Height,StartX,StartY : Integer; Screen_Width, Screen_Height,Image_Width : Natural);
+
 
    generic
       type T is private;
    procedure Generic_Swap (X, Y : in out T);
 
 end Graphics.Renderer;
+

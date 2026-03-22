@@ -203,6 +203,9 @@ package body Graphics.Renderer is
    --  Scanline rasterization for filled triangle
    procedure Draw_Filled_Triangle (Img : in out Byte_Array; V1, V2, V3 : in out Vec2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
       procedure Swap is new Generic_Swap (T => Float);
+   -- Scanline rasterization for filled triangle
+   procedure Draw_Filled_Triangle(img : in out Byte_Array; V1, V2, V3 : in out Vector2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
+      procedure swap is new generic_swap (T => Float);
    begin
       --  Sort vertices by Y
       if V1.Y > V2.Y then
@@ -230,12 +233,17 @@ package body Graphics.Renderer is
          SplitVertex : Vec2 := (SplitX, V2.Y);
          Fill_Bottom_Triangle (Img, V1, V2, SplitVertex, C, Screen_Width, Screen_Height);
          Fill_Top_Triangle (Img, V2, SplitVertex, V3, C, Screen_Width, Screen_Height);
+         SplitVertex : Vector2 := (SplitX, V2.Y);
+         Fill_Bottom_Triangle(img, V1, V2, SplitVertex, C, Screen_Width, Screen_Height);
+         Fill_Top_Triangle(img, V2, SplitVertex, V3, C, Screen_Width, Screen_Height);
       end if;
    end Draw_Filled_Triangle;
 
    procedure Draw_Filled_Quad (Img : in out Byte_Array; X, Y, Width, Height : Float; C : Graphics.Color.Color;
          Screen_Width, Screen_Height : Natural) is
       V1, V2, V3, V4, V5, V6 : Vec2;
+   procedure Draw_Filled_Quad(img : in out Byte_Array; X,Y,Width,Height : Float; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
+      V1, V2, V3, V4, V5, V6 : Vector2;
    begin
       if C.A = 0 then
          return;
@@ -412,3 +420,4 @@ package body Graphics.Renderer is
 
    end Draw_Image_To_Buffer;
 end Graphics.Renderer;
+

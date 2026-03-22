@@ -1,136 +1,170 @@
 -- ecs-store.ads
 
--- This file is part of the ECS (Entity Component System) framework.
--- This file defines the main ECS store structure that holds entities and their associated components.
--- This is the public API for the ECS data storage.
--- It uses Ada.Containers to manage dynamic collections of entities and components.
-
--- The store contains:
---   - An entity map to hold all entities.
---   - Component tables for each component type.
---   - Lookup maps to associate entities with their components.
-
--- This structure allows for efficient storage and retrieval of entities and their components.
--- No logic is implemented here -- only the data structure definitions.
-
--- Additional component types and their corresponding tables and lookups can be added as needed.
+-- Central ECS storage structure - holds all entities and components.
+--    - The Store is the "database" of the ECS.
+--    - Everything the game knows about entities lives here:
+--       * Entity map (ID → Entity record)
+--       * Component tables (one per component type). Includes:
+--          - Component tables for each component type.
+--          - Lookup maps to associate Entities with their Components.
+--       * Query functions (find entities with specific components)
+--    - This structure allows for efficient storage and retrieval of entities and their components.
+--    - No logic is implemented here -- only the data structure definitions.
+--
+-- * Additional component types and their corresponding tables and lookups can be added as needed.
 
 with Ada.Containers;
-with Ada.Containers.Vectors;
 with Ada.Containers.Hashed_Maps;
-with ECS.Types;
-with ECS.Entities;
-with ECS.Components;    --use type ECS.Components.Transform_Component;
+with ECS.Entities;                  use ECS.Entities;
+with ECS.Components;                use ECS.Components;
+with ECS.Component_Table;
+
+-- Component Types
+with ECS.Components.Transform;      use ECS.Components.Transform;
+with ECS.Components.Motion;         use ECS.Components.Motion;
+with ECS.Components.Collider;       use ECS.Components.Collider;
+with ECS.Components.Render;         use ECS.Components.Render;
+with ECS.Components.Paddle;         use ECS.Components.Paddle;
+with ECS.Components.Ball;           use ECS.Components.Ball;
+with ECS.Components.Brick;          use ECS.Components.Brick;
+
 
 package ECS.Store is
-
-   -- Hash function for Entity_ID (has to be defined for Ada.Containers.Hashed_Maps)
-   -- Needs to be before Entity_Maps for instantiation visibility.
-   function Hash_Entity_ID (ID : ECS.Types.Entity_ID) return Ada.Containers.Hash_Type;
+   -- Converts Entity_ID to Hash_Type
+   function Hash_Entity_ID (ID : Entity_ID) return Ada.Containers.Hash_Type;
 
 
-   -- Entity Map
-   use type ECS.Types.Entity_ID;             -- Make Entity_ID directly visible (for Key_Type)
-   use type ECS.Entities.Entity_Record;      -- Make Entity_Record directly visible (for Element_Type)
-
+   use type Entity_ID;              -- Make Entity_ID directly visible (for Key_Type)
    package Entity_Maps is new Ada.Containers.Hashed_Maps (
-      Key_Type        => ECS.Types.Entity_ID,               -- Entity ID as key
-      Element_Type    => ECS.Entities.Entity_Record,        -- Entity record as value
-      Hash            => Hash_Entity_ID,                    -- Hash function
-      Equivalent_Keys => "="                                -- Key equivalence function
+      Key_Type        => Entity_ID,          -- Entity ID as key
+      Element_Type    => Entity,             -- Entity record as value
+      Hash            => Hash_Entity_ID,     -- Hash function
+      Equivalent_Keys => "="                 -- Key equivalence function
    );
 
 
-   -- Component Tables
+   -- Dense storage for Components
+   package Transform_Table is new Component_Table
+      (Component_Type => Transform_Component,
+      Hash           => Hash_Entity_ID);
 
-   -- Transform Component Table
-   use type ECS.Components.Transform_Component;       -- Make Transform_Component directly visible
+   package Motion_Table is new Component_Table
+     (Component_Type => Motion_Component,
+      Hash           => Hash_Entity_ID);
 
-   package Transform_Vectors is new Ada.Containers.Vectors (
-      Index_Type   => ECS.Types.Index,                      -- Index type
-      Element_Type => ECS.Components.Transform_Component    -- Transform component type
-   );
+   package Collider_Table is new Component_Table
+      (Component_Type => Collider_Component,
+      Hash           => Hash_Entity_ID);
 
+   package Render_Table is new Component_Table
+      (Component_Type   => Render_Component,
+      Hash           => Hash_Entity_ID);
 
-   -- Velocity Component Table
-   use type ECS.Components.Velocity_Component;        -- Make Velocity_Component directly visible
+   package Paddle_Table is new Component_Table
+      (Component_Type   => Paddle_Component,
+      Hash           => Hash_Entity_ID);
 
-   package Velocity_Vectors is new Ada.Containers.Vectors (
-      Index_Type   => ECS.Types.Index,                      -- Index type
-      Element_Type => ECS.Components.Velocity_Component     -- Velocity component type
-   );
+   package Ball_Table is new Component_Table
+      (Component_Type   => Ball_Component,
+      Hash           => Hash_Entity_ID);
 
-   -- xxxx_Vectors can be created for additional component types as needed.
+   package Brick_Table is new Component_Table
+      (Component_Type   => Brick_Component,
+      Hash           => Hash_Entity_ID);
 
-
-   -- Lookup Maps
-   use type ECS.Types.Entity_ID;       -- Make Entity_ID directly visible
-
-   package Lookup_Maps is new Ada.Containers.Hashed_Maps (
-      Key_Type        => ECS.Types.Entity_ID,               -- Entity ID as key
-      Element_Type    => ECS.Types.Index,                   -- Index into component table as value
-      Hash            => Hash_Entity_ID,                    -- Hash function
-      Equivalent_Keys => "="                                -- Key equivalence function
-   );
+   -- Tables for each Component type need to be added here
+   -- TODO: Add other Component Types here!
 
 
+   -- Entities
+   type Entity_ID_Array is array (Natural range <>) of Entity_ID;
+   type Entity_ID_Array_Access is access Entity_ID_Array;
 
-   type Store is record -- The main ECS store structure
 
+   -- The main ECS store structure
+   -- Holds Entity map and Component tables with Lookups for each Component Type
+   type Store is record
       -- Entities
-      Entities : Entity_Maps.Map;                  -- Map of all entities
-      Next_Entity_ID : ECS.Types.Entity_ID := 0;   -- Next available entity ID
+      Entities       : Entity_Maps.Map;      -- Map of all entities
+      Next_Entity_ID : Entity_ID := 0;       -- Next available entity ID
 
+      -- Component tables (Vectors and Lookups)
+      Transform   : Transform_Table.Table;
+      Motion      : Motion_Table.Table;
+      Collider   : Collider_Table.Table;
+      Render  : Render_Table.Table;
+      Paddle      : Paddle_Table.Table;
+      Ball        : Ball_Table.Table;
+      Brick       : Brick_Table.Table;
 
-      -- Component tables
-      Transform_Table : Transform_Vectors.Vector;   -- Transform components
-      Velocity_Table : Velocity_Vectors.Vector;    -- Velocity components
-
-
-      -- Lookups
-      Transform_Lookup : Lookup_Maps.Map;  -- Map from Entity ID to Transform component index
-      Velocity_Lookup : Lookup_Maps.Map;   -- Map from Entity ID to Velocity component index
-   
+      -- TODO: Add Component tables for each Component type!
    end record;
 
-   ----------------------------------------------------------------------------------------------------------------------------
-   ----------------------------------------------------------------------------------------------------------------------------
 
-   -- INITIALIZATION PROCEDURE: For initializing the ECS store
-   procedure Initialize (S : in out Store);  -- Initializes the ECS store
+   -- Initializes the ECS store
+   -- NOTE: This procedure should be called before using the ECS store
+   procedure Initialize (S : in out Store);
 
-   -- ENTITY OPERATIONS: For manipulating entities in the entity map
-   function Create_Entity (S : in out Store) return ECS.Types.Entity_ID;      -- Creates a new entity and returns its ID
-   
-   procedure Destroy_Entity (S : in out Store; ID : ECS.Types.Entity_ID);     -- Destroys an entity by ID
-   
-   function Has_Entity (S : Store; ID : ECS.Types.Entity_ID) return Boolean;  -- Checks if an entity exists by its ID
-   
 
-   -- TRANSFORM COMPONENT OPERATIONS: For manipulating Transform components in the component table and lookup
-   procedure Add_Transform_Component (
-      S  : in out Store;
-      ID : ECS.Types.Entity_ID;
-      X  : Float;
-      Y  : Float;
-      R  : Float;
-      k  : Float
-   );  -- Adds a Transform component to an entity
+   -- Creates a new entity in the ECS store and returns its Entity_ID
+   function Create_Entity (S : in out Store) return Entity_ID;
 
-   function Has_Transform_Component (
-      S  : Store;
-      ID : ECS.Types.Entity_ID
-   ) return Boolean;  -- Checks if an entity has a Transform component
 
-   procedure Get_Transform_Component (
-      S  : in out Store;
-      ID : ECS.Types.Entity_ID;
-      Ref: out ECS.Components.Transform_Component  -- Component reference so we can access it (Ada Rule: No raw pointers to container elements)
-   ); -- Gets a Transform component for an entity
+   -- Removes an Entity from the ECS Store
+   procedure Destroy_Entity (S : in out Store; ID : Entity_ID);
 
-   procedure Remove_Transform_Component (
-      S  : in out Store;
-      ID : ECS.Types.Entity_ID
-   );  -- Removes a Transform component from an entity
+
+   -- Returns whether or not the ECS Store contains an Entity of the given Entity_ID
+   function Has_Entity (S : Store; ID : Entity_ID) return Boolean;
+
+
+   -- Creates a new component of the passed type and attaches it to the given Entity_ID
+   procedure Add_Component
+  (   S   : in out Store;
+      E   : Entity_ID;
+      Tag : Component_Tag  );
+
+
+   -- Removes a component of the passed type from the given Entity_ID
+   procedure Remove_Component
+  (   S   : in out Store;
+      E   : Entity_ID;
+      Tag : Component_Tag  );
+
+
+   -- Returns whether or not the given Entity_ID contains an instance of the passed component type
+   function Has_Component
+  (   S   : Store;
+      E   : Entity_ID;
+      Tag : Component_Tag  ) return Boolean;
+
+
+   -- Returns an instance of the passed component type on the given Entity_ID
+   function Get_Component
+  (   S   : Store;
+      E   : Entity_ID;
+      Tag : Component_Tag  ) return Component'Class;
+
+
+   --------------------------------------------------------------------------------
+   -- Get_Entities_With
+   -- Gets an array of Entity IDs that have all the specified component tags
+   --------------------------------------------------------------------------------
+   function Get_Entities_With
+  (   S    : Store;
+      Tags : Component_Tag_Array) return Entity_ID_Array_Access;
+
+
+   -------------------------------------------------------------------------------
+   -- Get_Entity_IDs
+   -- Return a dynamically allocated array containing all entity IDs
+   --    that own a specific component type.
+   -- This function iterates through all entities in the store and
+   --    checks if they have the specified component tag.
+   -------------------------------------------------------------------------------
+   function Get_Entity_IDs
+   (  S   : Store;
+      Tag : Component_Tag) return Entity_ID_Array_Access;
+
 
 end ECS.Store;

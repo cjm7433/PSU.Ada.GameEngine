@@ -1,10 +1,11 @@
 --  with Ada.Tags; use Ada.Tags;
 with Ada.Unchecked_Deallocation;
-with GameMath;
+with Math.Linear_Algebra;
 with Graphics.Color; use Graphics.Color;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Graphics.Renderer; use Graphics.Renderer;
 
+package ECS.Component is
 package ECS.Component is
 
    type Component_T is tagged null record;
@@ -15,34 +16,34 @@ package ECS.Component is
    procedure Free_Component is new
       Ada.Unchecked_Deallocation (Component_T'Class, Component_Access);
 
-   type Entity_State_T is new Component_T with record
-      State : Entity_State := Idle;
-   end record;
+  type Entity_State_T is new Component_T with record
+    State : Entity_State := Idle;
+  end record;
 
-   type Transform_T is new Component_T with record
-      Position : GameMath.Vec2;
-      Velocity : GameMath.Vec2;
-      Rotation : Float;
-   end record;
+  type Transform_T is new Component_T with record
+    Position : Math.Linear_Algebra.Vector2;
+    Velocity : Math.Linear_Algebra.Vector2;
+    Rotation : Float;
+  end record;
 
-   type Rigidbody_T is new Component_T with record
-      Mass : Float;
-   end record;
+  type RigidBody_T is new Component_T with record
+    Mass : Float;
+  end record;
 
-   --  Axis aligned bounding box for collision detection between objects
-   type AABB_T is new Component_T with record
-      Left   : Float;
-      Bottom : Float;
-      Right  : Float;
-      Top    : Float;
-   end record;
+  -- Axis aligned bounding box for collistion detection between objects
+  type AABB_T is new Component_T with record
+    Left : Float;
+    Bottom : Float;
+    Right : Float;
+    Top : Float;
+  end record;
 
-   type Collision_Params_T is new Component_T with record
-      Collision_Enabled    : Boolean;
-      Collision_Occurred   : Boolean := False;
-      Destroy_On_Collision : Boolean := False;
-      Prev_Frame_Collision : Boolean := False;
-   end record;
+  type Collision_Params_T is new Component_T with record
+    Collision_Enabled : Boolean;
+    Collision_Occurred : Boolean := False;
+    Destroy_On_Collision : Boolean := False;
+    Prev_Frame_Collision : Boolean := False;
+  end record;
 
    type Circle_T is new Component_T with record
       Sides    : Positive;
@@ -56,16 +57,16 @@ package ECS.Component is
       C        : Color;
    end record;
 
-   type Text_T is new Component_T with record
-      Text    : Unbounded_String;
-      C       : Color;
-   end record;
+  type Text_T is new Component_T with record
+    Text : Unbounded_String;
+    C : Color;
+  end record;
 
-   type Texture_T is new Component_T with record
-      Width    : Integer;
-      Height   : Integer;
-      Data     : Storage_Array_Access;
-   end record;
+  type Texture_T is new Component_T with record
+    Width : Integer;
+    Height : Integer;
+    Data : Storage_Array_Access;
+  end record;
 
    type Single_Animation_T is new Component_T with record
       OffsetX     : Integer   := 0;
@@ -86,15 +87,14 @@ package ECS.Component is
       (Entity_State) of Single_Animation_Access;
    type Texture_Map              is array (Entity_State) of Texture_Access;
 
-   type Animation_Component_T is new Component_T with record
-      Animations     : Animation_Map   := [others => null];
-      Textures       : Texture_Map     := [others => null];
-      Current        : Entity_State    := Idle;
-   end record;
+  type Animation_Component_T is new Component_T with record
+    Animations : Animation_Map := (others => null);
+    Textures : Texture_Map := (others => null);
+    Current : Entity_State := Idle;
+  end record;
 
-   type Audio_Component_T is new Component_T with record
-      Sound_Triggered   : Boolean            := False;
-      File_Path         : Unbounded_String;
-   end record;
-
+  type Audio_Component_T is new Component_T with record
+    Sound_Triggered : Boolean := False;
+    File_Path : Unbounded_String;
+  end record;
 end ECS.Component;

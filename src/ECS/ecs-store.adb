@@ -1,292 +1,556 @@
---  ecs-store.adb
---  This file is part of the PSU Ada Game Engine (PAGE).
---  This file defines the main ECS store structure that holds entities and their associated components.
---  This is the public API for the ECS data storage.
---  It uses Ada.Containers to manage dynamic collections of entities and components.
+-- Implementation of Store operations.
 
---  The store contains:
---    - An entity map to hold all entities.
---    - Component tables for each component type.
---    - Lookup maps to associate entities with their components.
+-- This file defines the main ECS store structure that holds entities and their associated components.
 
---  This structure allows for efficient storage and retrieval of entities and their components.
---  No logic is implemented here -- only the data structure definitions.
---  Additional component types and their corresponding tables and lookups can be added as needed.
+-- The store contains:
+--   - An Entity map to hold all entities.
+--   - A Table which includes:
+--      - Component tables for each component type.
+--      - Lookup maps to associate Entities with their Components.
 
-with Ada.Containers.Indefinite_Vectors;
-with Ada.Containers.Ordered_Maps;
-with ECS.Types;
-with ECS.Entities;
-with ECS.Components;
-with Ada.Containers.Hashed_Maps;
+-- Additional Component types and their corresponding tables + lookups can be added as needed.
+--   - Search for "TODO" to find where!
+
+with Ada.Tags; use type Ada.Tags.Tag;
+
 
 package body ECS.Store is
-
-   -- Hash function for Entity_ID
-   -- Simple hash function that converts Entity_ID to Hash_Type
-   -- Used (and needed) for Ada.Containers.Hashed_Maps
-   function Hash_Entity_ID (ID : ECS.Types.Entity_ID) return Ada.Containers.Hash_Type is
-   
+   -- Converts Entity_ID to Hash_Type
+   function Hash_Entity_ID (
+      ID : Entity_ID
+   ) return Ada.Containers.Hash_Type is
    begin
-   
       return Ada.Containers.Hash_Type(ID);
-   
    end Hash_Entity_ID;
 
 
-   -- Procedure to initialize the ECS store
-   --    - Clears all entities and component tables
-   --    - Resets the next available entity ID
-   --    - This procedure should be called before using the ECS store.
-   procedure Initialize (S : in out Store) is   -- Initialize the ECS store
-
+   -- Initializes the ECS store
+   -- NOTE: This procedure should be called before using the ECS store
+   procedure Initialize (
+      S : in out Store
+   ) is
    begin
-      Entity_Maps.Clear (S.Entities);              -- Clear the entity map
+      S.Entities.Clear;
 
-      Transform_Vectors.Clear (S.Transform_Table);  -- Clear the component tables
-      Velocity_Vectors.Clear (S.Velocity_Table);
-      -- etc. for other component tables
-      -- e.g., Collider_Vectors.Clear (S.Collider_Table);
+      S.Transform.Data.Clear;
+      S.Transform.Lookup.Clear;
 
-      Lookup_Maps.Clear (S.Transform_Lookup);   -- Clear the lookup maps
-      Lookup_Maps.Clear (S.Velocity_Lookup);
-      -- etc. for other lookup maps
-      -- e.g., Lookup_Maps.Clear (S.Collider_Lookup);
+      S.Motion.Data.Clear;
+      S.Motion.Lookup.Clear;
 
+      S.Collider.Data.Clear;
+      S.Collider.Lookup.Clear;
+
+      S.Render.Data.Clear;
+      S.Render.Lookup.Clear;
+
+      S.Paddle.Data.Clear;
+      S.Paddle.Lookup.Clear;
+
+      S.Ball.Data.Clear;
+      S.Ball.Lookup.Clear;
+
+      S.Brick.Data.Clear;
+      S.Brick.Lookup.Clear;
+
+      -- TODO: Add Component Types here
+      -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
+
+      S.Next_Entity_ID := 0;
    end Initialize;
 
 
--- Function to create a new entity in the ECS store
--- This function should be called to add new entities to the ECS store.
--- This function creates an entity with unique ID and no associated components.
---    - Assigns a unique entity ID
---    - Initializes the entity record
---    - Inserts the entity into the entity map
---    - Returns the new entity ID
-   function Create_Entity (S : in out Store) return ECS.Types.Entity_ID is
-   
-   New_ID : ECS.Types.Entity_ID;             -- New entity ID
-   ER     : ECS.Entities.Entity_Record;      -- New entity record
-
+   -- Creates a new entity in the ECS store and returns its Entity_ID
+   function Create_Entity (
+      S : in out Store
+   ) return Entity_ID is
+      E : Entity;
    begin
-   -- 'Succ' (Successor) is a built-in attribute for discrete types (like integers, characters, or enumerated types) that returns the value immediately following the given input, essentially input + 1 in sequence
-      S.Next_Entity_ID := ECS.Types.Entity_ID'Succ (S.Next_Entity_ID);  -- Increment the next available entity ID
-      New_ID := S.Next_Entity_ID;                                       -- Assign the new entity ID
+      -- Increment Next_Entity_ID
+      S.Next_Entity_ID := Entity_ID'Succ (S.Next_Entity_ID);
 
-      ER.ID := New_ID;                             -- Set the entity ID
-      ER.Tags := (others => False);                -- Initialize component presence set
+      E.ID := S.Next_Entity_ID;
+      S.Entities.Insert (E.ID, E);
 
-      S.Entities.Insert (Key => New_ID, New_Item => ER);    -- Insert the new entity into the entity map
-
-      return New_ID;                -- Return the new entity ID
-
+      return E.ID;
    end Create_Entity;
 
 
--- Procedure to destroy an entity in the ECS store
--- This procedure removes an entity and its associated components from the ECS store.
---    - Removes the entity from the entity map
---    - Removes associated components from component tables and lookups
---    - Note: Component removal logic will be added later.
-procedure Destroy_Entity (S : in out Store; ID : ECS.Types.Entity_ID) is
-   
+   -- Removes an Entity from the ECS Store
+   procedure Destroy_Entity (
+      S  : in out Store;
+      ID :        Entity_ID
+   ) is
    begin
-
-      if not S.Entities.Contains (ID) then
-         
-         return;        -- Entity does not exist, do nothing
-      
+      -- Guard if non-existent
+      if not S.Has_Entity (ID) then
+         return;
       end if;
 
-      -- NOTE:
-      -- Component removal will be added later.
+      -- Component Removal
+      if S.Transform.Lookup.Contains (ID) then
+         Transform_Table.Remove (S.Transform, ID);
+      end if;
 
-      S.Entities.Delete (ID);  -- Remove the entity from the entity map
+      if S.Motion.Lookup.Contains (ID) then
+         Motion_Table.Remove (S.Motion, ID);
+      end if;
 
+      if S.Collider.Lookup.Contains (ID) then
+         Collider_Table.Remove (S.Collider, ID);
+      end if;
+
+      if S.Paddle.Lookup.Contains (ID) then
+         Paddle_Table.Remove (S.Paddle, ID);
+      end if;
+
+      if S.Ball.Lookup.Contains (ID) then
+         Ball_Table.Remove (S.Ball, ID);
+      end if;
+
+      if S.Brick.Lookup.Contains (ID) then
+         Brick_Table.Remove (S.Brick, ID);
+      end if;
+
+      if S.Render.Lookup.Contains (ID) then
+         Render_Table.Remove (S.Render, ID);
+      end if;
+
+      -- TODO: Add Component Types here
+      -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
+
+      S.Entities.Delete (ID);
    end Destroy_Entity;
 
 
-
--- Function to check if an entity exists in the ECS store
-function Has_Entity (S : Store; ID : ECS.Types.Entity_ID) return Boolean is
-
+   -- Returns whether or not the ECS Store contains an Entity of the given Entity_ID
+   function Has_Entity (
+      S  : Store;
+      ID : Entity_ID
+   ) return Boolean is
    begin
-
-      return S.Entities.Contains (ID); -- Check if the entity map contains the given entity ID (True or False)
-
+      return S.Entities.Contains (ID);
    end Has_Entity;
 
 
--------------------------------------------------------------------------------------------------------------------------------
-
-   -- Transform component is used here -- similar procedures/functions can be created for other component types.
-
-   -- This procedure adds a Transform component to the specified entity ID
-   -- It updates the component table and lookup map accordingly.
-   -- Systems will use this to add components to entities as needed.
-   --    - Prevents adding if the component already exists for the entity.
-   --    - Initializes the component with provided values.
-   --    - Marks the entity as having the Transform component in its component presence set.
-
-   -- Note: Similar procedures can be created for other component types.
-   procedure Add_Transform_Component (
-      
-      S  : in out Store;         -- ECS store that holds entities and components 
-      ID : ECS.Types.Entity_ID;  -- Entity ID of the entity to add the component to
-
-      X  : Float;    -- Position coordinates
-      Y  : Float;
-
-      R  : Float;    -- Rotation in degrees
-      k  : Float     -- Uniform scale factor; Does this lowercase violate Ada convention
-
-
+   -- Creates a new component of the passed type and attaches it to the given Entity_ID
+   procedure Add_Component (
+      S   : in out Store;
+      E   :        Entity_ID;
+      Tag :        Component_Tag
    ) is
+   begin
+      -- Runtime Component_Type Checks
 
-      E: ECS.Components.Transform_Component;  -- New Transform component
+      -- The following each add a Component to Component Vector and Lookup like:
+      -- If the Tag matches the Component type:
+      --    If the Lookup does not contain the Entity_ID:
+      --       Add it to the end
+      --       Add the Component data to the vector of Components
 
-      begin
+      --TODO: This looks rough... also remove default values from factory. Defaults should live in definition.
+      if Tag = Transform_Component'Tag then
+         if not S.Transform.Lookup.Contains (E) then
+            S.Transform.Lookup.Insert
+               (E, Transform_Table.Index (S.Transform.Data.Length));
 
-         -- Validate that the entity exists
-         if not S.Entities.Contains (ID) then
-            
-            return;        -- Entity does not exist, do nothing
-         
+            S.Transform.Data.Append
+              (Transform_Component'
+                 (   Position => (0.0, 0.0),
+                     Rotation => 0.0,
+                     Scale    => (1.0, 1.0)));
          end if;
 
-         -- Prevent adding if already exists
-         if S.Transform_Lookup.Contains (ID) then
+      elsif Tag = Motion_Component'Tag then
+         if not S.Motion.Lookup.Contains (E) then
+            S.Motion.Lookup.Insert
+              (E, Motion_Table.Index (S.Motion.Data.Length));
 
-            return;  -- Component already exists for this entity, do nothing
-         
+            S.Motion.Data.Append
+              (Motion_Component'
+                 (   others => (0.0, 0.0)));
          end if;
 
-         -- Create and populate the Transform component
-         E.Owner := ID; -- Set owner to entity ID
-         E.X := X;      -- Set position
-         E.Y := Y;
-         E.Rotation := R;  -- Set rotation
-         E.Scale := k;     -- Set scale
-         -- Add the component to the Transform table
-         S.Transform_Table.Append (E);
+      elsif Tag = Collider_Component'Tag then
+         if not S.Collider.Lookup.Contains (E) then
+            S.Collider.Lookup.Insert
+               (E, Collider_Table.Index (S.Collider.Data.Length));
 
-         -- Get the index of the newly added component
-         S.Transform_Lookup.Insert (
-            Key      => ID,                           -- Entity ID
-            New_Item => S.Transform_Table.Last_Index  -- Index of the newly added component
-         );
+            S.Collider.Data.Append(Collider_Component'(others => <>));
+         end if;
 
-         -- Mark that the entity has a Transform component
-         S.Entities (ID).Tags (ECS.Types.Transform) := True;
+      elsif Tag = Paddle_Component'Tag then
+         if not S.Paddle.Lookup.Contains (E) then
+            S.Paddle.Lookup.Insert
+               (E, Paddle_Table.Index (S.Paddle.Data.Length));
 
-      --           To reduce verbosity without use, you may do:
-      --  C : constant ECS.Types.Component_Type := ECS.Types.Transform;
-      --  S.Entities (ID).Tags (C) := True;
-      --  Useful when working with multiple component types in a loop.
+            S.Paddle.Data.Append
+            (Paddle_Component'
+               (  Move_Speed => 500.0,
+                  Min_X      => 50.0,
+                  Max_X      => 750.0,
+                  Move_Left  => False,
+                  Move_Right => False));
+         end if;
 
-      end Add_Transform_Component;
+      elsif Tag = Ball_Component'Tag then
+         if not S.Ball.Lookup.Contains (E) then
+            S.Ball.Lookup.Insert
+               (E, Ball_Table.Index (S.Ball.Data.Length));
+
+            S.Ball.Data.Append
+            (Ball_Component'
+               (  Min_Speed        => 200.0,
+                  Max_Speed        => 800.0,
+                  Base_Speed       => 400.0,
+                  Bounce_Damping   => 1.0,
+                  Is_Attached      => True,
+                  Attach_Offset_X  => 0.0));
+         end if;
+
+      elsif Tag = Brick_Component'Tag then
+         if not S.Brick.Lookup.Contains (E) then
+            S.Brick.Lookup.Insert
+               (E, Brick_Table.Index (S.Brick.Data.Length));
+
+            S.Brick.Data.Append
+            (Brick_Component'
+               (  Brick_Kind  => Normal,
+                  Health      => 1,
+                  Max_Health  => 1,
+                  Points      => 10,
+                  Is_Dying    => False,
+                  Death_Timer => 0.0));
+         end if;
+
+      elsif Tag = Render_Component'Tag then
+         if not S.Render.Lookup.Contains (E) then
+            S.Render.Lookup.Insert
+               (E, Render_Table.Index (S.Render.Data.Length));
+
+            S.Render.Data.Append
+            (Render_Component'
+               (  Shape   => Rectangle,
+                  Tint    => (1.0, 1.0, 1.0, 1.0),
+                  Layer   => 0,
+                  Visible => True));
+         end if;
+
+      -- TODO: Add Component Types here
+      -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
+
+      else
+         raise Program_Error with "Unknown component tag"; --TODO: raise with info on which tag caused the exception
+      end if;
+   end Add_Component;
 
 
-   -- Check if an entity has a Transform component
-   -- This is what systems will use to check for component presence (filter)
-   function Has_Transform_Component (
-      S  : Store;                -- ECS store
-      ID : ECS.Types.Entity_ID   -- Entity ID
+   -- Removes a component of the passed type from the given Entity_ID
+   procedure Remove_Component (
+      S   : in out Store;
+      E   : Entity_ID;
+      Tag : Component_Tag
+   ) is
+   begin
+      -- Steps to Remove_Component: --> These are handled in Component_Table's Remove()
+            --  Find index of component to remove
+            --  Swap last element into that index
+            --  Update the swapped entity’s index
+            --  Remove last vector element
+            --  Remove entity from lookup
+
+      -- Runtime Component_Type Checks
+
+      -- A fun fact I am learning (aka trying to learn) about Ada:
+      --    Rule of thumb:
+      --    Whenever you pass a record aggregate to a container operation, qualify it with Type'(...).
+
+      -- The following each remove a Component from its Lookup and Component Vector like:
+      -- If the Tag matches the Component type:
+      --    If the Entity_ID is present in the Lookup
+      --       Remove the Component from Component vector and Lookup (using Component_Table Remove())
+
+      if Tag = Transform_Component'Tag then
+         if S.Transform.Lookup.Contains (E) then
+            Transform_Table.Remove (S.Transform, E);
+         end if;
+
+      elsif Tag = Motion_Component'Tag then
+         if S.Motion.Lookup.Contains (E) then
+            Motion_Table.Remove (S.Motion, E);
+         end if;
+
+      elsif Tag = Collider_Component'Tag then
+         if S.Collider.Lookup.Contains (E) then
+            Collider_Table.Remove (S.Collider, E);
+         end if;
+
+      elsif Tag = Paddle_Component'Tag then
+         if S.Paddle.Lookup.Contains (E) then
+            Paddle_Table.Remove (S.Paddle, E);
+         end if;
+
+      elsif Tag = Ball_Component'Tag then
+         if S.Ball.Lookup.Contains (E) then
+            Ball_Table.Remove (S.Ball, E);
+         end if;
+
+      elsif Tag = Brick_Component'Tag then
+         if S.Brick.Lookup.Contains (E) then
+            Brick_Table.Remove (S.Brick, E);
+         end if;
+
+      elsif Tag = Render_Component'Tag then
+         if S.Render.Lookup.Contains (E) then
+            Render_Table.Remove (S.Render, E);
+         end if;
+
+      -- TODO: Add other Component types here!
+      -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
+
+      else
+         raise Program_Error with "Unknown component tag"; --TODO: raise with info on which tag caused the exception
+      end if;
+   end Remove_Component;
+
+
+   -- Returns whether or not the given Entity_ID contains an instance of the passed component type
+   function Has_Component (
+      S   : Store;
+      E   : Entity_ID;
+      Tag : Component_Tag
    ) return Boolean is
+   begin
+      -- Runtime Component_Type Checks
+
+      -- The following each return a Boolean as if it were:
+      -- Boolean := Does this Entity_ID exist within the Lookup?
+
+      if Tag = Transform_Component'Tag then
+         return S.Transform.Lookup.Contains (E);
+
+      elsif Tag = Motion_Component'Tag then
+         return S.Motion.Lookup.Contains (E);
+
+      elsif Tag = Collider_Component'Tag then
+         return S.Collider.Lookup.Contains (E);
+
+      elsif Tag = Paddle_Component'Tag then
+         return S.Paddle.Lookup.Contains (E);
+
+      elsif Tag = Ball_Component'Tag then
+         return S.Ball.Lookup.Contains (E);
+
+      elsif Tag = Brick_Component'Tag then
+         return S.Brick.Lookup.Contains (E);
+
+      elsif Tag = Render_Component'Tag then
+         return S.Render.Lookup.Contains (E);
+
+      -- TODO: Add other Component types here!
+      -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
+
+      else
+         return False;
+      end if;
+   end Has_Component;
+
+
+   -- Returns an instance of the passed component type on the given Entity_ID
+   function Get_Component (
+      S   : Store;
+      E   : Entity_ID;
+      Tag : Component_Tag
+   ) return Component'Class is
+   begin
+      -- Runtime Component_Type Checks
+
+      -- The following each return a Component as if it were:
+      -- Component := Component_Vector(Index of Entity in Lookup)
+
+      if Tag = Transform_Component'Tag then
+         return S.Transform.Data(S.Transform.Lookup (E));
+
+      elsif Tag = Motion_Component'Tag then
+         return S.Motion.Data(S.Motion.Lookup (E));
+
+      elsif Tag = Collider_Component'Tag then
+         return S.Collider.Data(S.Collider.Lookup (E));
+
+      elsif Tag = Paddle_Component'Tag then
+         return S.Paddle.Data(S.Paddle.Lookup (E));
+
+      elsif Tag = Ball_Component'Tag then
+         return S.Ball.Data(S.Ball.Lookup (E));
+
+      elsif Tag = Brick_Component'Tag then
+         return S.Brick.Data(S.Brick.Lookup (E));
+
+      elsif Tag = Render_Component'Tag then
+         return S.Render.Data(S.Render.Lookup (E));
+
+      -- TODO: Add other Component types here!
+      -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
+
+      else
+         raise Program_Error with "Unknown Component tag"; --TODO: raise with info on which tag caused the exception
+      end if;
+   end Get_Component;
+
+
+   --------------------------------------------------------------------------------
+   -- Get_Entities_With
+   -- Gets an array of Entity IDs that have all the specified component tags
+   --------------------------------------------------------------------------------
+   function Get_Entities_With
+  (   S    : Store;
+      Tags : Component_Tag_Array) return Entity_ID_Array_Access is
+
+      Base_List : Entity_ID_Array_Access;
+
+   begin
+
+      -- If list is empty, do nothing
+      if Tags'Length = 0 then
+         return null;
+      end if;
+
+      -- Use first tag as base
+      Base_List := Get_Entity_IDs (S, Tags (Tags'First));
+
+      -- If list is empty, do nothing
+      if Base_List = null then
+         return null;
+      end if;
+
+      declare
+         Temp : Entity_ID_Array(0 .. Base_List'Length - 1);
+         Count : Natural := 0;
 
       begin
 
-         return S.Transform_Lookup.Contains (ID);  -- Check if the Transform lookup contains the given entity ID (True or False)
+         -- For each entity in the base list, check if it has all the other tags
+         for I in Base_List'Range loop
 
-      end Has_Transform_Component;
+            declare
+               E : constant Entity_ID := Base_List (I);
+               Match : Boolean := True;
+
+            begin
+
+               -- Check remaining tags
+               for J in Tags'First + 1
+                        .. Tags'Last
+               loop
+                  if not Has_Component
+                  (S, E, Tags (J))
+                  then
+                     Match := False;
+                     exit;
+                  end if;
+               end loop;
+
+               if Match then
+                  Temp (Count) := E;
+                  Count := Count + 1;
+               end if;
+
+            end;
+
+         end loop;
+
+         -- If there are no matches, return null, do nothing
+         if Count = 0 then
+            return null;
+         end if;
+
+         -- Create a new array of the correct size and return it
+         declare Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+         begin
+            -- Copy matches from temp to result
+            for K in 0 .. Count - 1 loop
+               Result (K) := Temp (K);
+            end loop;
+
+            return Result;
+
+         end;
+
+      end;
+
+   end Get_Entities_With;
 
 
-   -- Get a Transform component for a given entity ID
-   -- Returns an access to the Transform component, or null if not found
-   -- Systems will use this to retrieve component data for processing
-   --    - Systems can mutate component data
-   --    - Systems cannot modify storage structure
+   -------------------------------------------------------------------------------
+   -- Get_Entity_IDs
+   -- Return a dynamically allocated array containing all entity IDs
+   --    that own a specific component type.
+   -- This function iterates through all entities in the store and
+   --    checks if they have the specified component tag.
+   -------------------------------------------------------------------------------
+   function Get_Entity_IDs
+  (   S   : Store;
+      Tag : Component_Tag) return Entity_ID_Array_Access is
 
-   -- Note: Caller must handle null access case
-   -- Note: Similar procedures can be created for other component types.
-   procedure Get_Transform_Component (
-      S  : in out Store;         -- ECS store
-      ID : ECS.Types.Entity_ID;   -- Entity ID
-      Ref: out ECS.Components.Transform_Component  -- Component reference so we can access it (Ada Rule: No raw pointers to container elements)
-   )is
-
-      Idx : ECS.Types.Index;  -- Index into the Transform component table
+      Count  : Natural := 0;
+      Cursor : Entity_Maps.Cursor := S.Entities.First;
 
    begin
 
-      if not S.Transform_Lookup.Contains (ID) then  -- If Component does not exist
-         
-          raise Constraint_Error with "Entity has no Transform component";
-         --return null; -- Return null access --> caller must handle    -- Cannot return anything with procedure
-      
+      -- First pass: count matches
+      -- While there are entities in Entity_Map ...
+      while Entity_Maps.Has_Element (Cursor) loop
+
+         declare
+            -- E is the entity cursor points to
+            E : constant Entity_ID := Entity_Maps.Key (Cursor);
+
+         begin
+            if Has_Component (S, E, Tag) then
+               Count := Count + 1;
+            end if;
+         end;
+
+         Cursor := Entity_Maps.Next (Cursor);
+
+      end loop;
+
+      -- If there are no matches, return null, do nothing
+      if Count = 0 then
+         return null;
       end if;
 
-      Idx := S.Transform_Lookup (ID);     -- Get the index of the Transform component for the given entity ID
-      Ref := S.Transform_Table (Idx);     -- Set the output reference to the Transform component
+      -- Allocate result array
+      declare
+         -- Result is a new array of Entity_IDs with size equal to the count of matches
+         Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
 
-      -- Can't do this in Ada:
-      --return S.Transform_Table (Idx)'Access;    -- Return access to the Transform component
+         Index  : Natural := 0;
 
-   end Get_Transform_Component;
+         Cursor2 : Entity_Maps.Cursor := S.Entities.First;
 
+      begin
 
-   -- Remove a Transform component for a given entity ID
-   -- This procedure removes the Transform component associated with the given entity ID
-   -- It maintains the integrity of the component table and lookup map (retains dense storage) by using a "swap and pop" method.
-   -- Systems will use this to remove components when needed (when an entity is destroyed or a component is no longer needed)
+         -- Second pass: fill array
+         while Entity_Maps.Has_Element (Cursor2) loop
 
-   -- The removal process involves:
-   --    - Finding the index of the component to remove
-   --    - Swapping it with the last component in the table (if not the last)
-   --    - Updating the lookup map for the moved component
-   --    - Deleting the last component from the table
-   --    - Removing the entry from the lookup map
-   --    - Updating the entity's component presence set
+            declare
+               -- E is the entity cursor points to
+               E : constant Entity_ID := Entity_Maps.Key (Cursor2);
 
-   -- Note: Similar procedures can be created for other component types.
-   procedure Remove_Transform_Component (
-      S  : in out Store;         -- ECS store
-      ID : ECS.Types.Entity_ID   -- Entity ID   
-   ) is
+            begin
+               if Has_Component (S, E, Tag) then
+                  Result (Index) := E;
+                  Index := Index + 1;
+               end if;
+            end;
 
-      Remove_Index : ECS.Types.Index;        -- Index to remove
-      Last_Index   : ECS.Types.Index;        -- Last index in the component table
-      Last_EID     : ECS.Types.Entity_ID;    -- Entity ID of the last component
+            Cursor2 := Entity_Maps.Next (Cursor2);
+         end loop;
 
-   begin
+         return Result;
+      end;
 
-      if not S.Transform_Lookup.Contains (ID) then     -- If Component does not exist
-
-         return;      -- Do nothing
-         -- Possibly raise Constraint_Error with "Entity has no Transform component";
-
-      end if;
-
-      Remove_Index := S.Transform_Lookup (ID);         -- Get index of component to remove
-      Last_Index   := S.Transform_Table.Last_Index;    -- Get index of last element in table
-
-      if Remove_Index /= Last_Index then              -- If not removing last element, we need to swap
-
-         S.Transform_Table (Remove_Index) := S.Transform_Table (Last_Index);  -- Move last to removed slot
-
-         Last_EID := S.Transform_Table (Last_Index).Owner;  -- Get the entity ID of the owner of the moved component
-
-         S.Transform_Lookup.Replace (     -- Update lookup for moved entity
-            Key      => Last_EID,         -- Entity ID of moved component
-            New_Item => Remove_Index      -- New index after move
-         );
-      
-      end if;
-
-      S.Transform_Table.Delete_Last;                            -- Remove last element from component table
-      S.Transform_Lookup.Delete (ID);                           -- Remove from lookup map
-      S.Entities (ID).Tags (ECS.Types.Transform) := False;      -- Update
-
-   end Remove_Transform_Component;
+   end Get_Entity_IDs;
 
 end ECS.Store;

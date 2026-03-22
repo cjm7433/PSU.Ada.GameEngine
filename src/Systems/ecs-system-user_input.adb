@@ -1,5 +1,6 @@
 with ecs;
-with GameMath; use GameMath;
+--with GameMath; use GameMath;
+with Math.Linear_Algebra; use Math.Linear_Algebra;
 package body ECS.System.User_Input is 
 
    procedure Register_Key_Callback(Key : Integer; Callback : Input_Callback) is

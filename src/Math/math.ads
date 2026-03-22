@@ -1,0 +1,2 @@
+package Math is
+end;
