@@ -18,6 +18,7 @@ with ECS.System.Movement;     use ECS.System.Movement;
 with ECS.System.Render;       use ECS.System.Render;
 with ECS.System.User_Input;   use ECS.System.User_Input;
 with GameMath;                use GameMath;
+with Wave_Player;
 -- Game Engine Graphics modules
 with Graphics.Color;          use Graphics.Color;
 with Graphics.Renderer;       use Graphics.Renderer;
@@ -137,6 +138,7 @@ procedure Arkanoid is
 
 
 begin
+   Wave_Player.Initialize;
    Register_Mouse_Callback (16#200#, Mouse_Move'Access);
    Register_Mouse_Callback (16#201#, L_Button_Down'Access);
    Register_Mouse_Callback (16#202#, L_Button_Up'Access);
@@ -188,12 +190,11 @@ begin
       Anims_P.Textures(Idle)  := Vaus_Texture;
       Anims_Ball.Textures(Idle) := Vaus_Texture;
 
-
       Lay_Bricks (Manager, Bricks_Texture, Level1);
       Add_Wall (Manager, 7.0, 240.0, (0.0,   8.0), "LWall");
       Add_Wall (Manager, 7.0, 240.0, (216.0, 8.0), "RWall");
       Add_Wall (Manager, 225.0, 7.0, (0.0,   0.0), "TWall");
-
+      Wave_Player.Play_Wav("C:\Users\lolgh\OneDrive\Desktop\Classes\Semester 9\SWENG 480\AdaGameEngine\PSU.Ada.GameEngine-greg-sound-playback\Demos\arkanoid_game\sfx\ost.wav");
 
          -- Windows message loop (game loop)
       while Has_Msg loop
@@ -210,6 +211,7 @@ begin
          Collision.Execute (Elapsed_Time, Manager);
          Arkanoid.Execute (Elapsed_Time, Manager);
          Animation.Execute(Elapsed_Time, Manager);
+         Wave_Player.Update;
          Draw_String(Buffer.all,10,10,0,0,"SCORE:" & Integer'Image(Score),(255,255,255,255),Width,Height);
          Render.Execute (Elapsed_Time, Manager);
          Draw_Buffer (Buffer.all'Address);
