@@ -20,12 +20,12 @@ project Psu_Ada_Gameengine is
    --  Platform-specific source directories
    case Psu_Ada_Gameengine_Config.Alire_Host_OS is
       when "linux" =>
-         for Source_Dirs use ("src/", "src/ECS/", "src/Game Config/", 
-                               "src/Graphics/", "src/Math/", "src/Systems/", 
-                               "src/Linux/");
+         for Source_Dirs use ("src/", "src/ECS/**", "src/Game Config/", 
+                               "src/Graphics/", "src/Math/**", "src/Systems/", 
+                               "src/Linux/", "src/win32/");
       when "windows" =>
-         for Source_Dirs use ("src/", "src/ECS/", "src/Game Config/", 
-                               "src/Graphics/", "src/Math/", "src/Systems/", 
+         for Source_Dirs use ("src/", "src/ECS/**", "src/Game Config/", 
+                               "src/Graphics/", "src/Math/**", "src/Systems/", 
                                "src/Windows/", "src/win32/");
    end case;
 
@@ -39,8 +39,8 @@ project Psu_Ada_Gameengine is
          when "linux" =>
             for Switches ("ada") use ("-lwayland-client");
          when "windows" =>
-            for Switches ("ada") use ("-lgdi32", "-llargeint");
-            for Switches ("c") use ("-lgdi32", "-llargeint");
+            for Switches ("ada") use ("-lgdi32", "-llargeint", "-lwimm");
+            for Switches ("c") use ("-lgdi32", "-llargeint", "-lwimm");
       end case;
    end Linker;
 

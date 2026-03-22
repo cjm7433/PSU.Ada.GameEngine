@@ -4,7 +4,6 @@ with Ada.Containers.Vectors;
 with Ada.Unchecked_Deallocation;
 
 package ECS.Entity is
-package ECS.Entity is
 
    subtype Id_T is String (1 .. 5);
    package Component_List is new Ada.Containers.Vectors (Index_Type => Natural,

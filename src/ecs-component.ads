@@ -6,7 +6,6 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Graphics.Renderer; use Graphics.Renderer;
 
 package ECS.Component is
-package ECS.Component is
 
    type Component_T is tagged null record;
    type Component_Access is access all Component_T'Class;

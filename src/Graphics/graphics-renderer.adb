@@ -167,7 +167,7 @@ package body Graphics.Renderer is
 
    end DrawHorizontalLine;
    --  Helper for Draw_Filled Triangle
-   procedure Fill_Top_Triangle (Img : in out Byte_Array; V1, V2, V3 : in out Vec2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
+   procedure Fill_Top_Triangle (Img : in out Byte_Array; V1, V2, V3 : in out Vector2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
    begin
       --  Calculate slopes for the left and right edges
       LeftSlope : Float := (V3.X - V1.X) / (V3.Y - V1.Y);
@@ -185,7 +185,7 @@ package body Graphics.Renderer is
       end loop;
    end Fill_Top_Triangle;
    --  Helper for Draw_Filled_Triangle
-   procedure Fill_Bottom_Triangle (Img : in out Byte_Array; V1, V2, V3 : in out Vec2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
+   procedure Fill_Bottom_Triangle (Img : in out Byte_Array; V1, V2, V3 : in out Vector2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
    begin
       --  Calculate slopes for the left and right edges
       LeftSlope : Float := (V2.X - V1.X) / (V2.Y - V1.Y);
@@ -200,9 +200,7 @@ package body Graphics.Renderer is
          CurXRight := CurXRight + RightSlope;
       end loop;
    end Fill_Bottom_Triangle;
-   --  Scanline rasterization for filled triangle
-   procedure Draw_Filled_Triangle (Img : in out Byte_Array; V1, V2, V3 : in out Vec2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
-      procedure Swap is new Generic_Swap (T => Float);
+
    -- Scanline rasterization for filled triangle
    procedure Draw_Filled_Triangle(img : in out Byte_Array; V1, V2, V3 : in out Vector2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
       procedure swap is new generic_swap (T => Float);
@@ -230,19 +228,13 @@ package body Graphics.Renderer is
       else
          --  Split triangle into flat-top and flat-bottom triangle
          SplitX : Float := V1.X + (V2.Y - V1.Y) / (V3.Y - V1.Y) * (V3.X - V1.X);
-         SplitVertex : Vec2 := (SplitX, V2.Y);
+         SplitVertex : Vector2 := (SplitX, V2.Y);
          Fill_Bottom_Triangle (Img, V1, V2, SplitVertex, C, Screen_Width, Screen_Height);
          Fill_Top_Triangle (Img, V2, SplitVertex, V3, C, Screen_Width, Screen_Height);
-         SplitVertex : Vector2 := (SplitX, V2.Y);
-         Fill_Bottom_Triangle(img, V1, V2, SplitVertex, C, Screen_Width, Screen_Height);
-         Fill_Top_Triangle(img, V2, SplitVertex, V3, C, Screen_Width, Screen_Height);
       end if;
    end Draw_Filled_Triangle;
 
-   procedure Draw_Filled_Quad (Img : in out Byte_Array; X, Y, Width, Height : Float; C : Graphics.Color.Color;
-         Screen_Width, Screen_Height : Natural) is
-      V1, V2, V3, V4, V5, V6 : Vec2;
-   procedure Draw_Filled_Quad(img : in out Byte_Array; X,Y,Width,Height : Float; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
+   procedure Draw_Filled_Quad (Img : in out Byte_Array; X,Y,Width,Height : Float; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural) is
       V1, V2, V3, V4, V5, V6 : Vector2;
    begin
       if C.A = 0 then
@@ -256,8 +248,6 @@ package body Graphics.Renderer is
       V5 := (X + Width, Y + Height);
       V6 := (X + Width, Y);
       --  Draw flat-top triangle
-      Draw_Filled_Triangle (Img, V1, V2, V3, C, Screen_Width, Screen_Height);
-      --  Draw flat-bottom triangle
       Draw_Filled_Triangle (Img, V4, V5, V6, C, Screen_Width, Screen_Height);
    end Draw_Filled_Quad;
 
