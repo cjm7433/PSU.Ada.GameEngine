@@ -3,20 +3,30 @@
 --  ============================================================
 
 with Ada.Text_IO;
+with System;
 
 package body Audio is
 
-   procedure Play_Audio (File_Path : String) is
+   procedure Initialize is
    begin
-      Ada.Text_IO.Put_Line ("[Audio Stub] Would play audio: " & File_Path);
+      null;
+   end Initialize;
+
+   procedure Play_Audio (Filename : String) is
+   begin
+      Ada.Text_IO.Put_Line ("[Audio Stub] Would play audio: " & Filename);
       --  TODO: Implement with ALSA, PulseAudio, or SDL2 audio
    end Play_Audio;
 
-   procedure Cleanup_Sounds is
+   procedure Update is
    begin
-      Ada.Text_IO.Put_Line ("[Audio Stub] Cleanup sounds");
-      Tracked_Aliases.Clear;
-      Audio_ID := 0;
-   end Cleanup_Sounds;
+      null;
+   end Update;
+
+   procedure Finalize is
+   begin
+      null;
+   end Finalize;
+
 
 end Audio;
