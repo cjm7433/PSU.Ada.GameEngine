@@ -24,6 +24,8 @@ package Math.Linear_Algebra is
             Magnitude   : Float := 1.0
       ) return Vector2;
 
+   -- New Vector Constructor
+   function New_Vector2 (X_In, Y_in : Float) return Vector2;
 
 
    -- COMPARISON
@@ -143,6 +145,12 @@ package Math.Linear_Algebra is
       function Length (
             V : Vector2
       ) return Float;
+
+      -- Scale
+      procedure Scale (
+        V : in out Vector2;
+        S : Float
+        ); 
 
 
       -- Magnitude squared (faster calculation; useful for comparisons)

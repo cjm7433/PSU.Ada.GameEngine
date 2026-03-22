@@ -2,7 +2,8 @@ with Interfaces;
 with Interfaces.C;
 with Win32; use Win32;
 with Graphics.Color; use Graphics.Color;
-with GameMath; use GameMath;
+--  with GameMath; use GameMath;
+with Math.Linear_Algebra; use Math.Linear_Algebra;
 with Interfaces; use Interfaces;
 with System; use System;
 with System.Storage_Elements; use System.Storage_Elements;
@@ -45,7 +46,7 @@ package Graphics.Renderer is
       Screen_Width    : Natural;
       Screen_Height   : Natural);
 
-   procedure Draw_Filled_Triangle(img : in out Byte_Array; V1, V2, V3 : in out Vec2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
+   procedure Draw_Filled_Triangle(img : in out Byte_Array; V1, V2, V3 : in out Vector2; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
    procedure Draw_Filled_Quad(img : in out Byte_Array; X,Y,Width,Height : Float; C : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
    procedure Draw_Character(img : in out Byte_Array; X,Y,Width,Height : Integer; Char : Character; color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
    procedure Draw_String(img : in out Byte_Array; X,Y : Integer; Width, Height : Integer; S : in String; Color : Graphics.Color.Color; Screen_Width, Screen_Height : Natural);
