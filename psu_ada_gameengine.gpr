@@ -39,8 +39,8 @@ project Psu_Ada_Gameengine is
          when "linux" =>
             for Switches ("ada") use ("-lwayland-client");
          when "windows" =>
-            for Switches ("ada") use ("-lgdi32", "-llargeint", "-lwimm");
-            for Switches ("c") use ("-lgdi32", "-llargeint", "-lwimm");
+            for Switches ("ada") use ("-lgdi32", "-llargeint", "-lwinmm");
+            for Switches ("c") use ("-lgdi32", "-llargeint", "-lwinmm");
       end case;
    end Linker;
 
