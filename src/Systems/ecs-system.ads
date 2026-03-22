@@ -7,7 +7,7 @@ with ECS.Event; use ECS.Event;
 with ECS.Event_Manager; use ECS.Event_Manager;
 with Graphics.Renderer; use Graphics.Renderer;
 with Ada.Text_IO; use Ada.Text_IO;
-with GameMath; use GameMath;
+with Math.Linear_Algebra; use Math.Linear_Algebra;
 with Win32; use Win32;
 with Audio; use Audio;
 
@@ -16,7 +16,7 @@ package ECS.System is
    type System_T is interface;
 
    procedure Execute ( Self : in out System_T;
-                       Dt   : Duration; 
+                       Dt   : Duration;
                        Manager    : access Entity_Manager_T'Class ) is abstract;
 
    type System_Access is access all System_T'Class;

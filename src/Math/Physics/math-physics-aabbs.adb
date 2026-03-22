@@ -141,4 +141,10 @@ package body Math.Physics.AABBs is
       -- Return the fraction for the axis that collided first
       return Float'Min(Fraction_X, Fraction_Y);
    end;
+
+   -- Get the half-size of an AABB
+   function Get_Half_Size (Box : AABB) return Vector2 is
+   begin
+      return Box.Half_Size;
+   end Get_Half_Size;
 end;

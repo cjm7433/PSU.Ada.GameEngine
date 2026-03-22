@@ -22,6 +22,7 @@
 with ECS.Systems;       use ECS.Systems;
 with ECS.Store;
 with ECS.Components;
+with Math.Physics.AABBs; use Math.Physics.AABBs;
 
 package ECS.Systems_Collision is
 

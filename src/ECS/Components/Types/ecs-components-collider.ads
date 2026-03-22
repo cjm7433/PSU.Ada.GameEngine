@@ -1,4 +1,5 @@
 with Math.Physics;   use Math.Physics;
+with Math.Physics.AABBs;  use Math.Physics.AABBs;
 
 
 package ECS.Components.Collider is
