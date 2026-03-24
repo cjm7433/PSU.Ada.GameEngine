@@ -1,4 +1,4 @@
-with Ada.Tags; use Ada.Tags;
+--  with Ada.Tags; use Ada.Tags;
 with Ada.Unchecked_Deallocation;
 with Math.Linear_Algebra;
 with Graphics.Color; use Graphics.Color;
@@ -7,12 +7,13 @@ with Graphics.Renderer; use Graphics.Renderer;
 
 package ECS.Component is
 
-  type Component_T is tagged null record;
-  type Component_Access is access all Component_T'Class;
-  type Components_T is array (Natural range <>) of Component_Access;
-  type Entity_State is (Idle, Walk, Run);
+   type Component_T is tagged null record;
+   type Component_Access is access all Component_T'Class;
+   type Components_T is array (Natural range <>) of Component_Access;
+   type Entity_State is (Idle, Walk, Run);
 
-  procedure Free_Component is new Ada.Unchecked_Deallocation (Component_T'Class, Component_Access);
+   procedure Free_Component is new
+      Ada.Unchecked_Deallocation (Component_T'Class, Component_Access);
 
   type Entity_State_T is new Component_T with record
     State : Entity_State := Idle;
@@ -43,17 +44,17 @@ package ECS.Component is
     Prev_Frame_Collision : Boolean := False;
   end record;
 
-  type Circle_T is new Component_T with record
-    Sides : Positive;
-    Radius : Positive;
-    C : Color;
-  end record;
+   type Circle_T is new Component_T with record
+      Sides    : Positive;
+      Radius   : Positive;
+      C        : Color;
+   end record;
 
-  type Quad_T is new Component_T with record
-    Width : Float;
-    Height : Float;
-    C : Color;
-  end record;
+   type Quad_T is new Component_T with record
+      Width    : Float;
+      Height   : Float;
+      C        : Color;
+   end record;
 
   type Text_T is new Component_T with record
     Text : Unbounded_String;
@@ -66,23 +67,24 @@ package ECS.Component is
     Data : Storage_Array_Access;
   end record;
 
-  type Single_Animation_T is new Component_T with record
-    OffsetX : Integer := 0;
-    OffsetY : Integer := 0;
-    Time : Duration := 0.0;
-    Total_Time : Duration := 0.0;
-    InitialX : Integer := 0;
-    InitialY : Integer := 0;
-    CurX : Integer := 0;
-    CurY : Integer := 0;
-    CurFrame : Integer := 0;
-    TotFrame : Integer := 0;
-  end record;
+   type Single_Animation_T is new Component_T with record
+      OffsetX     : Integer   := 0;
+      OffsetY     : Integer   := 0;
+      Time        : Duration  := 0.0;
+      Total_Time  : Duration  := 0.0;
+      InitialX    : Integer   := 0;
+      InitialY    : Integer   := 0;
+      CurX        : Integer   := 0;
+      CurY        : Integer   := 0;
+      CurFrame    : Integer   := 0;
+      TotFrame    : Integer   := 0;
+   end record;
 
-  type Single_Animation_Access is access all Single_Animation_T;
-  type Texture_Access is access all Texture_T;
-  type Animation_Map is array (Entity_State) of Single_Animation_Access;
-  type Texture_Map is array (Entity_State) of Texture_Access;
+   type Single_Animation_Access  is access all Single_Animation_T;
+   type Texture_Access           is access all Texture_T;
+   type Animation_Map            is array
+      (Entity_State) of Single_Animation_Access;
+   type Texture_Map              is array (Entity_State) of Texture_Access;
 
   type Animation_Component_T is new Component_T with record
     Animations : Animation_Map := (others => null);

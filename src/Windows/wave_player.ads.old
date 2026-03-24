@@ -7,8 +7,9 @@ package Wave_Player is
    procedure Update;
    procedure Finalize;
 
-private
-   pragma Linker_Options ("-lole32");
-   pragma Linker_Options ("-lxaudio2_9");
+-- Testing, moved linkers to gpr
+--private
+   --pragma Linker_Options ("-lole32");
+   --pragma Linker_Options ("-lxaudio2_9");
 
 end Wave_Player;

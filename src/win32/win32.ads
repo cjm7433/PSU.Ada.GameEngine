@@ -27,7 +27,7 @@ package Win32 is
    BI_RGB            : constant := 0;
    DIB_RGB_COLORS    : constant := 0;
 
-   -- Key constants
+   --  Key constants
    WM_KEYDOWN        : constant := 16#100#; -- Define the key-down message
    WM_KEYUP          : constant := 16#101#; -- Define the key-up message
    WM_MOUSEMOVE      : constant := 16#200#; -- Mouse move message
@@ -36,7 +36,6 @@ package Win32 is
    WM_LBUTTONDBLCLK  : constant := 16#203#; -- Left mouse button double click
    WM_RBUTTONDOWN    : constant := 16#204#; -- Right mouse button down
    WM_RBUTTONUP      : constant := 16#205#; -- Right mouse button up
-   
 
    MK_LBUTTON        : constant := 1;       -- Left mouse button
    MK_RBUTTON        : constant := 2;       -- Right mouse button
@@ -46,27 +45,23 @@ package Win32 is
    MK_XBUTTON1       : constant := 32;      -- X1 mouse button (extra button)
    MK_XBUTTON2       : constant := 64;      -- X2 mouse button (extra button)
 
-   
-
-
-
-   -- Windowing events -- 
+   --  Windowing events
    WM_SIZE           : constant := 16#0005#; -- Sent after a window's size has changed
    WM_SIZING         : constant := 16#0214#; -- Sent while a window is being resized
    WM_GETMINMAXINFO  : constant := 16#0024#; -- Sent to determine minimum and maximum window sizes
    WM_WINDOWPOSCHANGED : constant := 16#0047#; -- Sent after a window's position or size changes
-    -- Text Formating options, used in DrawTextA as a bit mask ( e.g., DT_LEFT | DTVCENTER)
-    -- Horizontal Alignment
+    --  Text Formating options, used in DrawTextA as a bit mask ( e.g., DT_LEFT | DTVCENTER)
+    --  Horizontal Alignment
    DT_LEFT           : constant := 16#0000#; -- Align text to the left
    DT_CENTER         : constant := 16#0001#; -- Center text horizontally
    DT_RIGHT          : constant := 16#0002#; -- Align text to the right
 
-   -- Vertical Alignment
+   --  Vertical Alignment
    DT_TOP            : constant := 16#0000#; -- Align text to the top (default)
    DT_VCENTER        : constant := 16#0004#; -- Center text vertically
    DT_BOTTOM         : constant := 16#0008#; -- Align text to the bottom
 
-   -- Text Formatting
+   --  Text Formatting
    DT_WORDBREAK      : constant := 16#0010#; -- Automatically break lines
    DT_SINGLELINE     : constant := 16#0020#; -- Single line (ignore word wrapping)
    DT_EXPANDTABS     : constant := 16#0040#; -- Expand tab characters
@@ -74,23 +69,24 @@ package Win32 is
    DT_NOCLIP         : constant := 16#0100#; -- Do not clip text (allow drawing outside rect)
    DT_EXTERNALLEADING : constant := 16#0200#; -- Include external leading in height calculations
 
-   -- Ellipsis & Trimming
+   --  Ellipsis & Trimming
    DT_CALCRECT       : constant := 16#0400#; -- Calculate the bounding rectangle without drawing
    DT_NOPREFIX       : constant := 16#0800#; -- Ignore `&` prefix for shortcut keys
    DT_INTERNAL       : constant := 16#1000#; -- Use system font metrics
 
-   -- Ellipsis options (used when text overflows)
+   --  Ellipsis options (used when text overflows)
    DT_END_ELLIPSIS   : constant := 16#8000#; -- Add `...` at the end of overflowing text
    DT_PATH_ELLIPSIS  : constant := 16#4000#; -- Add `...` in the middle of a file path
    DT_WORD_ELLIPSIS  : constant := 16#20000#; -- Add `...` at the end of last visible word
 
-   -- Used in SetBkMode
+   --  Used in SetBkMode
    TRANSPARENT       : constant := 1;        -- Background is transparent (no fill behind text)
    OPAQUE            : constant := 2;        -- Background is filled with the current background color
 
- --  type LPCSTR is access constant IC.char;
+   --  type LPCSTR is access constant IC.char;
    type LPCSTR is new ICS.chars_ptr;
- --  type LPSTR is access all IC.char;
+
+   --  type LPSTR is access all IC.char;
    type LPSTR is new ICS.chars_ptr;
    IDI_APPLICATION : LPCSTR;
    IDC_ARROW       : LPCSTR;
@@ -115,7 +111,7 @@ package Win32 is
    subtype USHORT is IC.unsigned_short;
    subtype WORD is USHORT;
 
-   type Byte is mod 2**8 with size => 8; 
+   type Byte is mod 2**8 with size => 8;
    type Byte_Array is array (Natural range <>) of Byte;
    type Byte_Array_Access is access Byte_Array;
 
@@ -130,14 +126,14 @@ package Win32 is
 
    type BITMAPINFOHEADER is record
       biSize          : DWORD   := 0;
-      biWidth         : Ic.int  := 0;
-      biHeight        : Ic.int  := 0;
+      biWidth         : IC.int  := 0;
+      biHeight        : IC.int  := 0;
       biPlanes        : WORD    := 0;
       biBitCount      : WORD    := 0;
       biCompression   : DWORD   := 0;
       biSizeImage     : DWORD   := 0;
-      biXPelsPerMeter : Ic.long := 0;
-      biYPelsPerMeter : Ic.long := 0;
+      biXPelsPerMeter : IC.long := 0;
+      biYPelsPerMeter : IC.long := 0;
       biClrUsed       : DWORD   := 0;
       biClrImportant  : DWORD   := 0;
    end record;
@@ -185,9 +181,9 @@ package Win32 is
 
    function TO_LPCSTR is new Ada.Unchecked_Conversion (IC.Strings.chars_ptr, LPCSTR);
 
-   Lp_Window_Name : LPCSTR := LPCSTR(ICS.New_String ("Ada Window"));
-   Lp_Class_Name  : LPCSTR := LPCSTR(ICS.New_String ("Core"));
-   Lp_Menu_Name   : LPCSTR := LPCSTR(ICS.New_String (""));
+   Lp_Window_Name : LPCSTR := LPCSTR (ICS.New_String ("Ada Window"));
+   Lp_Class_Name  : LPCSTR := LPCSTR (ICS.New_String ("Core"));
+   Lp_Menu_Name   : LPCSTR := LPCSTR (ICS.New_String (""));
 
    type WNDCLASS is record
       Style           : IC.unsigned := CS_HREDRAW or CS_VREDRAW;
@@ -231,10 +227,10 @@ package Win32 is
       Rc_Paint     : RECT;
       F_Restore    : Interfaces.C.int;
       F_Inc_Update : Interfaces.C.int;
-      Rgb_Reserved : Interfaces.C.char_array(0 .. 31);
+      Rgb_Reserved : Interfaces.C.char_array (0 .. 31);
    end record;
 
-   function Draw_Text_A(
+   function Draw_Text_A (
       H_dc        : HDC;
       Lp_Ch_Text  : LPCSTR;
       C_Ch_Text   : IC.int;
@@ -243,33 +239,34 @@ package Win32 is
    ) return IC.int
    with Import => True, Convention => C, External_Name => "DrawTextA";
 
-   function Text_Out_A(
+   function Text_Out_A (
       H_dc        : HDC;
       x           : IC.int;
       y           : IC.int;
       Lp_String   : LPCSTR;
       len         : IC.int
-   ) return Boolean
+      ) return Boolean
+
    with Import => True, Convention => C, External_Name => "TextOutA";
 
-   function Set_Text_Color(
+   function Set_Text_Color (
       H_dc        : HDC;
       Color       : DWORD
    ) return DWORD
    with Import => True, Convention => C, External_Name => "SetTextColor";
 
-   function Set_Bk_Mode(
+   function Set_Bk_Mode (
       H_dc        : HDC;
       Mode        : IC.int
    ) return IC.int
    with Import => True, Convention => C, External_Name => "SetBkMode";
 
-   function Create_Compatible_Bitmap(
+   function Create_Compatible_Bitmap (
       H_dc        : HDC;
       Cx          : IC.int;
       Cy          : IC.int
    ) return HBITMAP
-   with Import => True, Convention => C, External_Name => "CreateCompatibleBitmap";  
+   with Import => True, Convention => C, External_Name => "CreateCompatibleBitmap";
 
    function Begin_Paint (H_Wnd : HWND; Lp_Paint : access PAINTSTRUCT) return HDC
    with Import => True, Convention => C, External_Name => "BeginPaint";
@@ -277,8 +274,8 @@ package Win32 is
    function End_Paint (H_Wnd : HWND; Lp_Paint : access PAINTSTRUCT) return Boolean
    with Import => True, Convention => C, External_Name => "EndPaint";
 
-   function Set_DI_Bits_To_Device
-     (H_dc         : HDC;
+   function Set_DI_Bits_To_Device (
+      H_dc         : HDC;
       X_Dest       : IC.int;
       Y_Dest       : IC.int;
       Dw_Width     : DWORD;
@@ -295,15 +292,15 @@ package Win32 is
    procedure Post_Quit_Message (N_Exit_Code : IC.int)
    with Import => True, Convention => C, External_Name => "PostQuitMessage";
 
-   function Get_Object(
+   function Get_Object (
       h  : HANDLE;
       c  : IC.int;
       pv : LPVOID
    ) return IC.int
    with Import => True, Convention => C, External_Name => "GetObject";
 
-   function Def_Window_Proc
-     (H_Wnd   : HWND;
+   function Def_Window_Proc (
+      H_Wnd   : HWND;
       Msg     : IC.unsigned;
       W_Param : WPARAM;
       L_Param : LPARAM)
@@ -319,7 +316,6 @@ package Win32 is
    function Get_Stock_Object (Fn_Object : IC.int) return HGDIOBJ
    with Import => True, Convention => C, External_Name => "GetStockObject";
 
-
    function Create_Compatible_DC (H_Dc  : HDC) return HDC
    with Import => True, Convention => C, External_Name => "CreateCompatibleDC";
 
@@ -330,10 +326,10 @@ package Win32 is
                                 H_Section : HANDLE;
                                 Dw_Offset : DWORD)
                                 return HBITMAP
-   with Import => True, Convention => C, External_Name => "CreateDIBSection"; 
+   with Import => True, Convention => C, External_Name => "CreateDIBSection";
 
    function Select_Object (H_Dc : HDC; Hgdi_Obj : HGDIOBJ) return HGDIOBJ
-   with Import => True, Convention => C, External_Name => "SelectObject";    
+   with Import => True, Convention => C, External_Name => "SelectObject";
 
    function Set_DI_Bits (H_Dc         : HDC;
                          hbmp         : HBITMAP;
@@ -380,10 +376,10 @@ package Win32 is
    with Import => True, Convention => C, External_Name => "CreateWindowExA";
 
    function Show_Window (H_Wnd : HWND; N_Cmd_Show : IC.int) return Boolean
-   with Import => True, Convention => C, External_Name => "ShowWindow"; 
+   with Import => True, Convention => C, External_Name => "ShowWindow";
 
    function Update_Window (H_Wnd : HWND) return Boolean
-   with Import => True, Convention => C, External_Name => "UpdateWindow"; 
+   with Import => True, Convention => C, External_Name => "UpdateWindow";
 
    function Get_Message (Lp_Msg : MSG_Access; H_Wnd : HWND;
                          W_Msg_Filter_Min : IC.unsigned;
@@ -396,8 +392,7 @@ package Win32 is
    function Get_H_Instance return HINSTANCE
    with Import => True, Convention => C, External_Name => "rts_get_hInstance";
 
-   function Stretch_DIBits
-      (
+   function Stretch_DIBits (
          H_Dc           : HDC;
          X_Dest         : IC.int;
          Y_Dest         : IC.int;
@@ -417,8 +412,7 @@ package Win32 is
    function GetDC (H_Wnd : HWND) return HDC
    with Import => True, Convention => C, External_Name => "GetDC";
 
-   function ReleaseDC
-      (
+   function ReleaseDC (
          H_Wnd : HWND;
          H_Dc  : HDC
       ) return Boolean
@@ -434,6 +428,5 @@ package Win32 is
       lpPoint : access POINT
    ) return Interfaces.C.int
    with Import => True, Convention => Stdcall, External_Name => "ScreenToClient";
-
 
 end Win32;

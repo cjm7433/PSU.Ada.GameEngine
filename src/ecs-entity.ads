@@ -5,15 +5,15 @@ with Ada.Unchecked_Deallocation;
 
 package ECS.Entity is
 
-  subtype ID_T is String (1 .. 5);
-  package Component_List is new Ada.Containers.Vectors (Index_Type => Natural, Element_Type => Component_Access);
-  use Component_List;
-  
-  type Entity_T (Count : Positive) is tagged record
-    Id : Id_T;
-    Components : Component_List.Vector;
-    Destroyed : Boolean;
-  end record;
+   subtype Id_T is String (1 .. 5);
+   package Component_List is new Ada.Containers.Vectors (Index_Type => Natural,
+      Element_Type => Component_Access);
+   use Component_List;
+   type Entity_T (Count : Positive) is tagged record
+       Id         : Id_T;
+       Components : Component_List.Vector;
+       Destroyed  : Boolean;
+   end record;
 
   type Entity_Access is access all Entity_T'Class;
   type Entities_T is array (Natural range <>) of Entity_Access;

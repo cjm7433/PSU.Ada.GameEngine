@@ -2,7 +2,7 @@ with ECS.Entity; use ECS.Entity;
 
 package body ECS.Entity_Manager is
 
-  Entity_Count : Positive := 1;
+   Entity_Count : Positive := 1;
 
   function AddEntity (Manager : in out Entity_Manager_T; Entity_Type : Id_T) return Entity_Access is
     Entity : Entity_Access := new Entity_T'(

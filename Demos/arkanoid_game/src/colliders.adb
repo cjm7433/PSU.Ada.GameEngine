@@ -4,7 +4,7 @@ package body Colliders is
    procedure Add_Wall(
       Manager        : access Entity_Manager_T'Class; 
       Width,Height   : Float;
-      Position       : Vec2;
+      Position       : Vector2;
       Id             : Id_T
    ) is
       Wall           : Entity_Access            := Manager.all.AddEntity (Id);

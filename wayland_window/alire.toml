@@ -1,0 +1,16 @@
+name = "wayland_window"
+description = "A Wayland window example in Ada with detailed comments"
+version = "0.1.0-dev"
+
+authors = ["Your Name"]
+maintainers = ["Your Name <example@example.com>"]
+licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
+website = ""
+tags = ["wayland", "graphics", "window", "gui", "example"]
+
+executables = ["wayland_window"]
+
+# Note: This project requires libwayland-client to be installed on your system
+# Install via: apt-get install libwayland-dev (Debian/Ubuntu)
+#              dnf install wayland-devel (Fedora)
+#              pacman -S wayland (Arch)

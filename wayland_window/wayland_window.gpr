@@ -1,0 +1,28 @@
+with "config/wayland_window_config.gpr";
+project Wayland_Window is
+
+   for Source_Dirs use ("src/", "config/");
+   for Languages use ("Ada", "C");
+   for Object_Dir use "obj/" & Wayland_Window_Config.Build_Profile;
+   for Create_Missing_Dirs use "True";
+   for Exec_Dir use "bin";
+   for Main use ("wayland_window.adb");
+
+   package Compiler is
+      for Default_Switches ("Ada") use Wayland_Window_Config.Ada_Compiler_Switches;
+      for Default_Switches ("C") use ("-Wall", "-Wextra");
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use ("-Es"); --  Symbolic traceback
+   end Binder;
+   
+   package Linker is
+      for Switches ("Ada") use ("-lwayland-client");
+   end Linker;
+
+   package Install is
+      for Artifacts (".") use ("share");
+   end Install;
+
+end Wayland_Window;

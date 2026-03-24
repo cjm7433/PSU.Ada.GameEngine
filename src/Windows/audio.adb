@@ -5,7 +5,7 @@ with Ada.Unchecked_Deallocation;
 with Interfaces.C;
 with System;
 
-package body Wave_Player is
+package body Audio is
 
    use Interfaces;
    use Interfaces.C;
@@ -288,7 +288,7 @@ pragma Convention (C, IXAudio2SourceVtbl);
 
    end Initialize;
 
-   procedure Play_Wav (Filename : String) is
+   procedure Play_Audio (Filename : String) is
 
    File : Ada.Streams.Stream_IO.File_Type;
    Str  : access Ada.Streams.Root_Stream_Type'Class;
@@ -434,7 +434,7 @@ begin
         (Voice => Voice,
          Audio => Audio));
 
-end Play_Wav;
+end Play_Audio;
 
    procedure Update is
       State : XAUDIO2_VOICE_STATE;
@@ -464,4 +464,4 @@ end Play_Wav;
       CoUninitialize;
    end Finalize;
 
-end Wave_Player;
+end Audio;

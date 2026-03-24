@@ -1,6 +1,5 @@
 with Interfaces;
 with Interfaces.C;
-with Win32; use Win32;
 with Graphics.Color; use Graphics.Color;
 --  with GameMath; use GameMath;
 with Math.Linear_Algebra; use Math.Linear_Algebra;
@@ -10,39 +9,44 @@ with System.Storage_Elements; use System.Storage_Elements;
 with System.Address_To_Access_Conversions;
 package Graphics.Renderer is
 
-  type Storage_Array_Access is access all Storage_Array;
+   --  Byte type for pixel data (ARGB8888 format)
+   type Byte is mod 2**8 with Size => 8;
+   type Byte_Array is array (Natural range <>) of Byte;
+   type Byte_Array_Access is access Byte_Array;
 
-   type bool is new boolean;
-   for bool'size use 8;
+   type Storage_Array_Access is access all Storage_Array;
+
+   type bool is new Boolean;
+   for bool'Size use 8;
 
    subtype Max_String_Length is Natural range 1 .. 255;
    type Char_Array is array (Max_String_Length) of Character;
 
    procedure Clear_Screen
-      (img : in out Byte_Array; c : Graphics.Color.Color; Screen_Width : Natural; Screen_Height : Natural);
+      (Img : in out Byte_Array; C : Graphics.Color.Color; Screen_Width : Natural; Screen_Height : Natural);
 
-   procedure set_pixel_color
-     (img : in out Byte_Array; x : Integer; y : Integer; c : Graphics.Color.Color; Screen_Width : Natural; Screen_Height : Natural);
+   procedure Set_Pixel_Color
+     (Img : in out Byte_Array; X : Integer; Y : Integer; C : Graphics.Color.Color; Screen_Width : Natural; Screen_Height : Natural);
 
-   function Get_Pixel_Color (img : in out Byte_Array; x,y : Integer; Screen_Width, Screen_Height : Natural) return Graphics.Color.Color;
+   function Get_Pixel_Color (Img : in out Byte_Array; X, Y : Integer; Screen_Width, Screen_Height : Natural) return Graphics.Color.Color;
 
-   procedure line
-     (x0  : in out Integer;
-      y0  : in out Integer;
-      x1  : in out Integer;
-      y1  : in out Integer;
-      c   : Graphics.Color.Color;
-      img : in out Byte_Array;
+   procedure Line
+     (X0  : in out Integer;
+      Y0  : in out Integer;
+      X1  : in out Integer;
+      Y1  : in out Integer;
+      C   : Graphics.Color.Color;
+      Img : in out Byte_Array;
       Screen_Width : Natural;
       Screen_Height : Natural);
 
    procedure Draw_Regular_Polygon
-     (img      : in out Byte_Array;
+     (Img      : in out Byte_Array;
       Sides    : Positive;
       Radius   : Positive;
       Center_X : Float;
       Center_Y : Float;
-      c        : Graphics.Color.Color;
+      C        : Graphics.Color.Color;
       Screen_Width    : Natural;
       Screen_Height   : Natural);
 
@@ -55,7 +59,8 @@ package Graphics.Renderer is
 
 
    generic
-      type t is private;
-   procedure generic_swap (x, y : in out t);
+      type T is private;
+   procedure Generic_Swap (X, Y : in out T);
 
 end Graphics.Renderer;
+

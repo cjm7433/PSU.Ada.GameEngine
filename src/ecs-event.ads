@@ -2,6 +2,7 @@ with Interfaces;
 with Ada.Streams;
 with Ada.Containers.Vectors;
 
+-- EVENT PACKAGE ADDED 11/25/24
 package ECS.Event is
 
   type Byte is mod 256; -- Equivalent to an unsigned 8-bit type
