@@ -1,9 +1,9 @@
 with System; use System;
---  with Interfaces.C;
---  with Interfaces.C.Strings;
+with Interfaces.C;
+with Interfaces.C.Strings;
 with Ada.Text_IO; use Ada.Text_IO;
 with ECS.Event_Manager; use ECS.Event_Manager;
---  with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with ECS.Event;
 with ECS;
 with Win32; use Win32;
@@ -51,8 +51,8 @@ package body Window is
 
          when WM_KEYDOWN =>
          declare
-            KeyCode : constant ECS.Event.Byte := ECS.Event.Byte (W_Param);
-            Event : constant ECS.Event.Event_T :=
+            KeyCode : ECS.Event.Byte := ECS.Event.Byte (W_Param);
+            Event : ECS.Event.Event_T :=
             (Source    => 0,
              EventType => ECS.Event.KeyDown,
              Data      => (KeyCode   => KeyCode,
@@ -67,8 +67,8 @@ package body Window is
 
          when WM_KEYUP =>
          declare
-            KeyCode : constant ECS.Event.Byte := ECS.Event.Byte (W_Param);
-            Event : constant ECS.Event.Event_T :=
+            KeyCode : ECS.Event.Byte := ECS.Event.Byte (W_Param);
+            Event : ECS.Event.Event_T :=
             (Source    => 0,
                EventType => ECS.Event.KeyUp,
                Data      => (KeyCode    => KeyCode,
@@ -83,9 +83,9 @@ package body Window is
 
          when WM_LBUTTONDOWN =>
          declare
-            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
-            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
-            MouseEvent : constant ECS.Event.Event_T :=
+            MouseX : Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseEvent : ECS.Event.Event_T :=
               (Source    => 0,
                EventType => ECS.Event.L_MouseDown,
                Data      => (KeyCode    => 0,
@@ -100,9 +100,9 @@ package body Window is
 
          when WM_LBUTTONUP =>
          declare
-            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
-            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
-            MouseEvent : constant ECS.Event.Event_T :=
+            MouseX : Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseEvent : ECS.Event.Event_T :=
               (Source    => 0,
                EventType => ECS.Event.L_MouseUp,
                Data      => (KeyCode    => 0,
@@ -117,9 +117,9 @@ package body Window is
 
          when WM_RBUTTONDOWN =>
          declare
-            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
-            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
-            MouseEvent : constant ECS.Event.Event_T :=
+            MouseX : Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseEvent : ECS.Event.Event_T :=
               (Source    => 0,
                EventType => ECS.Event.R_MouseDown,
                Data      => (KeyCode    => 0,
@@ -134,9 +134,9 @@ package body Window is
 
          when WM_RBUTTONUP =>
          declare
-            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
-            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
-            MouseEvent : constant ECS.Event.Event_T :=
+            MouseX : Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseEvent : ECS.Event.Event_T :=
               (Source    => 0,
                EventType => ECS.Event.R_MouseUp,
                Data      => (KeyCode    => 0,
@@ -151,11 +151,11 @@ package body Window is
 
          when WM_MOUSEMOVE =>
          declare
-            MouseX : constant Integer := Integer (IC.int (LOWORD (L_Param)));
-            MouseY : constant Integer := Integer (IC.int (HIWORD (L_Param)));
+            MouseX : Integer := Integer (IC.int (LOWORD (L_Param)));
+            MouseY : Integer := Integer (IC.int (HIWORD (L_Param)));
          begin
                declare
-                  MouseEvent : constant ECS.Event.Event_T :=
+                  MouseEvent : ECS.Event.Event_T :=
                   (Source    => 0,
                    EventType => ECS.Event.MouseMove,
                    Data      => (KeyCode    => 0,
@@ -232,7 +232,7 @@ package body Window is
       Bmi_Reset : Byte_Array (0 .. BITMAPINFO'Size / 8 - 1) := (others => 0);
       Bmi : aliased BITMAPINFO with Address => Bmi_Reset'Address;
       Result : Interfaces.C.int;
-      Handle_DC : constant HDC := GetDC (W_Instance.Handle);
+      Handle_DC : HDC := GetDC (W_Instance.Handle);
    begin
       Bmi.bmiHeader.biSize            := BITMAPINFOHEADER'Size / 8;
       Bmi.bmiHeader.biWidth           := W_Instance.Width;
@@ -265,7 +265,7 @@ package body Window is
       --  Release the HDC to avoid memory leak
       if Handle_DC /= Null_Address then
          declare
-            Result_Release : constant Boolean :=
+            Result_Release : Boolean :=
                ReleaseDC (W_Instance.Handle, Handle_DC);
          begin
             if not Result_Release then

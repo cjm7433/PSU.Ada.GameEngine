@@ -3,6 +3,7 @@ with Ada.Real_Time;           use Ada.Real_Time;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;             use Ada.Text_IO;
 with Interfaces.C;            use Interfaces.C;
+with System;
 -- Game Engine ECS modules
 with ECS;                     use ECS;
 with ECS.Component;           use ECS.Component;
@@ -24,6 +25,7 @@ with Graphics.Renderer;       use Graphics.Renderer;
 with Graphics.Texture_Loader; use Graphics.Texture_Loader;
 -- Window interface (platform-agnostic)
 with Window;                  use Window;
+with Win32;                   use Win32;
 -- User defined modules
 with Arkanoid_Inputs;         use Arkanoid_Inputs;
 with Custom_Components;       use Custom_Components;
@@ -171,6 +173,8 @@ begin
    Stop_Time  := Clock;
    GameWindow := New_Window (Interfaces.C.int (Width), Interfaces.C.int (Height), Title);
    declare
+      Message : MSG_Access := new MSG;
+      Lp_Result : LRESULT;
       Background_Image  : QOI_Image_Data;
       Texture_Image     : QOI_Image_Data;
       Running           : Boolean := True;
@@ -190,14 +194,15 @@ begin
       Add_Wall (Manager, 7.0, 240.0, (0.0,   8.0), "LWall");
       Add_Wall (Manager, 7.0, 240.0, (216.0, 8.0), "RWall");
       Add_Wall (Manager, 225.0, 7.0, (0.0,   0.0), "TWall");
-      Play_Audio("..\sfx\ost.wav");
+      Play_Audio("sfx/ost.wav");
 
          -- Platform-agnostic game loop
       while Running loop
          Stop_Time    := Clock;
          Elapsed_Time := To_Duration(Stop_Time - Start_Time);
          Start_Time   := Stop_Time;
-         
+         Running := Get_Message (Message, System.Null_Address, 0, 0);
+         Lp_Result := Dispatch_Message (Message);
          --  Process platform events (Windows MSG or Wayland events)
          Window.Process_Events;
          
@@ -209,7 +214,7 @@ begin
          Collision.Execute (Elapsed_Time, Manager);
          Arkanoid.Execute (Elapsed_Time, Manager);
          Animation.Execute(Elapsed_Time, Manager);
-         Update;
+         --Update;
          Draw_String(Buffer.all,10,10,0,0,"SCORE:" & Integer'Image(Score),(255,255,255,255),Width,Height);
          Render.Execute (Elapsed_Time, Manager);
          Draw_Buffer (Buffer.all'Address);

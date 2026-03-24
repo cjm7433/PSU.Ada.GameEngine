@@ -21,8 +21,8 @@ project Arkanoid is
          when "linux" =>
             for Switches ("ada") use ("-lwayland-client");
          when "windows" =>
-            for Switches ("ada") use ("-lgdi32", "-llargeint", "-lwinmm");
-            for Switches ("c") use ("-lgdi32", "-llargeint", "-lwinmm");
+            for Switches ("ada") use ("-lgdi32", "-llargeint", "-lwinmm", "-lole32", "-lxaudio2_9");
+            for Switches ("c") use ("-lgdi32", "-llargeint", "-lwinmm", "-lole32", "-lxaudio2_9");
          when others =>
             null;
       end case;
