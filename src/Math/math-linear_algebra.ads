@@ -16,179 +16,177 @@ package Math.Linear_Algebra is
    );
 
 
-
-   -- CONSTRUCTORS
-      -- Polar constructor (radians)
-      function Vector2_From_Polar (
-            Angle       : Float := 0.0;
-            Magnitude   : Float := 1.0
-      ) return Vector2;
-
-   -- New Vector Constructor
-   function New_Vector2 (X_In, Y_in : Float) return Vector2;
+   -- Polar constructor (radians)
+   function Vector2_From_Polar (
+         Angle       : Float := 0.0;
+         Magnitude   : Float := 1.0
+   ) return Vector2;
 
 
-   -- COMPARISON
-      -- Exact equality
-      function "=" (
-            V1, V2 : Vector2
-      ) return Boolean;
+   -- Exact equality
+   function "=" (
+         V1, V2 : Vector2
+   ) return Boolean;
 
 
-      -- Approximate equality
-      function Is_Equal_Approximate (
-            F1, F2 : Float;
-            Epsilon : Float := 1.0E-6
-      ) return Boolean;
+   -- Approximate equality
+   function Is_Equal_Approximate (
+         F1, F2 : Float;
+         Epsilon : Float := 1.0E-6
+   ) return Boolean;
 
 
-      -- Approximate equality
-      function Is_Equal_Approximate (
-            V1, V2 : Vector2;
-            Epsilon : Float := 1.0E-6
-      ) return Boolean;
+   -- Approximate equality
+   function Is_Equal_Approximate (
+         V1, V2 : Vector2;
+         Epsilon : Float := 1.0E-6
+   ) return Boolean;
 
 
-      -- Magntitude greater than
-      function ">" (
-            V1, V2 : Vector2
-      ) return Boolean;
+   -- Magntitude greater than
+   function ">" (
+         V1, V2 : Vector2
+   ) return Boolean;
 
 
-      -- Magnitude greater than or exactly equal
-      function ">=" (
-            V1, V2 : Vector2
-      ) return Boolean;
+   -- Magnitude greater than or exactly equal
+   function ">=" (
+         V1, V2 : Vector2
+   ) return Boolean;
 
 
-      -- Magnitude less than
-      function "<" (
-            V1, V2 : Vector2
-      ) return Boolean;
+   -- Magnitude less than
+   function "<" (
+         V1, V2 : Vector2
+   ) return Boolean;
 
 
-      -- Magnitude less than or exactly equal
-      function "<=" (
-            V1, V2 : Vector2
-      ) return Boolean;
+   -- Magnitude less than or exactly equal
+   function "<=" (
+         V1, V2 : Vector2
+   ) return Boolean;
 
 
-
-   -- ARITHMETIC
-      -- Component-wise addition
-      function "+" (
-            V1, V2 : Vector2
-      ) return Vector2;
+   -- Component-wise addition
+   function "+" (
+         V1, V2 : Vector2
+   ) return Vector2;
 
 
-      -- Component-wise subtraction
-      function "-" (
-            V1, V2 : Vector2
-      ) return Vector2;
+   -- Component-wise subtraction
+   function "-" (
+         V1, V2 : Vector2
+   ) return Vector2;
 
 
-      -- Negation
-      function "-" (
-            V : Vector2
-      ) return Vector2;
+   -- Negation
+   function "-" (
+         V : Vector2
+   ) return Vector2;
 
 
-      -- Component-wise multiplication
-      function "*" (
-            V1, V2 : Vector2
-      ) return Vector2;
+   -- Component-wise multiplication
+   function "*" (
+         V1, V2 : Vector2
+   ) return Vector2;
 
 
-      -- Magnitude Integer multiplication
-      function "*" (
-            V : Vector2;
-            S : Integer
-      ) return Vector2;
+   -- Magnitude Integer multiplication
+   function "*" (
+         V : Vector2;
+         S : Integer
+   ) return Vector2;
 
 
-      -- Magnitude Float multiplication
-      function "*" (
-            V : Vector2;
-            S : Float
-      ) return Vector2;
+   -- Magnitude Float multiplication
+   function "*" (
+         V : Vector2;
+         S : Float
+   ) return Vector2;
 
 
-      -- Component-wise division
-      function "/" (
-            V1, V2 : Vector2
-      ) return Vector2;
+   -- Component-wise division
+   function "/" (
+         V1, V2 : Vector2
+   ) return Vector2;
 
 
-      -- Magnitude Integer division
-      function "/" (
-            V : Vector2;
-            S : Integer
-      ) return Vector2;
+   -- Magnitude Integer division
+   function "/" (
+         V : Vector2;
+         S : Integer
+   ) return Vector2;
 
 
-      -- Magnitude Float division
-      function "/" (
-            V : Vector2;
-            S : Float
-      ) return Vector2;
+   -- Magnitude Float division
+   function "/" (
+         V : Vector2;
+         S : Float
+   ) return Vector2;
 
 
-
-   -- ALGEBRA
-      -- Normalization
-      function Normalize (
-            V : Vector2
-      ) return Vector2;
+   -- Normalization
+   function Normalize (
+         V : Vector2
+   ) return Vector2;
 
 
-      -- Magnitude
-      function Length (
-            V : Vector2
-      ) return Float;
-
-      -- Scale
-      procedure Scale (
-        V : in out Vector2;
-        S : Float
-        ); 
+   -- Magnitude
+   function Length (
+         V : Vector2
+   ) return Float;
 
 
-      -- Magnitude squared (faster calculation; useful for comparisons)
-      function Length_Squared (
-            V : Vector2
-      ) return Float;
+   -- Magnitude squared (faster calculation; useful for comparisons)
+   function Length_Squared (
+         V : Vector2
+   ) return Float;
 
 
-      -- Rotation (radians)
-      function Rotate (
-            F     : Float;
-            Angle : Float := 0.0
-      ) return Float;
+   -- Rotation (radians)
+   function Rotate (
+         F     : Float;
+         Angle : Float := 0.0
+   ) return Float;
 
 
-      -- Rotation (radians)
-      function Rotate (
-            V     : Vector2;
-            Angle : Float := 0.0
-      ) return Vector2;
+   -- Rotation (radians)
+   function Rotate (
+         V     : Vector2;
+         Angle : Float := 0.0
+   ) return Vector2;
 
 
-      -- Distance
-      function Distance (
-            V1 : Vector2;
-            V2 : Vector2
-      ) return Float;
+   -- Distance
+   function Distance (
+         V1 : Vector2;
+         V2 : Vector2
+   ) return Float;
 
 
-      -- Distance squared (faster calculation; useful for comparisons)
-      function Distance_Squared (
-            V1 : Vector2;
-            V2 : Vector2
-      ) return Float;
+   -- Distance squared (faster calculation; useful for comparisons)
+   function Distance_Squared (
+         V1 : Vector2;
+         V2 : Vector2
+   ) return Float;
 
 
-      -- Angle
-      function Angle (
-            V : Vector2
-      ) return Float;
+   -- Angle
+   function Angle (
+         V : Vector2
+   ) return Float;
+
+
+   -- Dot product
+   function Dot (
+         V1 : Vector2;
+         V2 : Vector2
+   ) return Float;
+
+
+   -- Reflect vector around surface normal
+   function Reflect (
+         V : Vector2;
+         N : Vector2
+   ) return Vector2;
 end;

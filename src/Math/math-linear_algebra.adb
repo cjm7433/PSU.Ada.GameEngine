@@ -283,4 +283,24 @@ package body Math.Linear_Algebra is
          return Rotate(Arctan(V.Y, V.X));
       end if;
    end;
+
+
+   -- Dot product
+   function Dot (
+         V1 : Vector2;
+         V2 : Vector2
+   ) return Float is
+   begin
+      return V1.X * V2.X + V1.Y * V2.Y;
+   end;
+
+
+   -- Reflect vector around surface normal
+   function Reflect (
+         V : Vector2;
+         N : Vector2
+   ) return Vector2 is
+   begin
+      return V - N * Dot(V, N) * 2.0;
+   end;
 end;
