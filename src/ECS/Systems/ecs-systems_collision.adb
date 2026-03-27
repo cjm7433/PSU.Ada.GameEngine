@@ -106,10 +106,10 @@ package body ECS.Systems_Collision is
 
       -- Calculate overlap on each axis (positive means penetration)
       Overlap_X : constant Float :=
-         (Get_Half_Size(C1.Bounding_Box).X + Get_Half_Size(C2.Bounding_Box).X) - abs (T1.Position.X - T2.Position.X);
+         (C1.Bounding_Box.Half_Size.X + C2.Bounding_Box.Half_Size.X) - abs (T1.Position.X - T2.Position.X);
       
       Overlap_Y : constant Float :=
-         (Get_Half_Size(C1.Bounding_Box).Y + Get_Half_Size(C2.Bounding_Box).Y) - abs (T1.Position.Y - T2.Position.Y);
+         (C1.Bounding_Box.Half_Size.Y + C2.Bounding_Box.Half_Size.Y) - abs (T1.Position.Y - T2.Position.Y);
    
    begin
       
@@ -309,9 +309,9 @@ package body ECS.Systems_Collision is
 
                -- Short-circuit: only check for AABB overlap if layers/masks allow collision
                if Entities_Can_Collide (C1, C2) and then AABB_Overlap (          
-                  T1.Position, Get_Half_Size(C1.Bounding_Box),
-                  T2.Position, Get_Half_Size(C2.Bounding_Box))
-               
+                  T1.Position, C1.Bounding_Box.Half_Size,
+                  T2.Position, C2.Bounding_Box.Half_Size
+               )
                then
                   
                   -- Separate and bounce (triggers are detected but not resolved)

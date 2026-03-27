@@ -48,8 +48,4 @@ package Math.Physics.AABBs is
          Box2     : AABB;
          Motion   : Vector2
    ) return Float;
-
-   -- Get the half-size of an AABB
-   function Get_Half_Size (Box : AABB) return Vector2;
-
 end;
