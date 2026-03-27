@@ -26,11 +26,6 @@ package body Math.Linear_Algebra is
       return Normal * Magnitude;
    end;
 
-   -- New Vector
-   function New_Vector2 (X_In, Y_In : Float) return Vector2 is
-   begin
-      return (X => X_In, Y => Y_In);
-   end New_Vector2;
 
    -- Exact equality
    function "=" (
@@ -219,11 +214,6 @@ package body Math.Linear_Algebra is
       return V / V.Length;
    end;
 
-   -- Scale in place
-  procedure Scale (V : in out Vector2; S : Float) is
-    begin
-      V := V * S;
-    end Scale;
 
    -- Magnitude
    function Length (
