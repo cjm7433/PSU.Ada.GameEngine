@@ -167,8 +167,12 @@ package body ECS.Store is
               (E, Motion_Table.Index (S.Motion.Data.Length));
 
             S.Motion.Data.Append
-              (Motion_Component'
-                 (   others => (0.0, 0.0)));
+              (Motion_Component'(
+                  Linear_Velocity      => (0.0, 0.0),
+                  Linear_Acceleration  => (0.0, 0.0),
+                  Angular_Velocity     => 0.0,
+                  Angular_Acceleration => 0.0
+              ));
          end if;
 
       elsif Tag = Collider_Component'Tag then
