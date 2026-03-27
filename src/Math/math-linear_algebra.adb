@@ -182,6 +182,30 @@ package body Math.Linear_Algebra is
    end;
 
 
+   -- Wrap Integer around min/max
+   function Wrap (
+         N     : Integer;
+         Min   : Integer;
+         Max   : Integer
+   ) return Integer is
+   begin
+      return Min + ((N - Min) mod (Max - Min));
+   end;
+
+
+   -- Wrap Float around min/max
+   function Wrap (
+         N   : Float;
+         Min : Float;
+         Max : Float
+   )return Float is
+      R : constant Float := Max - Min;
+      D : constant Float := N - Min;
+   begin
+      return Min + R * Float'Floor(D / R) * (-1.0) + D;
+   end Wrap;
+
+
    -- Normalization
    function Normalize (
       V : Vector2

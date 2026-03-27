@@ -125,6 +125,22 @@ package Math.Linear_Algebra is
    ) return Vector2;
 
 
+   -- Wrap Integer around min/max
+   function Wrap (
+         N     : Integer;
+         Min   : Integer;
+         Max   : Integer
+   ) return Integer;
+
+
+   -- Wrap Float around min/max
+   function Wrap (
+         N     : Float;
+         Min   : Float;
+         Max   : Float
+   ) return Float;
+
+
    -- Normalization
    function Normalize (
          V : Vector2

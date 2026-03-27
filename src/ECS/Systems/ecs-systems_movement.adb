@@ -91,24 +91,8 @@ package body ECS.Systems_Movement is
             -- Integrate velocity --> transform
             T.Position  :=   T.Position + M.Linear_Velocity * Dt;
 
-            -- Integrate and normalize rotation (TODO: hopefully X is the right scalar component!)
-            -- TODO: Normalize with LinAlg library instead
-            T.Rotation := (T.Rotation + M.Angular_Velocity.X * DT);
-            -- would be nice to do: T.Rotation := (T.Rotation + M.Angular_Velocity.X * DT) mod (2.0 * Pi); instead
-            
-            -- Rotation should probably be wrapped between 0 a 2pi
-            -- TODO: Here or elsewhere (like in a Movement_Normalize system)?
-            -- TODO: Do I need to make 2pi a constant (would it help reduce overhead)?
-            -- TODO: Normalize with LinAlg library instead
-
-            -- Wrap rotation between 0 and 2pi
-            if T.Rotation >= (2.0 * Pi) then
-               T.Rotation := T.Rotation - (2.0 * Pi);
-            
-            elsif T.Rotation < 0.0 then
-               T.Rotation := T.Rotation + (2.0 * Pi);
-            
-            end if;
+            -- Integrate and normalize rotation
+            T.Rotation := Wrap(T.Rotation + M.Angular_Velocity * DT, 0.0, 2.0 * Pi);
          end;
       end loop;
 
