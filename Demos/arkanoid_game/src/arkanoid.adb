@@ -6,7 +6,7 @@ with Interfaces.C;            use Interfaces.C;
 with System;
 -- Game Engine ECS modules
 with ECS;                     use ECS;
-with ECS.Store;               use ECS.Store;
+with ECS.Store;               --use ECS.Store;
 with ECS.Components;           use ECS.Components;
 with ECS.Entities;              use ECS.Entities;
 with ECS.Manager;             use ECS.Manager;
@@ -37,7 +37,7 @@ procedure Arkanoid is
    Elapsed_Time          : Duration;
 
    -- Entity Manager and Entities
-   S : Store;
+   S : ECS.Store.Store;
 
    -- Systems
 
@@ -53,7 +53,7 @@ begin
    Start_Time := Clock;
    Stop_Time  := Clock;
    GameWindow := New_Window (Interfaces.C.int (Width), Interfaces.C.int (Height), Title);
-   Initialize (S);
+   ECS.Store.Initialize (S);
 
    declare
       Message : MSG_Access := new MSG;
