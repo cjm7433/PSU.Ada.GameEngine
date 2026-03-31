@@ -92,7 +92,7 @@ package body ECS.Systems_Movement is
             T.Position  :=   T.Position + M.Linear_Velocity * Dt;
 
             -- Integrate and normalize rotation
-            T.Rotation := Wrap(T.Rotation + M.Angular_Velocity * DT, 0.0, 2.0 * Pi);
+            T.Rotation := Rotate(T.Rotation, M.Angular_Velocity * DT);
          end;
       end loop;
 
