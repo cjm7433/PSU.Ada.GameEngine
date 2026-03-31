@@ -1,4 +1,4 @@
-with ECS.Component; use ECS.Component;
+with ECS.Components; use ECS.Components;
 --  with GameMath;
 with Math.Linear_Algebra;
 package Custom_Components is

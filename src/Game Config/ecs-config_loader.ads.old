@@ -1,0 +1,26 @@
+with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+--  with ECS.Entity; use ECS.Entity;
+--  with ECS.Entity_Manager; use ECS.Entity_Manager;
+--  with ECS.Component; use ECS.Component;
+--  with GameMath;                use GameMath;
+with ECS.Store; use ECS.Store;
+with ECS.Entities; use ECS.Entities;
+with ECS.Components; use ECS.Components;
+with ECS.Manager; use ECS.Manager;
+with Math.Linear_Algebra; use Math.Linear_Algebra;
+with Graphics.Color; use Graphics.Color;
+with ECS.Systems_Movement;     use ECS.Systems_Movement;
+with ECS.Systems_Collision;    use ECS.Systems_Collision;
+with ECS.Components.Quad; use ECS.Components.Quad;
+with ECS.Components.AABB; use ECS.Components.AABB;
+with ECS.Components.Rigidbody; use ECS.Components.Rigidbody;
+
+
+package ECS.Config_Loader is
+
+   --  procedure Load_Config (Manager : in out ECS.Entity_Manager.Entity_Manager_T; File_Name : String);
+   procedure Load_Config (Manager : in out ECS.Manager; File_Name : String);
+
+end ECS.Config_Loader;
