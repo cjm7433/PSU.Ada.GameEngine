@@ -18,8 +18,9 @@ with Audio;                   use Audio;
 with Math.Linear_Algebra;     use Math.Linear_Algebra;
 -- Game Engine Graphics modules
 with Graphics.Color;          use Graphics.Color;
-with Graphics.Renderer;       use Graphics.Renderer;
-with Graphics.Texture_Loader; use Graphics.Texture_Loader;
+--  with Graphics.Renderer;       use Graphics.Renderer;
+with Graphics.Rendering;      use Graphics.Rendering;
+--  with Graphics.Texture_Loader; use Graphics.Texture_Loader;
 -- Window interface (platform-agnostic)
 with Window;                  use Window;
 with Win32;                   use Win32;
@@ -32,7 +33,7 @@ procedure Arkanoid is
    Height                : Integer                 := 240;
    Title                 : Unbounded_String        := To_Unbounded_String ("Arkanoid Clone");
    GameWindow            : Window_Access;
-   Buffer                : Graphics.Renderer.Byte_Array_Access := new Graphics.Renderer.Byte_Array (0 .. Width * Height * 4);
+   Buffer                : Graphics.Rendering.Byte_Array_Access := new Graphics.Rendering.Byte_Array (0 .. Width * Height * 4);
    Start_Time, Stop_Time : Time;
    Elapsed_Time          : Duration;
 
@@ -42,7 +43,11 @@ procedure Arkanoid is
    -- Systems
 
    -- Textures
-   bkgrd                : constant String       := "Data/bkgrd.qoi";
+   --  bkgrd                : constant String       := "Data/bkgrd.qoi";
+   Example_Color : Graphics.Rendering.Byte_Array := ( 16#FF#, 16#FF#, 16#00#, 16#00#);
+   X1, X2, Y1, Y2 : Integer := 0;
+
+   
 
 
 
@@ -58,15 +63,18 @@ begin
    declare
       Message : MSG_Access := new MSG;
       Lp_Result : LRESULT;
-      Background_Image  : QOI_Image_Data;
-      Texture_Image     : QOI_Image_Data;
+      --Background_Image  : QOI_Image_Data;
+      --Texture_Image     : QOI_Image_Data;
       Running           : Boolean := True;
    begin
 
-      Background_Image        := Load_QOI (bkgrd);
+      --Background_Image        := Load_QOI (bkgrd);
 
       Add_Brick(S, (4.0, 4.0), 2, Red);
+      X2 := 10;
+      Y2 := 10;
 
+      Graphics.Rendering.Line(X1, Y1, X2, Y2, Red, Example_Color, Width, Height); 
          -- Platform-agnostic game loop
       while Running loop
          Stop_Time    := Clock;
@@ -76,8 +84,8 @@ begin
          Lp_Result := Dispatch_Message (Message);
          --  Process platform events (Windows MSG or Wayland events)
          Window.Process_Events;
-         
-         Draw_Image_To_Buffer (Buffer.all, Background_Image.Data, 0, 0, Integer(Width), Integer(Height), 0,0, Width, Height,Natural(Background_Image.Desc.Width));
+
+         --  Draw_Image_To_Buffer (Buffer.all, Background_Image.Data, 0, 0, Integer(Width), Integer(Height), 0,0, Width, Height,Natural(Background_Image.Desc.Width));
 
          Draw_Buffer (Buffer.all'Address);
          
