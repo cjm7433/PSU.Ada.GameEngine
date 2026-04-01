@@ -37,6 +37,16 @@ package Graphics.Rendering is
        Width, Height : Integer;
        Screen_Width, Screen_Height : Natural);
 
+
+   procedure Draw
+      (Buffer : in out Byte_Array;
+       Img : in out Storage_Array_Access;
+       X, Y : Integer;
+       Width, Height : Integer;
+       Start_X, Start_Y : Integer;
+       Screen_Width, Screen_Height : Natural;
+       Img_Width, Img_Height : Natural);
+
    generic
       type T is private;
    procedure Generic_Swap (X, Y : in out T);
