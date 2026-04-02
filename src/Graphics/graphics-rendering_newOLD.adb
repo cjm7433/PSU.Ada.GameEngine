@@ -1,5 +1,5 @@
 
-package body Graphics.Rendering is
+package body Graphics.Rendering_newOLD is
    type Point is record
       X : Integer;
       Y : Integer;
@@ -111,117 +111,6 @@ package body Graphics.Rendering is
    end Line;
 
 
-   -----------------------------------------------------
-   --  Procedure: Fill_Rect
-   --  Added 2025: required to draw solid filled rectangles for
-   --    bricks and the paddle in the ECS render system.
-   --  Inputs: X, Y  - top-left corner of the rectangle (pixels)
-   --          W, H  - width and height of the rectangle (pixels)
-   --          C     - fill colour
-   --          Img   - byte array of image data (BGRA8888)
-   --          Width - width of the render window
-   --          Height - height of the render window
-   --  Output: None
-   --  Note: Pixels that fall outside the buffer bounds are silently
-   --    clipped; the caller does not need to guard against overflow.
-   -----------------------------------------------------
-   procedure Fill_Rect
-      (X, Y, W, H : Integer;
-       C           : Graphics.Color.Color;
-       Img         : in out Byte_Array;
-       Width, Height : Natural) is
-   begin
-      for Row in Y .. Y + H - 1 loop
-         for Col in X .. X + W - 1 loop
-            Set_Pixel_Color (Img, Col, Row, C, Width, Height);
-         end loop;
-      end loop;
-   end Fill_Rect;
-
-
-   -----------------------------------------------------
-   --  Procedure: Fill_Circle
-   --  Added 2025: required to draw the ball as a filled circle
-   --    in the ECS render system.
-   --  Inputs: CX, CY - centre of the circle (pixels)
-   --          Radius  - radius of the circle (pixels)
-   --          C       - fill colour
-   --          Img     - byte array of image data (BGRA8888)
-   --          Width   - width of the render window
-   --          Height  - height of the render window
-   --  Output: None
-   --  Note: Uses a scanline approach derived from the midpoint circle
-   --    algorithm. Pixels outside the buffer bounds are silently
-   --    clipped via Set_Pixel_Color.
-   -----------------------------------------------------
-   procedure Fill_Circle
-      (CX, CY, Radius : Integer;
-       C               : Graphics.Color.Color;
-       Img             : in out Byte_Array;
-       Width, Height   : Natural) is
-
-      F     : Integer := 1 - Radius;
-      Ddx   : Integer := 0;
-      Ddy   : Integer := -2 * Radius;
-      Px    : Integer := 0;
-      Py    : Integer := Radius;
-
-      -- Fills a horizontal span from (CX - Span_X, Row) to (CX + Span_X, Row)
-      procedure Fill_Span (Row, Span_X : Integer) is
-      begin
-         for Col in CX - Span_X .. CX + Span_X loop
-            Set_Pixel_Color (Img, Col, Row, C, Width, Height);
-         end loop;
-      end Fill_Span;
-
-   begin
-      -- Fill the top and bottom caps and the horizontal midline
-      Fill_Span (CY,          Radius);
-      Fill_Span (CY + Radius, 0);
-      Fill_Span (CY - Radius, 0);
-
-      while Px < Py loop
-         if F >= 0 then
-            Py  := Py  - 1;
-            Ddy := Ddy + 2;
-            F   := F   + Ddy;
-         end if;
-
-         Px  := Px  + 1;
-         Ddx := Ddx + 2;
-         F   := F   + Ddx + 1;
-
-         Fill_Span (CY + Py,  Px);
-         Fill_Span (CY - Py,  Px);
-         Fill_Span (CY + Px,  Py);
-         Fill_Span (CY - Px,  Py);
-      end loop;
-   end Fill_Circle;
-
-
-   -----------------------------------------------------
-   --  Procedure: Clear_Buffer
-   --  Added 2025: required to erase the framebuffer at the start
-   --    of each game loop iteration so that objects from the
-   --    previous frame do not bleed into the current frame.
-   --  Inputs: C      - colour to flood the buffer with
-   --          Img    - byte array of image data (BGRA8888)
-   --          Width  - width of the render window
-   --          Height - height of the render window
-   --  Output: None
-   -----------------------------------------------------
-   procedure Clear_Buffer
-      (C             : Graphics.Color.Color;
-       Img           : in out Byte_Array;
-       Width, Height : Natural) is
-   begin
-      for Row in 0 .. Height - 1 loop
-         for Col in 0 .. Width - 1 loop
-            Set_Pixel_Color (Img, Col, Row, C, Width, Height);
-         end loop;
-      end loop;
-   end Clear_Buffer;
-
 
    procedure Draw 
       (Buffer : in out Byte_Array;
@@ -275,4 +164,4 @@ package body Graphics.Rendering is
       end loop;
    end Draw;
 
-end Graphics.Rendering;
+end Graphics.Rendering_newOLD;

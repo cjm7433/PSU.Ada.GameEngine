@@ -30,6 +30,36 @@ package Graphics.Rendering is
        Img : in out Byte_Array;
        Width, Height : Natural);
 
+   -- Added 2025: Fill_Rect, Fill_Circle, Clear_Buffer
+   -- Needed to draw solid game objects (bricks, paddle, ball) and clear
+   -- the framebuffer between frames. Set_Pixel_Color and Line alone are
+   -- insufficient for filled-shape rendering required by the ECS render system.
+
+   -- Fills a solid axis-aligned rectangle.
+   -- X, Y is the top-left corner; W, H are width and height in pixels.
+   -- Pixels outside the buffer bounds are silently clipped.
+   procedure Fill_Rect
+      (X, Y, W, H : Integer;
+       C           : Graphics.Color.Color;
+       Img         : in out Byte_Array;
+       Width, Height : Natural);
+
+   -- Fills a solid circle using the midpoint circle algorithm.
+   -- CX, CY is the centre; Radius is in pixels.
+   -- Pixels outside the buffer bounds are silently clipped.
+   procedure Fill_Circle
+      (CX, CY, Radius : Integer;
+       C               : Graphics.Color.Color;
+       Img             : in out Byte_Array;
+       Width, Height   : Natural);
+
+   -- Fills the entire buffer with a single colour.
+   -- Call once at the start of each frame to erase the previous frame.
+   procedure Clear_Buffer
+      (C             : Graphics.Color.Color;
+       Img           : in out Byte_Array;
+       Width, Height : Natural);
+
    procedure Draw
       (Buffer : in out Byte_Array;
        Img : in out Storage_Array_Access;
