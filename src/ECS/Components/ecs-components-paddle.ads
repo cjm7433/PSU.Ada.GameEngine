@@ -15,13 +15,13 @@ package ECS.Components.Paddle is
    type Paddle_Component is new Component with record
 
       -- Movement speed in units per second
-      Move_Speed : Float := 500.0;
+      Move_Speed : Float := 120.0;
 
       -- Horizontal bounds (keep paddle on screen)
       -- These are world-space X coordinates
       -- TODO: Maybe set them elsewhere or make a global somewhere else idk
-      Min_X : Float := 50.0;   -- Left boundary
-      Max_X : Float := 750.0;  -- Right boundary
+      Min_X : Float := 70.0;   -- Left boundary
+      Max_X : Float := 730.0;  -- Right boundary
 
       -- TODO: Delete in favor of an input component
       Move_Left  : Boolean := False;

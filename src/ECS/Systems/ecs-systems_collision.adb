@@ -173,7 +173,8 @@ package body ECS.Systems_Collision is
          
          if B.Health = 0 then
             B.Is_Dying    := True;
-            B.Death_Timer := 0.2;
+            -- Use the component's Death_Timer value as the delay
+            -- This is the time before the brick visually disappears
          end if;
       
       end if;

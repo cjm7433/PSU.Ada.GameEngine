@@ -213,6 +213,8 @@ package body Window is
       --  Window properties
       W_Instance.Width := Width;
       W_Instance.Height := Height;
+      W_Instance.Current_Width := Width;
+      W_Instance.Current_Height := Height;
       W_Instance.Title := Title;
 
       --  Show the window

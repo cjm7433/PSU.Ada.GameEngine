@@ -92,7 +92,7 @@ package body ECS.Systems_Ball_Physics is
                   begin
                      -- Position ball above paddle center (with offset)
                      T.Position.X := Paddle_T.Position.X + B.Attach_Offset_X;
-                     T.Position.Y := Paddle_T.Position.Y + 20.0;  -- 20 units above paddle
+                     T.Position.Y := Paddle_T.Position.Y + B.Attach_Offset_Y;
                      
                      -- Keep ball stationary while attached
                      M.Linear_Velocity := (0.0, 0.0);

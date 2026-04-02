@@ -89,7 +89,7 @@ package body ECS.Systems_Movement is
             M.Angular_Velocity   := M.Angular_Velocity + M.Angular_Acceleration * DT;
       
             -- Integrate velocity --> transform
-            T.Position  :=   T.Position + M.Linear_Velocity * Dt;
+            T.Position  :=   T.Position + M.Linear_Velocity * DT;
 
             -- Integrate and normalize rotation
             T.Rotation := Wrap(T.Rotation + M.Angular_Velocity * DT, 0.0, 2.0 * Pi);

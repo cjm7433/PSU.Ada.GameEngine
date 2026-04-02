@@ -32,14 +32,17 @@ package body Graphics.Rendering is
        X, Y :  Integer;
        C : Graphics.Color.Color;
        Width, Height : Natural) is
-      Index : constant Natural := (Y * Width + X) * 4;
    begin
-      if (X >= 0 and then X < Width) and then (Y >= 0 and then
-         Y < Height) and then (C.A > 0) then
-         Img (Index) := Byte (C.B);
-         Img (Index + 1) := Byte (C.G);
-         Img (Index + 2) := Byte (C.R);
-         Img (Index + 3) := Byte (C.A);
+      -- Only set pixel if within bounds and alpha > 0
+      if X >= 0 and then X < Width and then Y >= 0 and then Y < Height and then C.A > 0 then
+         declare
+            Index : constant Natural := (Y * Width + X) * 4;
+         begin
+            Img (Index) := Byte (C.B);
+            Img (Index + 1) := Byte (C.G);
+            Img (Index + 2) := Byte (C.R);
+            Img (Index + 3) := Byte (C.A);
+         end;
       end if;
    end Set_Pixel_Color; 
 
