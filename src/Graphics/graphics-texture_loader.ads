@@ -1,7 +1,8 @@
 with QOI; use QOI;
 with GNAT.OS_Lib;
 
-with Graphics.Renderer; use Graphics.Renderer;
+--  with Graphics.Renderer; use Graphics.Renderer;
+with Graphics.Rendering; use Graphics.Rendering;
 
 package Graphics.Texture_Loader is
 

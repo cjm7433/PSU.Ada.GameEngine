@@ -23,7 +23,7 @@ package ECS.Components.Brick is
       Points      : Natural := 10;
 
       -- Is this brick currently being destroyed? (for animation)
-      Is_Dying    : Boolean   := False;
-      Death_Timer : Float     := 0.0;         -- Time remaining in death animation
+      Is_Dying      : Boolean   := False;
+      Death_Timer   : Float     := 0.5;         -- Time remaining in death animation (seconds)
    end record;
 end;

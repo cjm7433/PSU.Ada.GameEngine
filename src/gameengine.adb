@@ -1,7 +1,9 @@
 with Ada.Text_IO; use Ada.Text_IO;
-with ECS.Entity; use ECS.Entity;
-with ECS.Component; use ECS.Component;
-with ECS.System; use ECS.System;
+with ECS.Store; use ECS.Store;
+with ECS.Manager; use ECS.Manager;
+with ECS.Entities; use ECS.Entities;
+with ECS.Components; use ECS.Components;
+with ECS.Systems; use ECS.Systems;
 
 procedure GameEngine is
 

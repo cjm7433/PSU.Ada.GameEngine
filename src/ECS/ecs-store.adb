@@ -190,11 +190,11 @@ package body ECS.Store is
 
             S.Paddle.Data.Append
             (Paddle_Component'
-               (  Move_Speed => 500.0,
-                  Min_X      => 50.0,
+               (  Min_X      => 50.0,
                   Max_X      => 750.0,
                   Move_Left  => False,
-                  Move_Right => False));
+                  Move_Right => False,
+                  others     => <>));
          end if;
 
       elsif Tag = Ball_Component'Tag then
@@ -204,12 +204,9 @@ package body ECS.Store is
 
             S.Ball.Data.Append
             (Ball_Component'
-               (  Min_Speed        => 200.0,
-                  Max_Speed        => 800.0,
-                  Base_Speed       => 400.0,
-                  Bounce_Damping   => 1.0,
-                  Is_Attached      => True,
-                  Attach_Offset_X  => 0.0));
+               (  Is_Attached      => True,
+                  Attach_Offset_X  => 0.0,
+                  others           => <>));
          end if;
 
       elsif Tag = Brick_Component'Tag then
