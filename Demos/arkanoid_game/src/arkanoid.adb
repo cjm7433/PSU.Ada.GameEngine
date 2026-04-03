@@ -38,6 +38,7 @@ with Math.Physics.AABBs;      use Math.Physics.AABBs;
 -- Game Engine Graphics modules
 with Graphics.Color;          use Graphics.Color;
 with Graphics.Rendering;      use Graphics.Rendering;
+with Graphics.Texture_Loader; use Graphics.Texture_Loader;
 
 -- Window interface (platform-agnostic)
 with Window;                  use Window;
@@ -55,6 +56,9 @@ procedure Arkanoid is
                      new Graphics.Rendering.Byte_Array (0 .. Width * Height * 4);
    Start_Time, Stop_Time : Time;
    Elapsed_Time          : Duration;
+   
+   -- Background Image (QOI)
+   Bkgrnd : constant String := "Data/bkgrd.qoi";
 
    -- Target frame rate and delta time
    Target_FPS : constant Float := 60.0;
@@ -142,6 +146,7 @@ begin
       Message   : MSG_Access := new MSG;
       Lp_Result : LRESULT;
       Running   : Boolean := True;
+      Background_Image : QOI_Image_Data;
 
       -- =====================================================================
       -- Reset_World
@@ -396,6 +401,7 @@ begin
 
       -- Build the initial scene
       Reset_World;
+      Background_Image := Load_QOI (Bkgrnd);
       Play_Audio("sfx/ost.wav");
 
       -- =====================================================================
@@ -480,6 +486,9 @@ begin
              Img    => Buffer.all,
              Width  => Width,
              Height => Height);
+
+         -- Draw Background
+         Draw (Buffer.all, Background_Image.Data, 0, 0, Integer(Width), Integer(Height), 0,0, Width, Height,Natural(Background_Image.Desc.Width));
 
          -- 2. Draw each visible entity
          declare
