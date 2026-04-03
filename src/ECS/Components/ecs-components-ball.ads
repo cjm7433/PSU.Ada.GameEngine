@@ -2,7 +2,7 @@
 
 package ECS.Components.Ball is
    type Ball_Component is new Component with record
-      -- Speed limits                        ** TODO: Should these be globals? **
+      -- Speed limits
       Min_Speed   : Float  := 100.0;          -- Minimum speed (prevent ball from stopping)
       Max_Speed   : Float  := 500.0;          -- Maximum speed (prevent ball from going too fast)
       Base_Speed  : Float  := 200.0;          -- Standard speed after launch
@@ -16,5 +16,11 @@ package ECS.Components.Ball is
 
       Attach_Offset_X : Float := 0.0;        -- Offset from paddle center when attached
       Attach_Offset_Y : Float := -10.0;      -- Offset above paddle when attached (negative = upward)
+
+      -- Paddle hit flag:
+      -- Set to True by the Collision System when the ball resolves a collision
+      -- with the paddle. Read and cleared each frame by the Ball Physics System
+      -- to apply Arkanoid zone-based paddle deflection.
+      Hit_Paddle : Boolean := False;
    end record;
 end;

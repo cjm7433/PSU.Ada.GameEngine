@@ -2,6 +2,9 @@
 with Ada.Real_Time;           use Ada.Real_Time;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;             use Ada.Text_IO;
+with Ada.Numerics;            use Ada.Numerics;
+with Ada.Numerics.Float_Random; use Ada.Numerics.Float_Random;
+with Ada.Numerics.Elementary_Functions; use Ada.Numerics.Elementary_Functions;
 with Interfaces.C;            use Interfaces.C;
 with System;
 -- Game Engine ECS modules
@@ -27,7 +30,7 @@ with ECS.Components.Paddle;    use ECS.Components.Paddle;
 with ECS.Components.Ball;      use ECS.Components.Ball;
 with ECS.Components.Brick;     use ECS.Components.Brick;
 
-with Audio;                   use Audio;
+-- with Audio;                   use Audio;                       Yes?
 with Math.Linear_Algebra;     use Math.Linear_Algebra;
 with Math.Physics.AABBs;      use Math.Physics.AABBs;
 -- Game Engine Graphics modules
@@ -52,10 +55,13 @@ procedure Arkanoid is
 
    -- Target frame rate and delta time
    Target_FPS : constant Float := 60.0;
-   DT         : constant Float := 1.0 / Target_FPS;
+   DT         : constant Float := 1.0/ Target_FPS;
 
    -- ECS Manager with registered systems
    Manager : aliased ECS.Manager.ECS_Manager;
+
+   -- Random number generator for ball-launch angle
+   Gen : Generator;
 
    -- -----------------------------------------------------------------------
    -- Paddle layout constants
@@ -67,11 +73,12 @@ procedure Arkanoid is
 
    -- -----------------------------------------------------------------------
    -- Ball layout constants
-   -- Ball AABB is a square with half-extents equal to the radius
+   -- Ball AABB is a square with half-extents equal to the radius.
+   -- Ball starts attached to the paddle; press Space to launch upward.
    -- -----------------------------------------------------------------------
-   Ball_Radius    : constant Integer := 4;
+   Ball_Radius    : constant Integer := 3;         -- adjust for ball size
    Ball_Start_X   : constant Float   := 112.0;
-   Ball_Start_Y   : constant Float   := 180.0;   -- above paddle, heading down
+   Ball_Start_Y   : constant Float   := 210.0;     -- just above paddle, attached (this is a little magic-numberish)
 
    -- -----------------------------------------------------------------------
    -- Wall layout constants
@@ -108,22 +115,26 @@ begin
    Put_Line ("#######################################");
    Put_Line ("Welcome to Arkanoid!");
    Put_Line ("Controls:");
-   Put_Line ("   Left/Right arrows = move paddle");
-   Put_Line ("   Space = launch ball");
-   Put_Line ("   Escape = reset world");
+   Put_Line ("   A/D = Move paddle");
+   Put_Line ("   Space = Launch ball");
+   Put_Line ("   Escape = Reset game");
    Put_Line ("#######################################");
    New_Line;
 
    ECS.Manager.Initialize (Manager);
-   
+
+   -- Initialize random generator
+   Reset (Gen);
+
    declare
       S : ECS.Store.Store renames Manager.World;
-      
+
+      -- Entity IDs are updated by Reset_World and referenced by the game loop
       Paddle_E  : Entity_ID;
       Ball_E    : Entity_ID;
       Brick_E   : Entity_ID;
       Wall_E    : Entity_ID;
-      
+
       Message   : MSG_Access := new MSG;
       Lp_Result : LRESULT;
       Running   : Boolean := True;
@@ -144,7 +155,6 @@ begin
          -- Create Wall entities (left, right, top)
          -- Components: Transform, Collider, Render
          -- Grey filled rectangles; collidable with the ball.
-         -- No Motion or game-specific component -- walls are static.
          -- ==================================================================
          declare
             Grey : constant ECS.Components.Render.Color :=
@@ -237,8 +247,8 @@ begin
             Solid;
 
          S.Render.Data (S.Render.Lookup (Paddle_E)).Shape   := Rectangle;
-         S.Render.Data (S.Render.Lookup (Paddle_E)).Tint    := 
-            (R => 0.75, G => 0.75, B => 0.75, A => 1.0);   -- Light Grey
+         S.Render.Data (S.Render.Lookup (Paddle_E)).Tint    :=
+            (R => 1.0, G => 1.0, B => 1.0, A => 1.0);   -- White
          S.Render.Data (S.Render.Lookup (Paddle_E)).Layer   := 1;
          S.Render.Data (S.Render.Lookup (Paddle_E)).Visible := True;
 
@@ -246,6 +256,11 @@ begin
             Float (Paddle_W / 2);
          S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Max_X :=
             Float (Width - Paddle_W / 2);
+
+         -- Home_Y is the fixed row the paddle lives on.  Paddle_Control_System
+         -- clamps T.Position.Y to this value every frame to prevent the paddle
+         -- from drifting downward due to collision resolution.
+         S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Home_Y := Paddle_Start_Y;
 
          -- ==================================================================
          -- Create Ball entity
@@ -280,7 +295,7 @@ begin
          S.Render.Data (S.Render.Lookup (Ball_E)).Layer   := 1;
          S.Render.Data (S.Render.Lookup (Ball_E)).Visible := True;
 
-         -- Ball starts attached to the paddle; press Space to launch upward.
+         -- Ball starts attached; velocity is zero until Space is pressed
          S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached     := True;
          S.Ball.Data (S.Ball.Lookup (Ball_E)).Attach_Offset_X := 0.0;
          S.Motion.Data (S.Motion.Lookup (Ball_E)).Linear_Velocity :=
@@ -288,9 +303,9 @@ begin
 
          -- ==================================================================
          -- Create Brick entities
-         -- 8 columns x 6 rows; each row has a distinct colour and strength.
+         -- 8 columns x 6 rows; each row has a distinct color and strength.
          --
-         -- Row colours and health (top to bottom):
+         -- Row colors and health (top to bottom):
          --   Row 0 - Red,    Strong (2 hp)
          --   Row 1 - Orange, Normal (1 hp)
          --   Row 2 - Yellow, Normal (1 hp)
@@ -364,17 +379,16 @@ begin
 
       end Reset_World;
 
-
    begin
-      -- Register systems in execution order
-      -- Systems are allocated on the heap so they persist
-      ECS.Manager.Add_System (Manager, new Paddle_Control_System);
+      -- Register systems in execution order.
+      -- Systems are allocated on the heap so they persist across resets.
       ECS.Manager.Add_System (Manager, new Movement_System);
       ECS.Manager.Add_System (Manager, new Ball_Physics_System);
       ECS.Manager.Add_System (Manager, new Collision_System);
       ECS.Manager.Add_System (Manager, new Brick_Destruction_System);
+      ECS.Manager.Add_System (Manager, new Paddle_Control_System);
 
-      -- Initialize the scene for the first time
+      -- Build the initial scene
       Reset_World;
 
       -- =====================================================================
@@ -389,7 +403,6 @@ begin
 
          -- Process platform events (Windows MSG or Wayland events)
          Window.Process_Events;
-
 
          -- -----------------------------------------------------------------
          -- Input pass
@@ -420,10 +433,15 @@ begin
          if Input.State.Space then
             if S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached then
                S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached := False;
-               -- Launch straight upward at base speed (positive Y = upward in screen coords)
-               S.Motion.Data (S.Motion.Lookup (Ball_E)).Linear_Velocity :=
-                  (X => 0.0,
-                   Y => S.Ball.Data (S.Ball.Lookup (Ball_E)).Base_Speed * (-1.0));
+               -- Launch at a random diagonal angle (between -30 and +30 degrees)
+               declare
+                  Base_Speed : constant Float := S.Ball.Data (S.Ball.Lookup (Ball_E)).Base_Speed;
+                  Angle : constant Float := Random (Gen) * (Pi / 3.0) - (Pi / 6.0);  -- -30 to +30 degrees
+               begin
+                  S.Motion.Data (S.Motion.Lookup (Ball_E)).Linear_Velocity :=
+                     (X => Base_Speed * Sin (Angle),
+                      Y => -Base_Speed * Cos (Angle));
+               end;
             end if;
          end if;
 
@@ -444,7 +462,7 @@ begin
          -- Render pass
          -- 1. Clear the framebuffer to black each frame.
          -- 2. Walk every entity that has both a Transform and a Render
-         --    component and draw it as a filled rectangle.
+         --    component and draw it according to its Shape.
          --    ECS Render.Color (0.0-1.0) is scaled to
          --    Graphics.Color.Color (0-255) at draw time.
          -- -----------------------------------------------------------------

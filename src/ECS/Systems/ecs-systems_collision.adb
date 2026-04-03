@@ -2,6 +2,30 @@
 --
 -- Implementation of Collision System.
 -- AABB collision detection and resolution using enum-based layer filtering.
+--
+-- 4/2/26
+-- Changes from original:
+--   - Ball now resolves only its single deepest collision per frame.
+--     Previously every overlapping pair was resolved independently in the
+--     same pass, which caused the ball to hit two adjacent bricks
+--     simultaneously, damaging both and potentially double-flipping the
+--     velocity back to its original direction.
+--   - Sets Ball_Component.Hit_Paddle = True when the ball's deepest
+--     collision is with the paddle, so Ball_Physics_System can apply
+--     zone-based paddle deflection that frame.
+--   - Non-ball solid pairs (e.g. paddle vs wall) are still resolved
+--     immediately as before.
+--   - Resolve_Collision now uses one-sided separation so that static or
+--     semi-static entities (walls, paddle) are never displaced by a
+--     collision.  Only the truly moving entity absorbs the full overlap.
+--     See Resolve_Collision for the detailed rules.
+--   - Ball-vs-paddle collisions are resolved with Resolve_Ball_Paddle
+--     instead of the general Resolve_Collision.  The general resolver
+--     picks the axis of least penetration, which flips between X and Y
+--     when the ball grazes a paddle corner, trapping the ball in an
+--     oscillation.  Resolve_Ball_Paddle always separates on Y only,
+--     which is correct for a flat horizontal surface and eliminates
+--     the corner-sticking behaviour entirely.
 
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
@@ -10,6 +34,7 @@ with ECS.Components.Motion;         use ECS.Components.Motion;
 with ECS.Components.Collider;       use ECS.Components.Collider;
 with ECS.Components.Ball;           use ECS.Components.Ball;
 with ECS.Components.Brick;          use ECS.Components.Brick;
+with ECS.Components.Paddle;         use ECS.Components.Paddle;
 with Math.Linear_Algebra;           use Math.Linear_Algebra;
 with Math.Physics;                  use Math.Physics;
 
@@ -21,82 +46,100 @@ package body ECS.Systems_Collision is
    ------------------------------------------------------------
    function Layer_In_Mask
      (Layer : Collision_Layer;
-      Mask  : Collision_Mask) return Boolean is 
-      
-      begin
-
-      -- Layer_None is a special case that means "no layers" and should never 
-      --    collide with anything, even if it's technically in the mask.
+      Mask  : Collision_Mask) return Boolean is
+   begin
       if Layer = Layer_None then
          return False;
       end if;
-      
-      -- Check each layer in the mask for a match.
-      -- We have to do this manually since Ada doesn't allow 
-      --    iterating over enum values.
+
       for I in Mask'Range loop
-         
          if Mask (I) = Layer then
             return True;
          end if;
       end loop;
-      
+
       return False;
-   
    end Layer_In_Mask;
 
 
    ------------------------------------------------------------
    -- Entities_Can_Collide
-   -- Helper: Two entities can collide if either's layer 
+   -- Helper: Two entities can collide if either's layer
    --    is in the other's mask.
    ------------------------------------------------------------
-   -- This allows for one-way collisions (e.g. ball triggers on paddle but not vice versa).
    function Entities_Can_Collide (C1, C2 : Collider_Component) return Boolean is
-   
    begin
-      -- TODO: Do we need to worry about Layer_None here?
-      -- If either entity has Layer_None, it should not collide with anything ...
-
-      return Layer_In_Mask (C1.Layer, C2.Mask) or     -- Entity 1's layer is in Entity 2's mask
-             Layer_In_Mask (C2.Layer, C1.Mask);       -- Entity 2's layer is in Entity 1's mask
-   
+      return Layer_In_Mask (C1.Layer, C2.Mask) or
+             Layer_In_Mask (C2.Layer, C1.Mask);
    end Entities_Can_Collide;
 
 
    ------------------------------------------------------------
    -- AABB_Overlap
    -- Helper: Check if two AABBs overlap.
-   -- TODO: Something similar already in math-physics library
    ------------------------------------------------------------
    function AABB_Overlap
      (Pos1 : Vector2; Half1 : Vector2;
       Pos2 : Vector2; Half2 : Vector2) return Boolean is
-      
-      -- Two boxes do not overlap if they are separated on either the X or Y axis.
-      -- If boxes aren't separated on either axis, they overlap.
 
-      Separated_X : constant Boolean :=               -- Separated on X if right edge of Box 1 is left of left edge of Box 2, or left edge of Box 1 is right of right edge of Box 2
+      Separated_X : constant Boolean :=
          (Pos1.X + Half1.X < Pos2.X - Half2.X) or
          (Pos1.X - Half1.X > Pos2.X + Half2.X);
-      
-      
-      Separated_Y : constant Boolean :=               -- Separated on Y if bottom edge of Box 1 is above top edge of Box 2, or top edge of Box 1 is below bottom edge of Box 2
+
+      Separated_Y : constant Boolean :=
          (Pos1.Y + Half1.Y < Pos2.Y - Half2.Y) or
          (Pos1.Y - Half1.Y > Pos2.Y + Half2.Y);
-   
+
    begin
       return not (Separated_X or Separated_Y);
    end AABB_Overlap;
 
 
    ------------------------------------------------------------
+   -- Penetration_Depth
+   -- Helper: Return the scalar penetration depth of the
+   --   axis of least penetration between two AABBs.
+   -- A larger value means the objects are more deeply overlapped.
+   -- Used to select the single deepest ball collision per frame.
+   ------------------------------------------------------------
+   function Penetration_Depth
+     (Pos1 : Vector2; Half1 : Vector2;
+      Pos2 : Vector2; Half2 : Vector2) return Float is
+
+      Overlap_X : constant Float :=
+         (Half1.X + Half2.X) - abs (Pos1.X - Pos2.X);
+
+      Overlap_Y : constant Float :=
+         (Half1.Y + Half2.Y) - abs (Pos1.Y - Pos2.Y);
+
+   begin
+      return Float'Min (Overlap_X, Overlap_Y);
+   end Penetration_Depth;
+
+
+   ------------------------------------------------------------
    -- Resolve_Collision
    -- Helper: Resolve an AABB collision.
-   -- Separates entities along axis of least penetration and
-   -- reflects velocity. 
-   -- M1/M2 are always valid references.
-   -- Has_M1/Has_M2 control whether velocity is actually changed.
+   --
+   -- Separation rules (to keep static entities in place):
+   --
+   --   E1 is the "mover" (ball, or the moving entity in a
+   --   non-ball pair).  E2 is the "static" entity (wall,
+   --   brick, or paddle).
+   --
+   --   If only E1 has motion  -> E1 absorbs 100% of overlap,
+   --                             E2 does not move.
+   --   If only E2 has motion  -> E2 absorbs 100% of overlap,
+   --                             E1 does not move.
+   --   If both have motion    -> split 50/50 as before.
+   --   If neither has motion  -> no positional change.
+   --
+   -- This prevents the paddle from drifting downward when hit
+   -- by the ball, and prevents walls from being pushed off
+   -- screen when the paddle slides into them.
+   --
+   -- Has_M1 / Has_M2 still control whether velocity is changed,
+   -- independently of the positional separation above.
    ------------------------------------------------------------
    procedure Resolve_Collision
      (T1 : in out Transform_Component; C1 : Collider_Component;
@@ -104,55 +147,127 @@ package body ECS.Systems_Collision is
       Has_M1 : Boolean; M1 : in out Motion_Component;
       Has_M2 : Boolean; M2 : in out Motion_Component) is
 
-      -- Calculate overlap on each axis (positive means penetration)
       Overlap_X : constant Float :=
-         (C1.Bounding_Box.Half_Size.X + C2.Bounding_Box.Half_Size.X) - abs (T1.Position.X - T2.Position.X);
-      
+         (C1.Bounding_Box.Half_Size.X + C2.Bounding_Box.Half_Size.X) -
+            abs (T1.Position.X - T2.Position.X);
+
       Overlap_Y : constant Float :=
-         (C1.Bounding_Box.Half_Size.Y + C2.Bounding_Box.Half_Size.Y) - abs (T1.Position.Y - T2.Position.Y);
-   
+         (C1.Bounding_Box.Half_Size.Y + C2.Bounding_Box.Half_Size.Y) -
+            abs (T1.Position.Y - T2.Position.Y);
+
+      -- Separation fractions.
+      -- If only one entity moves, it absorbs the full overlap (1.0 / 0.0).
+      -- If both move, they share it equally (0.5 / 0.5).
+      -- If neither moves, both fractions are 0.0.
+      -- This is what keeps the paddle and walls in place during collisions.
+      F1 : constant Float :=
+         (if Has_M1 and Has_M2 then 0.5
+          elsif Has_M1         then 1.0
+          else                      0.0);
+
+      F2 : constant Float :=
+         (if Has_M1 and Has_M2 then 0.5
+          elsif Has_M2         then 1.0
+          else                      0.0);
+
    begin
-      
-      -- Separate along axis of least penetration
+
       if Overlap_X < Overlap_Y then
-         
-         -- To avoid "sticking," we split the overlap in half and move each
-         -- entity by that amount. The one on the left moves left, the one on the right moves right.
-         
+
+         -- Separate along X axis
          if T1.Position.X < T2.Position.X then
-
-            T1.Position.X := T1.Position.X - Overlap_X / 2.0;
-            T2.Position.X := T2.Position.X + Overlap_X / 2.0;
-         
+            T1.Position.X := T1.Position.X - Overlap_X * F1;
+            T2.Position.X := T2.Position.X + Overlap_X * F2;
          else
-
-            T1.Position.X := T1.Position.X + Overlap_X / 2.0;
-            T2.Position.X := T2.Position.X - Overlap_X / 2.0;
-
+            T1.Position.X := T1.Position.X + Overlap_X * F1;
+            T2.Position.X := T2.Position.X - Overlap_X * F2;
          end if;
-         
-         -- Reflect velocity on X axis (only if entity has Motion)
+
          if Has_M1 then M1.Linear_Velocity.X := -M1.Linear_Velocity.X; end if;
-         
          if Has_M2 then M2.Linear_Velocity.X := -M2.Linear_Velocity.X; end if;
-      
+
       else
-         -- Same separation logic but on Y axis. The one on top moves up, the one on bottom moves down.
+
+         -- Separate along Y axis
          if T1.Position.Y < T2.Position.Y then
-            T1.Position.Y := T1.Position.Y - Overlap_Y / 2.0;
-            T2.Position.Y := T2.Position.Y + Overlap_Y / 2.0;
-      
+            T1.Position.Y := T1.Position.Y - Overlap_Y * F1;
+            T2.Position.Y := T2.Position.Y + Overlap_Y * F2;
          else
-            T1.Position.Y := T1.Position.Y + Overlap_Y / 2.0;
-            T2.Position.Y := T2.Position.Y - Overlap_Y / 2.0;
+            T1.Position.Y := T1.Position.Y + Overlap_Y * F1;
+            T2.Position.Y := T2.Position.Y - Overlap_Y * F2;
          end if;
-      
+
          if Has_M1 then M1.Linear_Velocity.Y := -M1.Linear_Velocity.Y; end if;
          if Has_M2 then M2.Linear_Velocity.Y := -M2.Linear_Velocity.Y; end if;
-      
+
       end if;
 
    end Resolve_Collision;
+
+
+   ------------------------------------------------------------
+   -- Resolve_Ball_Paddle
+   -- Helper: Resolve a ball-vs-paddle collision.
+   --
+   -- The paddle is a flat horizontal surface.  Using the general
+   -- axis-of-least-penetration logic causes the ball to stick at
+   -- the paddle corners: when Overlap_X and Overlap_Y are nearly
+   -- equal (corner graze) the chosen axis flips between frames,
+   -- trapping the ball in an oscillation until the player shakes
+   -- it loose.
+   --
+   -- Fix: always separate on Y only, pushing the ball straight up
+   -- away from the top surface of the paddle regardless of the X
+   -- overlap.  This is physically correct for a flat horizontal
+   -- platform and eliminates corner sticking entirely.
+   --
+   -- The ball absorbs 100% of the Y separation; the paddle does not
+   -- move (consistent with the one-sided separation rules).
+   -- The ball's Y velocity is forced upward (negated if positive).
+   -- The ball's X velocity is left untouched here; Ball_Physics_System
+   -- will replace the full direction via zone-based deflection when
+   -- it sees Hit_Paddle = True.
+   --
+   -- Parameters:
+   --   T_Ball      : ball Transform (position updated in place)
+   --   Half_Ball_Y : ball AABB half-size on Y axis
+   --   C_Pad       : paddle Collider (half-sizes read, not modified)
+   --   T_Pad       : paddle Transform (position read, not modified)
+   --   M_Ball      : ball Motion (velocity updated in place)
+   ------------------------------------------------------------
+   procedure Resolve_Ball_Paddle
+     (T_Ball      : in out Transform_Component;
+      Half_Ball_Y :        Float;
+      C_Pad       :        Collider_Component;
+      T_Pad       :        Transform_Component;
+      M_Ball      : in out Motion_Component) is
+
+      -- True Y penetration depth
+      Overlap_Y : constant Float :=
+         (Half_Ball_Y + C_Pad.Bounding_Box.Half_Size.Y) -
+            abs (T_Ball.Position.Y - T_Pad.Position.Y);
+
+      -- Safety: ensure we push at least 1 pixel even on a zero-overlap frame
+      Push : constant Float := Float'Max (Overlap_Y, 1.0);
+
+   begin
+      -- Push ball away from the paddle surface (ball is above paddle
+      -- centre when hitting the top face, so T_Ball.Y < T_Pad.Y)
+      if T_Ball.Position.Y <= T_Pad.Position.Y then
+         T_Ball.Position.Y := T_Ball.Position.Y - Push;
+      else
+         T_Ball.Position.Y := T_Ball.Position.Y + Push;
+      end if;
+
+      -- Reflect Y velocity upward regardless of corner geometry.
+      -- Only flip if the ball is currently moving toward the paddle
+      -- (positive Y = downward in screen space) to avoid double-flipping
+      -- on consecutive frames when the ball is already moving away.
+      if M_Ball.Linear_Velocity.Y > 0.0 then
+         M_Ball.Linear_Velocity.Y := -M_Ball.Linear_Velocity.Y;
+      end if;
+
+   end Resolve_Ball_Paddle;
 
 
    ------------------------------------------------------------
@@ -161,24 +276,19 @@ package body ECS.Systems_Collision is
    -- TODO: Should this be handled elsewhere?
    ------------------------------------------------------------
    procedure Apply_Brick_Damage (S : in out Store.Store; Brick_Entity : Entity_ID) is
-      
+
       Index_B : constant Natural := S.Brick.Lookup (Brick_Entity);
       B : Brick_Component renames S.Brick.Data (Index_B);
-   
+
    begin
-      
-      -- Only apply damage if brick isn't already dying and has health left.
       if not B.Is_Dying and B.Health > 0 then
          B.Health := B.Health - 1;
-         
+
          if B.Health = 0 then
-            B.Is_Dying    := True;
-            -- Use the component's Death_Timer value as the delay
-            -- This is the time before the brick visually disappears
+            B.Is_Dying := True;
          end if;
-      
       end if;
-   
+
    end Apply_Brick_Damage;
 
 
@@ -187,87 +297,89 @@ package body ECS.Systems_Collision is
    -- Helper: Resolve motion for a colliding pair.
    -- Pulls each entity's Motion out of the store individually
    -- to avoid conditional renames (which Ada does not permit).
+   --
+   -- Note: Has_M1 / Has_M2 are passed into Resolve_Collision,
+   -- which uses them both to determine separation fractions
+   -- (keeping static entities in place) and to gate velocity
+   -- reflection.  See Resolve_Collision for details.
    ------------------------------------------------------------
    procedure Resolve_With_Motion
      (S  : in out Store.Store;
       E1 : Entity_ID; T1 : in out Transform_Component; C1 : Collider_Component;
       E2 : Entity_ID; T2 : in out Transform_Component; C2 : Collider_Component) is
 
-      -- Check for Motion component on each entity. We have to do this before renaming
       Has_M1 : constant Boolean := S.Has_Component (E1, Motion_Component'Tag);
       Has_M2 : constant Boolean := S.Has_Component (E2, Motion_Component'Tag);
 
-      -- Dummy records stand in when entity has no Motion component.
-      -- Resolve_Collision only writes to them when Has_M1/Has_M2 is True,
-      -- so no incorrect state is ever saved.
       Dummy_M1 : Motion_Component;
       Dummy_M2 : Motion_Component;
 
    begin
 
-      -- Each branch gives us a plain variable renames, which is always valid.
       if Has_M1 and Has_M2 then
-         
          declare
             M1 : Motion_Component renames S.Motion.Data (S.Motion.Lookup (E1));
             M2 : Motion_Component renames S.Motion.Data (S.Motion.Lookup (E2));
-         
          begin
-            -- Both entities have Motion; resolve with full velocity updates
             Resolve_Collision (T1, C1, T2, C2, True, M1, True, M2);
          end;
 
       elsif Has_M1 and not Has_M2 then
-         
          declare
             M1 : Motion_Component renames S.Motion.Data (S.Motion.Lookup (E1));
-         
          begin
-            -- Entity 1 has Motion but Entity 2 doesn't; only update Entity 1's velocity
             Resolve_Collision (T1, C1, T2, C2, True, M1, False, Dummy_M2);
          end;
 
       elsif not Has_M1 and Has_M2 then
-         
          declare
             M2 : Motion_Component renames S.Motion.Data (S.Motion.Lookup (E2));
-         
          begin
-            -- Entity 2 has Motion but Entity 1 doesn't; only update Entity 2's velocity
             Resolve_Collision (T1, C1, T2, C2, False, Dummy_M1, True, M2);
          end;
 
       else
-         -- Neither entity has Motion; no velocity to update   (probably impossible)
          Resolve_Collision (T1, C1, T2, C2, False, Dummy_M1, False, Dummy_M2);
       end if;
-   
+
    end Resolve_With_Motion;
 
 
    ---------------------------------------------------------
    -- Components_Needed
-   -- Components_Needed is the list of required components 
-   -- Components required: Collision, Transform
    ---------------------------------------------------------
    overriding
    function Components_Needed
      (Self : Collision_System)
       return ECS.Components.Component_Tag_Array is
-
    begin
-
-      -- Collision needs Collider and Transform Components
       return (0 => ECS.Components.Collider.Collider_Component'Tag,
               1 => ECS.Components.Transform.Transform_Component'Tag);
-   
    end Components_Needed;
 
 
    ------------------------------------------------------------
    -- Update
-   -- Update executes collision detection and resolution
-   --    (Detect and resolve all collisions this frame.)
+   -- Two-pass collision resolution:
+   --
+   -- Pass 1 (ball collisions):
+   --   For each entity that has a Ball component, scan all other
+   --   collidable entities and record every overlapping hit.
+   --   Dying bricks are excluded from the scan so the ball passes
+   --   through them cleanly after the killing hit.
+   --   Resolve only the single deepest overlap so that grazing a
+   --   corner shared by two adjacent bricks causes exactly one
+   --   bounce and damages exactly one brick.
+   --   Paddle hits use Resolve_Ball_Paddle (Y-axis only) to avoid
+   --   corner sticking.  All other hits use Resolve_With_Motion.
+   --
+   -- Pass 2 (non-ball solid pairs):
+   --   Resolve all remaining solid-vs-solid overlaps that do not
+   --   involve the ball (e.g. paddle sliding into a wall).
+   --   These are low-frequency and safe to resolve all at once.
+   --
+   -- In both passes, separation is absorbed entirely by whichever
+   -- entity is moving; static entities (walls, bricks) never move.
    ------------------------------------------------------------
    overriding
    procedure Update
@@ -275,66 +387,194 @@ package body ECS.Systems_Collision is
       S    : in out Store.Store;
       DT   : Float) is
 
-      Entities : Entity_ID_Array_Access;     -- All entities with Collision + Transform
-   
+      Entities : Entity_ID_Array_Access;
+
    begin
-      
-      -- Get entities with the required components
+
       Entities := S.Get_Entities_With (Self.Components_Needed);
       if Entities = null then
          return;
       end if;
 
-      -- Check each unique pair once (I < J avoids A-vs-B and B-vs-A)
+      -- ================================================================
+      -- Pass 1: Ball collisions — resolve deepest non-dying hit only
+      -- ================================================================
       for I in Entities'Range loop
-         for J in I + 1 .. Entities'Last loop
+         declare
+            E_Ball : constant Entity_ID := Entities (I);
+         begin
+
+            if not S.Has_Component (E_Ball, Ball_Component'Tag) then
+               goto Next_Ball_Candidate;
+            end if;
+
             declare
+               Index_CB   : constant Natural := S.Collider.Lookup (E_Ball);
+               C_Ball     : Collider_Component renames S.Collider.Data (Index_CB);
+               Index_TB   : constant Natural := S.Transform.Lookup (E_Ball);
+               T_Ball     : Transform_Component renames S.Transform.Data (Index_TB);
+               Index_Ball : constant Natural := S.Ball.Lookup (E_Ball);
+               B          : Ball_Component renames S.Ball.Data (Index_Ball);
 
-               E1 : constant Entity_ID := Entities (I);
-               E2 : constant Entity_ID := Entities (J);
-
-               -- Who doesn't like a nickname?
-               Index_C1 : constant Natural := S.Collider.Lookup (E1);
-               C1 : Collider_Component renames S.Collider.Data (Index_C1);
-               
-               Index_T1 : constant Natural := S.Transform.Lookup (E1);
-               T1 : Transform_Component renames S.Transform.Data (Index_T1);
-
-               Index_C2 : constant Natural := S.Collider.Lookup (E2);
-               C2 : Collider_Component renames S.Collider.Data (Index_C2);
-               
-               Index_T2 : constant Natural := S.Transform.Lookup (E2);
-               T2 : Transform_Component renames S.Transform.Data (Index_T2);
+               Best_Depth     : Float   := -1.0;
+               Best_J         : Integer := -1;
+               Best_Is_Brick  : Boolean := False;
+               Best_Is_Paddle : Boolean := False;
 
             begin
 
-               -- Short-circuit: only check for AABB overlap if layers/masks allow collision
-               if Entities_Can_Collide (C1, C2) and then AABB_Overlap (          
-                  T1.Position, C1.Bounding_Box.Half_Size,
-                  T2.Position, C2.Bounding_Box.Half_Size
-               )
+               for J in Entities'Range loop
+
+                  if J = I then
+                     goto Next_J;
+                  end if;
+
+                  declare
+                     E_Other  : constant Entity_ID := Entities (J);
+                     Index_CO : constant Natural   := S.Collider.Lookup (E_Other);
+                     C_Other  : Collider_Component renames S.Collider.Data (Index_CO);
+                     Index_TO : constant Natural   := S.Transform.Lookup (E_Other);
+                     T_Other  : Transform_Component renames S.Transform.Data (Index_TO);
+                  begin
+
+                     -- Exclude dying bricks from collision candidates.
+                     -- Once a brick's health has reached zero and Is_Dying is
+                     -- True, the ball should pass through it cleanly rather
+                     -- than bouncing a second time against a brick that is
+                     -- already marked for destruction.
+                     if S.Has_Component (E_Other, Brick_Component'Tag) then
+                        declare
+                           Idx_B : constant Natural := S.Brick.Lookup (E_Other);
+                        begin
+                           if S.Brick.Data (Idx_B).Is_Dying then
+                              goto Next_J;
+                           end if;
+                        end;
+                     end if;
+
+                     if Entities_Can_Collide (C_Ball, C_Other)
+                        and then C_Ball.Collider_Form  = Solid
+                        and then C_Other.Collider_Form = Solid
+                        and then AABB_Overlap
+                           (T_Ball.Position,  C_Ball.Bounding_Box.Half_Size,
+                            T_Other.Position, C_Other.Bounding_Box.Half_Size)
+                     then
+                        declare
+                           Depth : constant Float := Penetration_Depth
+                              (T_Ball.Position,  C_Ball.Bounding_Box.Half_Size,
+                               T_Other.Position, C_Other.Bounding_Box.Half_Size);
+                        begin
+                           if Depth > Best_Depth then
+                              Best_Depth     := Depth;
+                              Best_J         := J;
+                              Best_Is_Brick  :=
+                                 S.Has_Component (E_Other, Brick_Component'Tag);
+                              Best_Is_Paddle :=
+                                 S.Has_Component (E_Other, Paddle_Component'Tag);
+                           end if;
+                        end;
+                     end if;
+
+                  end;
+
+                  <<Next_J>>
+               end loop;
+
+               -- Resolve the single deepest hit (if any)
+               if Best_J >= 0 then
+                  declare
+                     E_Best   : constant Entity_ID := Entities (Best_J);
+                     Index_CO : constant Natural   := S.Collider.Lookup (E_Best);
+                     C_Best   : Collider_Component renames S.Collider.Data (Index_CO);
+                     Index_TO : constant Natural   := S.Transform.Lookup (E_Best);
+                     T_Best   : Transform_Component renames S.Transform.Data (Index_TO);
+                  begin
+
+                     if Best_Is_Paddle then
+                        -- Use Y-only paddle resolver to prevent corner sticking.
+                        -- Resolve_Ball_Paddle always pushes the ball upward off
+                        -- the paddle surface regardless of which overlap axis is
+                        -- smaller, eliminating the oscillation that occurs when
+                        -- Overlap_X and Overlap_Y are nearly equal at corners.
+                        declare
+                           M_Ball : Motion_Component renames
+                              S.Motion.Data (S.Motion.Lookup (E_Ball));
+                        begin
+                           Resolve_Ball_Paddle
+                              (T_Ball      => T_Ball,
+                               Half_Ball_Y => C_Ball.Bounding_Box.Half_Size.Y,
+                               C_Pad       => C_Best,
+                               T_Pad       => T_Best,
+                               M_Ball      => M_Ball);
+                        end;
+                        B.Hit_Paddle := True;
+
+                     else
+                        -- General resolver for bricks and walls
+                        Resolve_With_Motion
+                           (S,
+                            E_Ball, T_Ball, C_Ball,
+                            E_Best, T_Best, C_Best);
+
+                        if Best_Is_Brick then
+                           Apply_Brick_Damage (S, E_Best);
+                        end if;
+
+                     end if;
+
+                  end;
+               end if;
+
+            end;
+
+         end;
+         <<Next_Ball_Candidate>>
+      end loop;
+
+      -- ================================================================
+      -- Pass 2: Non-ball solid pairs (e.g. paddle vs wall)
+      -- Resolve_With_Motion gives the full displacement to whichever
+      -- entity has a Motion component, so walls (no Motion) never move
+      -- and the paddle only moves horizontally as driven by its own
+      -- control system.
+      -- ================================================================
+      for I in Entities'Range loop
+         for J in I + 1 .. Entities'Last loop
+            declare
+               E1 : constant Entity_ID := Entities (I);
+               E2 : constant Entity_ID := Entities (J);
+            begin
+
+               if S.Has_Component (E1, Ball_Component'Tag) or
+                  S.Has_Component (E2, Ball_Component'Tag)
                then
-                  
-                  -- Separate and bounce (triggers are detected but not resolved)
-                  if C1.Collider_Form = Solid and C2.Collider_Form = Solid then
+                  goto Next_Non_Ball_Pair;
+               end if;
+
+               declare
+                  Index_C1 : constant Natural := S.Collider.Lookup (E1);
+                  C1 : Collider_Component renames S.Collider.Data (Index_C1);
+                  Index_T1 : constant Natural := S.Transform.Lookup (E1);
+                  T1 : Transform_Component renames S.Transform.Data (Index_T1);
+
+                  Index_C2 : constant Natural := S.Collider.Lookup (E2);
+                  C2 : Collider_Component renames S.Collider.Data (Index_C2);
+                  Index_T2 : constant Natural := S.Transform.Lookup (E2);
+                  T2 : Transform_Component renames S.Transform.Data (Index_T2);
+               begin
+                  if Entities_Can_Collide (C1, C2)
+                     and then C1.Collider_Form = Solid
+                     and then C2.Collider_Form = Solid
+                     and then AABB_Overlap
+                        (T1.Position, C1.Bounding_Box.Half_Size,
+                         T2.Position, C2.Bounding_Box.Half_Size)
+                  then
                      Resolve_With_Motion (S, E1, T1, C1, E2, T2, C2);
                   end if;
+               end;
 
-                  -- Apply brick damage when ball is one of the colliders
-                  if S.Has_Component (E1, Ball_Component'Tag) and
-                     S.Has_Component (E2, Brick_Component'Tag)
-                  
-                  then
-                     Apply_Brick_Damage (S, E2);
-
-                  elsif S.Has_Component (E2, Ball_Component'Tag) and
-                        S.Has_Component (E1, Brick_Component'Tag)
-                  then
-                     Apply_Brick_Damage (S, E1);
-                  end if;
-
-               end if;
             end;
+            <<Next_Non_Ball_Pair>>
          end loop;
       end loop;
 
