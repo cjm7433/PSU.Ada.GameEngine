@@ -526,7 +526,7 @@ package body ECS.Systems_Collision is
                                M_Ball      => M_Ball);
                         end;
                         B.Hit_Paddle := True;
-                        Audio.Play_Audio("sfx/ball_hit.wav");
+                        Audio.Play_Audio("sfx/ball_hit.wav", False);
                      else
                         -- General resolver for bricks and walls
                         Resolve_With_Motion
@@ -537,7 +537,7 @@ package body ECS.Systems_Collision is
                         if Best_Is_Brick then
                            Apply_Brick_Damage (S, E_Best);
                            Update_Score (S.Brick.Data (S.Brick.Lookup (E_Best)).Points);
-                           Audio.Play_Audio("sfx/ball_hit.wav");
+                           Audio.Play_Audio("sfx/ball_hit.wav", False);
                         end if;
 
                      end if;

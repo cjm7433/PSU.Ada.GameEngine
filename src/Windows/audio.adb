@@ -288,10 +288,11 @@ pragma Convention (C, IXAudio2SourceVtbl);
 
    end Initialize;
 
-   procedure Play_Audio (Filename : String) is
+   procedure Play_Audio (Filename : String; Looping : Boolean) is
 
    File : Ada.Streams.Stream_IO.File_Type;
    Str  : access Ada.Streams.Root_Stream_Type'Class;
+   Loop_Count : Natural := 0;
 
    type Chunk_Header is record
       ID   : String (1 .. 4);
@@ -359,6 +360,10 @@ begin
       raise Program_Error with "Not a WAV file";
    end if;
 
+   if Looping then
+      Loop_Count  := 255;
+   end if;
+
    -- Scan chunks
    while not (FMT_Found and DATA_Found) loop
 
@@ -422,6 +427,7 @@ begin
      (Flags      => XAUDIO2_END_OF_STREAM,
       AudioBytes => UINT32 (Audio'Length),
       pAudioData => Audio.all'Address,
+      LoopCount  => UINT32 (Loop_Count),
       others     => <>);
 
    HR := Voice.lpVtbl.SubmitSourceBuffer
