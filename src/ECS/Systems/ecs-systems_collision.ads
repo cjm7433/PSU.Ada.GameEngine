@@ -23,10 +23,14 @@ with ECS.Systems;       use ECS.Systems;
 with ECS.Store;
 with ECS.Components;
 with Math.Physics.AABBs; use Math.Physics.AABBs;
+with Audio; use Audio;
 
 package ECS.Systems_Collision is
 
    type Collision_System is new System with null record;
+
+   procedure Reset_Score;
+   function Get_Score return Integer;
 
    ---------------------------------------------------------
    -- Update

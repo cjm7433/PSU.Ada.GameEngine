@@ -40,6 +40,18 @@ with Math.Physics;                  use Math.Physics;
 
 package body ECS.Systems_Collision is
 
+   Score : Integer := 0;
+
+   procedure Reset_Score is
+   begin
+      Score := 0;
+   end Reset_Score;
+
+   function Get_Score return Integer is
+   begin
+      return Score;
+   end Get_Score;
+
    ------------------------------------------------------------
    -- Layer_In_Mask
    -- Helper: Check if a layer appears anywhere in a mask.
@@ -268,6 +280,12 @@ package body ECS.Systems_Collision is
       end if;
 
    end Resolve_Ball_Paddle;
+
+
+   procedure Update_Score (Points : Integer) is
+   begin
+      Score := Score + Points;
+   end Update_Score;
 
 
    ------------------------------------------------------------
@@ -508,7 +526,7 @@ package body ECS.Systems_Collision is
                                M_Ball      => M_Ball);
                         end;
                         B.Hit_Paddle := True;
-
+                        Audio.Play_Audio("sfx/ball_hit.wav");
                      else
                         -- General resolver for bricks and walls
                         Resolve_With_Motion
@@ -518,6 +536,8 @@ package body ECS.Systems_Collision is
 
                         if Best_Is_Brick then
                            Apply_Brick_Damage (S, E_Best);
+                           Update_Score (S.Brick.Data (S.Brick.Lookup (E_Best)).Points);
+                           Audio.Play_Audio("sfx/ball_hit.wav");
                         end if;
 
                      end if;

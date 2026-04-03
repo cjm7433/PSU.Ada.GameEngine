@@ -1,5 +1,7 @@
 -- Ada Libraries
 with Ada.Real_Time;           use Ada.Real_Time;
+with Ada.Strings;             use Ada.Strings;
+with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Numerics;            use Ada.Numerics;
@@ -30,12 +32,13 @@ with ECS.Components.Paddle;    use ECS.Components.Paddle;
 with ECS.Components.Ball;      use ECS.Components.Ball;
 with ECS.Components.Brick;     use ECS.Components.Brick;
 
--- with Audio;                   use Audio;                       Yes?
+with Audio;                   use Audio;
 with Math.Linear_Algebra;     use Math.Linear_Algebra;
 with Math.Physics.AABBs;      use Math.Physics.AABBs;
 -- Game Engine Graphics modules
 with Graphics.Color;          use Graphics.Color;
 with Graphics.Rendering;      use Graphics.Rendering;
+
 -- Window interface (platform-agnostic)
 with Window;                  use Window;
 with Win32;                   use Win32;
@@ -67,7 +70,7 @@ procedure Arkanoid is
    -- Paddle layout constants
    -- -----------------------------------------------------------------------
    Paddle_W       : constant Integer := 40;
-   Paddle_H       : constant Integer := 6;
+   Paddle_H       : constant Integer := 2;
    Paddle_Start_X : constant Float   := 112.0;   -- horizontal centre
    Paddle_Start_Y : constant Float   := 228.0;   -- near bottom
 
@@ -102,6 +105,7 @@ procedure Arkanoid is
    Brick_Gap      : constant Integer := 2;
    Brick_Origin_X : constant Integer := 9;   -- centered horizontally with Brick_W=24
    Brick_Origin_Y : constant Integer := 32;   -- top margin  (pixels)
+
 
 begin
 
@@ -149,6 +153,7 @@ begin
       begin
          -- Clear the store so all previous entities are gone
          ECS.Store.Initialize (S);
+         Reset_Score;
          Input.Reset;
 
          -- ==================================================================
@@ -380,6 +385,7 @@ begin
       end Reset_World;
 
    begin
+      Audio.Initialize;
       -- Register systems in execution order.
       -- Systems are allocated on the heap so they persist across resets.
       ECS.Manager.Add_System (Manager, new Movement_System);
@@ -390,6 +396,7 @@ begin
 
       -- Build the initial scene
       Reset_World;
+      Play_Audio("sfx/ost.wav");
 
       -- =====================================================================
       -- Game loop
@@ -552,12 +559,14 @@ begin
                end loop;
             end if;
          end;
-
+         Audio.Update;
+             Draw_String (Buffer.all, 10, 10, 0, 0, "SCORE: " & Trim (Integer'Image (Get_Score), Left),
+                  (255, 255, 255, 255), Width, Height);
          Draw_Buffer (Buffer.all'Address);
 
          -- Frame rate limiting (~60 FPS)
          delay until Start_Time + Milliseconds (16);
       end loop;
-
+      Audio.Finalize;
    end;
 end Arkanoid;

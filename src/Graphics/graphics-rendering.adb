@@ -278,4 +278,60 @@ package body Graphics.Rendering is
       end loop;
    end Draw;
 
+   procedure Draw_String (
+      Img                           : in out Byte_Array;
+      X, Y                           : Integer;
+      Width, Height                 : Integer;
+      S                             : String;
+      Color                         : Graphics.Color.Color;
+      Screen_Width, Screen_Height   : Natural
+      )
+   is
+      StartX   : Integer := X;
+      StartY   : Integer := Y;
+      Char     : Character;
+      Char_Spacing : constant Natural := 10;
+   begin
+      for I in 1 .. S'Length loop
+         Char := S (I);
+         Draw_Character (Img, StartX, StartY, Width, Height, Char, Color, Screen_Width, Screen_Height);
+         StartX := StartX + Char_Spacing;
+      end loop;
+   end Draw_String;
+
+   procedure Draw_Character (
+      Img                           : in out Byte_Array;
+      X, Y, Width, Height           : Integer;
+      Char                          : Character;
+      Color                         : Graphics.Color.Color;
+      Screen_Width, Screen_Height   : Natural
+      )
+   is
+      C : Text_Array := Get_Character (Char);
+      StartX : Integer := X;
+      StartY : Integer := Y;
+   begin
+      for I in 0 .. C'Length - 1 loop
+         declare
+            Bits : Graphics.Text.Text := C (I);
+         begin
+            for J in reverse 0 .. 7 loop
+            --  Print the most significant bit
+               declare
+                  Bit : Integer := Integer ((Bits / (2**J)) and 1);
+               begin
+                  if Bit = 1 then
+                     Set_Pixel_Color (Img, StartX, StartY, Color, Screen_Width, Screen_Height); -- Print the pixel and move to the next position
+                     StartX := StartX + 1;
+                  else
+                     StartX := StartX + 1;
+                  end if;
+               end;
+            end loop;
+            StartY := StartY + 1; -- New line
+            StartX := X;          -- Reset cursor
+         end;
+      end loop;
+   end Draw_Character;
+
 end Graphics.Rendering;

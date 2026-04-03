@@ -1,4 +1,5 @@
 with Graphics.Color; use Graphics.Color;
+with Graphics.Text; use Graphics.Text;
 with System.Storage_Elements; use System.Storage_Elements;
 
 package Graphics.Rendering is
@@ -65,6 +66,21 @@ package Graphics.Rendering is
        Img : in out Storage_Array_Access;
        X, Y : Integer;
        Width, Height : Integer;
+       Screen_Width, Screen_Height : Natural);
+       
+   procedure Draw_Character
+      (img : in out Byte_Array; 
+      X,Y,Width,Height : Integer; 
+      Char : Character; 
+      color : Graphics.Color.Color; 
+      Screen_Width, Screen_Height : Natural);
+       
+   procedure Draw_String
+      (img : in out Byte_Array; 
+       X,Y : Integer; 
+       Width, Height : Integer; 
+       S : in String; 
+       Color : Graphics.Color.Color; 
        Screen_Width, Screen_Height : Natural);
 
    generic
