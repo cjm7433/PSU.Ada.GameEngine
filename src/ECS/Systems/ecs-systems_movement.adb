@@ -16,7 +16,9 @@ with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Transform;      use ECS.Components.Transform;
 with ECS.Components.Motion;         use ECS.Components.Motion;
+with ECS.Components.Collider;       use ECS.Components.Collider;
 with Math.Linear_Algebra;           use Math.Linear_Algebra;
+with Math.Physics.AABBs;            use Math.Physics.AABBs;
 with Ada.Numerics;                  use Ada.Numerics;
 
 package body ECS.Systems_Movement is
@@ -76,6 +78,13 @@ package body ECS.Systems_Movement is
 
             Index_M : constant Motion_Table.Index := S.Motion.Lookup (E);
             M : Motion_Component renames S.Motion.Data (Index_M);
+
+			-- Optional collider
+			Index_C : Collider_Table.Index;
+
+			-- Soonest fraction along motion which collision occurred and reflected motion
+			Motion_Fraction : Float := Float'Last;
+			Reflection : Vector2 := (0.0, 0.0);
          
          begin
 
@@ -85,14 +94,47 @@ package body ECS.Systems_Movement is
             
             -- Integrate acceleration --> velocity
             M.Linear_Velocity    := M.Linear_Velocity + M.Linear_Acceleration * DT;
-
             M.Angular_Velocity   := M.Angular_Velocity + M.Angular_Acceleration * DT;
-      
-            -- Integrate velocity --> transform
-            T.Position  :=   T.Position + M.Linear_Velocity * DT;
+
+			-- Resolve collision if the entity has a collider
+			if S.Has_Component(E, ECS.Components.Collider.Collider_Component'Tag) then
+				Index_C := S.Collider.Lookup (E);
+				C : Collider_Component renames S.Collider.Data (Index_C);
+				
+				Colliders : Entity_ID_Array_Access := S.Get_Entities_With((0 => ECS.Components.Collider.Collider_Component'Tag));
+				
+				for J in Colliders'Range loop
+                    declare
+                        F : constant Entity_ID := Colliders (J);
+					begin
+						if I /= J then
+                            Index_D : constant Collider_Table.Index := S.Collider.Lookup (F);
+                            D : Collider_Component renames S.Collider.Data (Index_D);
+
+                            -- Check for collision between this entity and the collider in world space along the motion path
+                            Motion_Fraction := Collision_Sweep(C.Bounding_Box, D.Bounding_Box, M.Linear_Velocity * DT);
+                            if Motion_Fraction <= 1.0 then
+                                Reflection := Reflect(M.Linear_Velocity, Get_Aligned_Normal(D.Bounding_Box, C.Bounding_Box));
+                            end if;
+                        end if;
+                    end;
+                end loop;
+            end if;
+
+			-- Simulate bounce collision
+			-- TODO:
+			--		Will need to be adapted to recursively do collision sweeps for the entirety of the motion path.
+			--		i.e. it currently can only bounce one time per frame.
+			if Motion_Fraction <= 1.0 then
+				-- Translate up to moment of collision
+	            -- Integrate velocity --> transform
+	            T.Position  :=   T.Position + M.Linear_Velocity * DT * Motion_Fraction;
+				-- Then translate remainder using reflection
+				T.Position := T.Position + Reflection * DT * (1.0 - Motion_Fraction);
+            end if;
 
             -- Integrate and normalize rotation
-            T.Rotation := Wrap(T.Rotation + M.Angular_Velocity * DT, 0.0, 2.0 * Pi);
+            T.Rotation := Rotate(T.Rotation, M.Angular_Velocity * DT);
          end;
       end loop;
 
