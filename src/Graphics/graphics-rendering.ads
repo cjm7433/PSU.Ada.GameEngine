@@ -67,6 +67,12 @@ package Graphics.Rendering is
        X, Y : Integer;
        Width, Height : Integer;
        Screen_Width, Screen_Height : Natural);
+
+   procedure Draw
+      (Buffer : in out Byte_Array; 
+       Img: in out Storage_Array_Access; 
+       X,Y,Width,Height,StartX,StartY : Integer; 
+       Screen_Width, Screen_Height,Image_Width : Natural);
        
    procedure Draw_Character
       (img : in out Byte_Array; 
