@@ -1,11 +1,12 @@
 package body ECS.Config_Loader is
 
-   procedure Load_Config (Manager : in out Entity_Manager_T; File_Name : String) is
+   procedure Load_Config (Manager : in out ECS_Manager; File_Name : String) is
       Input   : File_Type;
       Line    : String (1 .. 256);
       Last    : Natural;
       Section : Unbounded_String;
-      Entity  : Entity_Access;
+      --Entity  : Entity_ID_Array;
+      S : Store;
 
    begin
       Put_Line ("Opening file: " & File_Name);
@@ -65,11 +66,11 @@ package body ECS.Config_Loader is
 
                         if Component_Name = "Transform" then
                            declare
-                              Transform_Comp : constant Component_Access := Entity.Get_Component (Transform_T'Tag);
-                              New_Transform_Comp : Component_Access;
+                              Transform_Comp : constant Component_Tag := Entity.Get_Component (Transform_Component'Tag);
+                              New_Transform_Comp : Component_Tag;
                            begin
                               if Transform_Comp = null then
-                                 New_Transform_Comp := new Transform_T;
+                                 New_Transform_Comp := new Transform_Component;
                                  Entity.Add_Component (New_Transform_Comp);
                                  Put_Line (" ");
                                  Put_Line ("Created new Transform component");
@@ -81,31 +82,31 @@ package body ECS.Config_Loader is
 
                               case Property_Name is
                                  when "Position.X" =>
-                                    Transform_T (New_Transform_Comp.all).Position.X := Float'Value (Value);
-                                    Put_Line ("Set Transform Position.X to " & Float'Image (Transform_T (New_Transform_Comp.all).Position.X));
+                                    Transform_Component (New_Transform_Comp.all).Position.X := Float'Value (Value);
+                                    Put_Line ("Set Transform Position.X to " & Float'Image (Transform_Component (New_Transform_Comp.all).Position.X));
                                  when "Position.Y" =>
-                                    Transform_T (New_Transform_Comp.all).Position.Y := Float'Value (Value);
-                                    Put_Line ("Set Transform Position.Y to " & Float'Image (Transform_T (New_Transform_Comp.all).Position.Y));
+                                    Transform_Component (New_Transform_Comp.all).Position.Y := Float'Value (Value);
+                                    Put_Line ("Set Transform Position.Y to " & Float'Image (Transform_Component (New_Transform_Comp.all).Position.Y));
                                  when "Velocity.X" =>
-                                    Transform_T (New_Transform_Comp.all).Velocity.X := Float'Value (Value);
-                                    Put_Line ("Set Transform Velocity.X to " & Float'Image (Transform_T (New_Transform_Comp.all).Velocity.X));
+                                    Transform_Component (New_Transform_Comp.all).Velocity.X := Float'Value (Value);
+                                    Put_Line ("Set Transform Velocity.X to " & Float'Image (Transform_Component (New_Transform_Comp.all).Velocity.X));
                                  when "Velocity.Y" =>
-                                    Transform_T (New_Transform_Comp.all).Velocity.Y := Float'Value (Value);
-                                    Put_Line ("Set Transform Velocity.Y to " & Float'Image (Transform_T (New_Transform_Comp.all).Velocity.Y));
+                                    Transform_Component (New_Transform_Comp.all).Velocity.Y := Float'Value (Value);
+                                    Put_Line ("Set Transform Velocity.Y to " & Float'Image (Transform_Component (New_Transform_Comp.all).Velocity.Y));
                                  when "Rotation" =>
-                                    Transform_T (New_Transform_Comp.all).Rotation := Float'Value (Value);
-                                    Put_Line ("Set Transform Rotation to " & Float'Image (Transform_T (New_Transform_Comp.all).Rotation));
+                                    Transform_Component (New_Transform_Comp.all).Rotation := Float'Value (Value);
+                                    Put_Line ("Set Transform Rotation to " & Float'Image (Transform_Component (New_Transform_Comp.all).Rotation));
                                  when others =>
                                     Put_Line ("Unknown property for Transform component: " & Property_Name);
                               end case;
                            end;
                         elsif Component_Name = "RigidBody" then
                            declare
-                              RigidBody_Comp : constant Component_Access := Entity.Get_Component (Rigidbody_T'Tag);
-                              New_RigidBody_Comp : Component_Access;
+                              RigidBody_Comp : constant Component_Tag := Entity.Get_Component (Rigidbody_Component'Tag);
+                              New_RigidBody_Comp : Component_Tag;
                            begin
                               if RigidBody_Comp = null then
-                                 New_RigidBody_Comp := new Rigidbody_T;
+                                 New_RigidBody_Comp := new Rigidbody_Component;
                                  Entity.Add_Component (New_RigidBody_Comp);
                                  Put_Line (" ");
                                  Put_Line ("Created new RigidBody component");
@@ -117,19 +118,19 @@ package body ECS.Config_Loader is
 
                               case Property_Name is
                                  when "Mass" =>
-                                    Rigidbody_T (New_RigidBody_Comp.all).Mass := Float'Value (Value);
-                                    Put_Line ("Set RigidBody Mass to " & Float'Image (Rigidbody_T (New_RigidBody_Comp.all).Mass));
+                                    Rigidbody_Component (New_RigidBody_Comp.all).Mass := Float'Value (Value);
+                                    Put_Line ("Set RigidBody Mass to " & Float'Image (Rigidbody_Component (New_RigidBody_Comp.all).Mass));
                                  when others =>
                                     Put_Line ("Unknown property for RigidBody component: " & Property_Name);
                               end case;
                            end;
                         elsif Component_Name = "Quad" then
                            declare
-                              Quad_Comp : constant Component_Access := Entity.Get_Component (Quad_T'Tag);
-                              New_Quad_Comp : Component_Access;
+                              Quad_Comp : constant Component_Tag := Entity.Get_Component (Quad_Component'Tag);
+                              New_Quad_Comp : Component_Tag;
                            begin
                               if Quad_Comp = null then
-                                 New_Quad_Comp := new Quad_T;
+                                 New_Quad_Comp := new Quad_Component;
                                  Entity.Add_Component (New_Quad_Comp);
                                  Put_Line (" ");
                                  Put_Line ("Created new Quad component");
@@ -141,34 +142,34 @@ package body ECS.Config_Loader is
 
                               case Property_Name is
                                  when "Width" =>
-                                    Quad_T (New_Quad_Comp.all).Width := Float'Value (Value);
-                                    Put_Line ("Set Quad Width to " & Float'Image (Quad_T (New_Quad_Comp.all).Width));
+                                    Quad_Component (New_Quad_Comp.all).Width := Float'Value (Value);
+                                    Put_Line ("Set Quad Width to " & Float'Image (Quad_Component (New_Quad_Comp.all).Width));
                                  when "Height" =>
-                                    Quad_T (New_Quad_Comp.all).Height := Float'Value (Value);
-                                    Put_Line ("Set Quad Height to " & Float'Image (Quad_T (New_Quad_Comp.all).Height));
+                                    Quad_Component (New_Quad_Comp.all).Height := Float'Value (Value);
+                                    Put_Line ("Set Quad Height to " & Float'Image (Quad_Component (New_Quad_Comp.all).Height));
                                  when "C.R" =>
-                                    Quad_T (New_Quad_Comp.all).C.R := Color_Int'Value (Value);
-                                    Put_Line ("Set Quad Color R to " & Color_Int'Image (Quad_T (New_Quad_Comp.all).C.R));
+                                    Quad_Component (New_Quad_Comp.all).C.R := Color_Int'Value (Value);
+                                    Put_Line ("Set Quad Color R to " & Color_Int'Image (Quad_Component (New_Quad_Comp.all).C.R));
                                  when "C.G" =>
-                                    Quad_T (New_Quad_Comp.all).C.G := Color_Int'Value (Value);
-                                    Put_Line ("Set Quad Color G to " & Color_Int'Image (Quad_T (New_Quad_Comp.all).C.G));
+                                    Quad_Component (New_Quad_Comp.all).C.G := Color_Int'Value (Value);
+                                    Put_Line ("Set Quad Color G to " & Color_Int'Image (Quad_Component (New_Quad_Comp.all).C.G));
                                  when "C.B" =>
-                                    Quad_T (New_Quad_Comp.all).C.B := Color_Int'Value (Value);
-                                    Put_Line ("Set Quad Color B to " & Color_Int'Image (Quad_T (New_Quad_Comp.all).C.B));
+                                    Quad_Component (New_Quad_Comp.all).C.B := Color_Int'Value (Value);
+                                    Put_Line ("Set Quad Color B to " & Color_Int'Image (Quad_Component (New_Quad_Comp.all).C.B));
                                  when "C.A" =>
-                                    Quad_T (New_Quad_Comp.all).C.A := Color_Int'Value (Value);
-                                    Put_Line ("Set Quad Color A to " & Color_Int'Image (Quad_T (New_Quad_Comp.all).C.A));
+                                    Quad_Component (New_Quad_Comp.all).C.A := Color_Int'Value (Value);
+                                    Put_Line ("Set Quad Color A to " & Color_Int'Image (Quad_Component (New_Quad_Comp.all).C.A));
                                  when others =>
                                     Put_Line ("Unknown property for Quad component: " & Property_Name);
                               end case;
                            end;
                         elsif Component_Name = "Collision_Params" then
                            declare
-                              Collision_Params_Comp : constant Component_Access := Entity.Get_Component (Collision_Params_T'Tag);
-                              New_Collision_Params_Comp : Component_Access;
+                              Collision_Params_Comp : constant Component_Tag := Entity.Get_Component (Collidier_Component'Tag);
+                              New_Collision_Params_Comp : Component_Tag;
                            begin
                               if Collision_Params_Comp = null then
-                                 New_Collision_Params_Comp := new Collision_Params_T;
+                                 New_Collision_Params_Comp := new Collidier_Component;
                                  Entity.Add_Component (New_Collision_Params_Comp);
                                  Put_Line (" ");
                                  Put_Line ("Created new Collision_Params component");
@@ -180,15 +181,15 @@ package body ECS.Config_Loader is
 
                               case Property_Name is
                                  when "Collision_Enabled" =>
-                                    Collision_Params_T (New_Collision_Params_Comp.all).Collision_Enabled := Boolean'Value (Value);
-                                    Put_Line ("Set Collision_Params Collision_Enabled to " & Boolean'Image (Collision_Params_T (New_Collision_Params_Comp.all).Collision_Enabled));
+                                    Collidier_Component (New_Collision_Params_Comp.all).Collision_Enabled := Boolean'Value (Value);
+                                    Put_Line ("Set Collision_Params Collision_Enabled to " & Boolean'Image (Collidier_Component (New_Collision_Params_Comp.all).Collision_Enabled));
                                  when "Destroy_On_Collision" =>
-                                    Collision_Params_T (New_Collision_Params_Comp.all).Destroy_On_Collision := Boolean'Value (Value);
-                                    Put_Line ("Set Collision_Params Destroy_On_Collision to " & Boolean'Image (Collision_Params_T (New_Collision_Params_Comp.all).Destroy_On_Collision));
+                                    Collidier_Component (New_Collision_Params_Comp.all).Destroy_On_Collision := Boolean'Value (Value);
+                                    Put_Line ("Set Collision_Params Destroy_On_Collision to " & Boolean'Image (Collidier_Component (New_Collision_Params_Comp.all).Destroy_On_Collision));
                                  when "Collision_Occurred" =>
-                                    Collision_Params_T (New_Collision_Params_Comp.all).Collision_Occurred := Boolean'Value (Value);
+                                    Collidier_Component (New_Collision_Params_Comp.all).Collision_Occurred := Boolean'Value (Value);
                                  when "Prev_Frame_Collision" =>
-                                    Collision_Params_T (New_Collision_Params_Comp.all).Prev_Frame_Collision := Boolean'Value (Value);
+                                    Collidier_Component (New_Collision_Params_Comp.all).Prev_Frame_Collision := Boolean'Value (Value);
                                  when others =>
                                     Put_Line ("Unknown property for Collision_Params component: " & Property_Name);
                               end case;
@@ -206,18 +207,18 @@ package body ECS.Config_Loader is
 
          --  Initialize AABB based on Transform and Quad components
          declare
-            Transform_Comp : constant Component_Access := Entity.Get_Component (Transform_T'Tag);
-            Quad_Comp      : constant Component_Access := Entity.Get_Component (Quad_T'Tag);
+            Transform_Comp : constant Component_Tag := Entity.Get_Component (Transform_Component'Tag);
+            Quad_Comp      : constant Component_Tag := Entity.Get_Component (Quad_Component'Tag);
          begin
             if Transform_Comp /= null and then Quad_Comp /= null then
                declare
-                  Transform : Transform_T renames Transform_T (Transform_Comp.all);
-                  Quad      : Quad_T renames Quad_T (Quad_Comp.all);
-                  AABB_Comp : constant Component_Access := Entity.Get_Component (AABB_T'Tag);
-                  New_AABB_Comp : Component_Access;
+                  Transform : Transform_Component renames Transform_T (Transform_Comp.all);
+                  Quad      : Quad_Component renames Quad_Component (Quad_Comp.all);
+                  AABB_Comp : constant Component_Tag := Entity.Get_Component (AABB_Component'Tag);
+                  New_AABB_Comp : Component_Tag;
                begin
                   if AABB_Comp = null then
-                     New_AABB_Comp := new AABB_T;
+                     New_AABB_Comp := new AABB_Component;
                      Entity.Add_Component (New_AABB_Comp);
                      Put_Line (" ");
                      Put_Line ("Created new AABB component");
@@ -227,10 +228,10 @@ package body ECS.Config_Loader is
                      Put_Line ("Using existing AABB component");
                   end if;
 
-                  AABB_T (New_AABB_Comp.all).Left   := Transform.Position.X;
-                  AABB_T (New_AABB_Comp.all).Right  := Transform.Position.X + Quad.Width;
-                  AABB_T (New_AABB_Comp.all).Bottom := Transform.Position.Y;
-                  AABB_T (New_AABB_Comp.all).Top    := Transform.Position.Y + Quad.Height;
+                  AABB_Component (New_AABB_Comp.all).Left   := Transform.Position.X;
+                  AABB_Component (New_AABB_Comp.all).Right  := Transform.Position.X + Quad.Width;
+                  AABB_Component (New_AABB_Comp.all).Bottom := Transform.Position.Y;
+                  AABB_Component (New_AABB_Comp.all).Top    := Transform.Position.Y + Quad.Height;
 
                   Put_Line ("Initialized AABB for entity " & Entity.Id);
                end;

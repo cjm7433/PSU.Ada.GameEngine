@@ -16,3 +16,6 @@ package Graphics.Color is
    Black  : constant Color := (R => 0,   G => 0,   B => 0,   A => 255);
    Invisible_Black : constant Color := (0,0,0,0);
 end Graphics.Color;
+
+-- ECS.Components.Render.Color uses Float (0.0–1.0).
+-- Do we need to change one of these or can we convert? Is it wasteful to convert?

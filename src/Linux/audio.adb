@@ -12,7 +12,7 @@ package body Audio is
       null;
    end Initialize;
 
-   procedure Play_Audio (Filename : String) is
+   procedure Play_Audio (Filename : String; Looping : Boolean) is
    begin
       Ada.Text_IO.Put_Line ("[Audio Stub] Would play audio: " & Filename);
       --  TODO: Implement with ALSA, PulseAudio, or SDL2 audio
