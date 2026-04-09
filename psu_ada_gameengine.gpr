@@ -37,7 +37,7 @@ project Psu_Ada_Gameengine is
    package Linker is 
       case Psu_Ada_Gameengine_Config.Alire_Host_OS is
          when "linux" =>
-            for Switches ("ada") use ("-lwayland-client");
+            for Switches ("ada") use ("-lwayland-client", "-lpipewire-0.3", "-lpwformat");
          when "windows" =>
             for Switches ("ada") use ("-lgdi32", "-llargeint", "-lwinmm","-lole32", "-lxaudio2_9");
             for Switches ("c") use ("-lgdi32", "-llargeint", "-lwinmm","-lole32", "-lxaudio2_9");
