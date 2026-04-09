@@ -442,6 +442,10 @@ begin
          S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Move_Right :=
             Input.State.Right;
 
+		-- DEBUG
+         Put_Line(S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Move_Left'Image);
+         Put_Line(S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Move_Right'Image);
+
          -- Space: launch the ball if it is still attached to the paddle
          if Input.State.Space then
             if S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached then
