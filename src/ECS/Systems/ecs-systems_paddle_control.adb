@@ -101,6 +101,9 @@ package body ECS.Systems_Paddle_Control is
                M.Linear_Velocity.X := 0.0;   -- Stop movement at boundary
             end if;
 
+			-- DEBUG:
+			Put_Line(M.Linear_Velocity.X'Image);			
+
             --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             -- Enforce vertical position (keep paddle on its home row)
             -- Collision resolution can push the paddle's Y position by a
