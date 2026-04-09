@@ -395,7 +395,7 @@ begin
       -- Systems are allocated on the heap so they persist across resets.
       ECS.Manager.Add_System (Manager, new Movement_System);
       ECS.Manager.Add_System (Manager, new Ball_Physics_System);
-      ECS.Manager.Add_System (Manager, new Collision_System);
+      --ECS.Manager.Add_System (Manager, new Collision_System);		Shouldn't need currently. Movement system will resolve sweep tests.
       ECS.Manager.Add_System (Manager, new Brick_Destruction_System);
       ECS.Manager.Add_System (Manager, new Paddle_Control_System);
 
