@@ -11,7 +11,8 @@
 --
 -- The wrapping step (4) prevents rotation from growing unbounded.
 -- Without it, rotation would eventually lose precision or overflow.
-
+with Ada.Text_IO;                   use Ada.Text_IO;   --DEBUG
+with ECS.Components.Ball;           use ECS.Components.Ball; --DEBUG
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Transform;      use ECS.Components.Transform;
@@ -96,48 +97,53 @@ package body ECS.Systems_Movement is
             M.Linear_Velocity    := M.Linear_Velocity + M.Linear_Acceleration * DT;
             M.Angular_Velocity   := M.Angular_Velocity + M.Angular_Acceleration * DT;
 
-			-- Resolve collision if the entity has a collider
-			if S.Has_Component(E, ECS.Components.Collider.Collider_Component'Tag) then
-				Index_C := S.Collider.Lookup (E);
-				C : Collider_Component renames S.Collider.Data (Index_C);
-				
-				Colliders : Entity_ID_Array_Access := S.Get_Entities_With((0 => ECS.Components.Collider.Collider_Component'Tag));
-				
-				for J in Colliders'Range loop
-                    declare
-                        F : constant Entity_ID := Colliders (J);
-					begin
-						if I /= J then
-                            Index_D : constant Collider_Table.Index := S.Collider.Lookup (F);
-                            D : Collider_Component renames S.Collider.Data (Index_D);
+            -- Resolve collision if the entity has a collider
+            if S.Has_Component(E, ECS.Components.Collider.Collider_Component'Tag) then
+               Index_C := S.Collider.Lookup (E);
+               C : Collider_Component renames S.Collider.Data (Index_C);
+               
+               Colliders : Entity_ID_Array_Access := S.Get_Entities_With((0 => ECS.Components.Collider.Collider_Component'Tag));
+               
+               for J in Colliders'Range loop
+                  declare
+                     F : constant Entity_ID := Colliders (J);
+                     New_Fraction: Float := Float'Last;
+                  begin
+                     if E /= F then
+                        Index_D : constant Collider_Table.Index := S.Collider.Lookup (F);
+                        D : Collider_Component renames S.Collider.Data (Index_D);
 
-                            -- Check for collision between this entity and the collider in world space along the motion path
-                            Motion_Fraction := Collision_Sweep(C.Bounding_Box, D.Bounding_Box, M.Linear_Velocity * DT);
-                            if Motion_Fraction <= 1.0 then
-                                Reflection := Reflect(M.Linear_Velocity, Get_Aligned_Normal(D.Bounding_Box, C.Bounding_Box));
-                            end if;
+                        -- Check for collision between this entity and the collider in world space along the motion path
+                        New_Fraction := Collision_Sweep(C.Bounding_Box, D.Bounding_Box, M.Linear_Velocity * DT);
+                        if New_Fraction <= 1.0 and New_Fraction < Motion_Fraction then
+                           Motion_Fraction := New_Fraction;
+                           Reflection := Reflect(M.Linear_Velocity, Get_Aligned_Normal(D.Bounding_Box, C.Bounding_Box));
                         end if;
-                    end;
-                end loop;
+                     end if;
+                  end;
+               end loop;
             end if;
 
-			-- Simulate bounce collision
-			-- TODO:
-			--		Will need to be adapted to recursively do collision sweeps for the entirety of the motion path.
-			--		i.e. it currently can only bounce one time per frame.
-			if Motion_Fraction <= 1.0 then
-				-- Translate up to moment of collision
-	            -- Integrate velocity --> transform
-	            T.Position  :=   T.Position + M.Linear_Velocity * DT * Motion_Fraction;
-				-- Then translate remainder using reflection
-				T.Position := T.Position + Reflection * DT * (1.0 - Motion_Fraction);
+            -- Simulate bounce collision
+            -- TODO:
+            --		Will need to be adapted to recursively do collision sweeps for the entirety of the motion path.
+            --		i.e. it currently can only bounce one time per frame.
+            if Motion_Fraction <= 1.0 then
+               -- Translate up to moment of collision
+               -- Integrate velocity --> transform
+               T.Position  :=   T.Position + M.Linear_Velocity * DT * Motion_Fraction;
+               -- Then translate remainder using reflection
+               T.Position := T.Position + Reflection * DT * (1.0 - Motion_Fraction);
+               M.Linear_Velocity := Reflection;
+            else
+               -- Integrate velocity --> transform
+               T.Position  :=   T.Position + M.Linear_Velocity * DT;
             end if;
 
             -- Integrate and normalize rotation
             T.Rotation := Rotate(T.Rotation, M.Angular_Velocity * DT);
          end;
       end loop;
-
    end Update;
 
 end ECS.Systems_Movement;

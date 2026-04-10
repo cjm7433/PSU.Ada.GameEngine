@@ -414,6 +414,21 @@ package body ECS.Systems_Collision is
          return;
       end if;
 
+      for I in Entities'Range loop
+         declare
+            E : constant Entity_ID := Entities (I);
+         begin
+            Index_C : constant Natural := S.Collider.Lookup (E);
+            C : Collider_Component renames S.Collider.Data (Index_C);
+            Index_T : constant Natural := S.Transform.Lookup (E);
+            T : Transform_Component renames S.Transform.Data (Index_T);
+
+            C.Bounding_Box.Center := T.Position;
+         end;
+      end loop;
+
+      return; --HACK; Movement system does collision sweep. This just snaps colliders
+
       -- ================================================================
       -- Pass 1: Ball collisions — resolve deepest non-dying hit only
       -- ================================================================

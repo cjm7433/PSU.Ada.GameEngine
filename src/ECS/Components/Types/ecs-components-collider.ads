@@ -22,6 +22,7 @@ package ECS.Components.Collider is
 
 
    type Collider_Component is new Component with record
+      Name           : String(1..4) := "None";   --DEBUG
       Bounding_Box   : AABB;
       Layer          : Collision_Layer := Layer_None;
       Mask           : Collision_Mask  := (others => Layer_None);

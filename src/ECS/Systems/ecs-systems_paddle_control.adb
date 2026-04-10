@@ -2,7 +2,6 @@
 --
 -- Implementation of Paddle Control System
 -- Reads input state and updates paddle velocity
-
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Transform;      use ECS.Components.Transform;
@@ -100,9 +99,6 @@ package body ECS.Systems_Paddle_Control is
                T.Position.X        := P.Max_X;
                M.Linear_Velocity.X := 0.0;   -- Stop movement at boundary
             end if;
-
-			-- DEBUG:
-			Put_Line(M.Linear_Velocity.X'Image);			
 
             --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             -- Enforce vertical position (keep paddle on its home row)

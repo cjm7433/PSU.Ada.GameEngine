@@ -188,6 +188,8 @@ begin
                   (Layer_Ball, Layer_None, Layer_None, Layer_None);
                S.Collider.Data (S.Collider.Lookup (E)).Collider_Form :=
                   Solid;
+               S.Collider.Data (S.Collider.Lookup (E)).Name :=
+                  "WALL";
 
                S.Render.Data (S.Render.Lookup (E)).Shape   := Rectangle;
                S.Render.Data (S.Render.Lookup (E)).Tint    := Grey;
@@ -255,6 +257,8 @@ begin
             (Layer_Ball, Layer_Wall, Layer_None, Layer_None);
          S.Collider.Data (S.Collider.Lookup (Paddle_E)).Collider_Form :=
             Solid;
+         S.Collider.Data (S.Collider.Lookup (Paddle_E)).Name :=
+            "PADL";
 
          S.Render.Data (S.Render.Lookup (Paddle_E)).Shape   := Rectangle;
          S.Render.Data (S.Render.Lookup (Paddle_E)).Tint    :=
@@ -298,6 +302,8 @@ begin
             (Layer_Paddle, Layer_Brick, Layer_Wall, Layer_None);
          S.Collider.Data (S.Collider.Lookup (Ball_E)).Collider_Form :=
             Solid;
+         S.Collider.Data (S.Collider.Lookup (Ball_E)).Name :=
+            "BALL";
 
          S.Render.Data (S.Render.Lookup (Ball_E)).Shape   := Circle;
          S.Render.Data (S.Render.Lookup (Ball_E)).Tint    :=
@@ -371,6 +377,8 @@ begin
                      (Layer_Ball, Layer_None, Layer_None, Layer_None);
                   S.Collider.Data (S.Collider.Lookup (Brick_E)).Collider_Form :=
                      Solid;
+                  S.Collider.Data (S.Collider.Lookup (Brick_E)).Name :=
+                     "BRCK";
 
                   S.Render.Data (S.Render.Lookup (Brick_E)).Shape   := Rectangle;
                   S.Render.Data (S.Render.Lookup (Brick_E)).Tint    := Tint;
@@ -393,16 +401,17 @@ begin
       Audio.Initialize;
       -- Register systems in execution order.
       -- Systems are allocated on the heap so they persist across resets.
+      ECS.Manager.Add_System (Manager, new Collision_System);
       ECS.Manager.Add_System (Manager, new Movement_System);
       ECS.Manager.Add_System (Manager, new Ball_Physics_System);
-      --ECS.Manager.Add_System (Manager, new Collision_System);		Shouldn't need currently. Movement system will resolve sweep tests.
       ECS.Manager.Add_System (Manager, new Brick_Destruction_System);
       ECS.Manager.Add_System (Manager, new Paddle_Control_System);
 
       -- Build the initial scene
       Reset_World;
       Background_Image := Load_QOI (Bkgrnd);
-      Play_Audio("sfx/ost.wav", True);
+      --DEBUG: Disabled for my sanity
+      --Play_Audio("sfx/ost.wav", True);
 
       -- =====================================================================
       -- Game loop
@@ -441,10 +450,6 @@ begin
             Input.State.Left;
          S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Move_Right :=
             Input.State.Right;
-
-		-- DEBUG
-         Put_Line(S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Move_Left'Image);
-         Put_Line(S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Move_Right'Image);
 
          -- Space: launch the ball if it is still attached to the paddle
          if Input.State.Space then

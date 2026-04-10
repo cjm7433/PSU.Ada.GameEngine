@@ -103,42 +103,55 @@ package body Math.Physics.AABBs is
       Max1        : Vector2 := Box1.Get_Max;
       Min2        : Vector2 := Box2.Get_Min;
       Max2        : Vector2 := Box2.Get_Max;
-      Delta_Entry : Vector2;
-      Fraction_X  : Float;
-      Fraction_Y  : Float;
+
+      Entry_Pos       : Vector2;
+      Exit_Pos        : Vector2;
+
+      Fraction_Entry_X : Float := Float'First;
+      Fraction_Entry_Y : Float := Float'First;
+      Fraction_Exit_X  : Float := Float'Last;
+      Fraction_Exit_Y  : Float := Float'Last;
+
+      Entry_Time  : Float;
+      Exit_Time   : Float;
    begin
-      -- TODO: Can optimize with a broadphase rectangle first
-
-      -- Compute vector to first collision
+      -- Compute entry/exit distances
       if Motion.X > 0.0 then
-         if Motion.Y > 0.0 then
-            Delta_Entry := (Min2.X - Max1.X, Min2.Y - Max1.Y);
-         else
-            Delta_Entry := (Min2.X - Max1.X, Max2.Y - Min1.Y);
-         end if;
+         Entry_Pos.X := Min2.X - Max1.X;
+         Exit_Pos.X  := Max2.X - Min1.X;
       else
-         if Motion.Y > 0.0 then
-            Delta_Entry := (Max2.X - Min1.X, Min2.Y - Max1.Y);
-         else
-            Delta_Entry := (Min2.X - Max1.X, Max2.Y - Min1.Y);
-         end if;
+         Entry_Pos.X := Max2.X - Min1.X;
+         Exit_Pos.X  := Min2.X - Max1.X;
+      end if;
+      if Motion.Y > 0.0 then
+         Entry_Pos.Y := Min2.Y - Max1.Y;
+         Exit_Pos.Y  := Max2.Y - Min1.Y;
+      else
+         Entry_Pos.Y := Max2.Y - Min1.Y;
+         Exit_Pos.Y  := Min2.Y - Max1.Y;
       end if;
 
-      -- Compute fraction for X axis
-      if Is_Equal_Approximate(Motion.X, 0.0) then
-         Fraction_X  := Float'Last;
-      else
-         Fraction_X  := Delta_Entry.X / Motion.X;
+      -- Compute entry/exit times
+      if not Is_Equal_Approximate(Motion.X, 0.0) then
+         Fraction_Entry_X := Entry_Pos.X / Motion.X;
+         Fraction_Exit_X  := Exit_Pos.X  / Motion.X;
+      end if;
+      if not Is_Equal_Approximate(Motion.Y, 0.0) then
+         Fraction_Entry_Y := Entry_Pos.Y / Motion.Y;
+         Fraction_Exit_Y  := Exit_Pos.Y  / Motion.Y;
       end if;
 
-      -- Compute fraction for Y axis
-      if Is_Equal_Approximate(Motion.Y, 0.0) then
-         Fraction_Y  := Float'Last;
-      else
-         Fraction_Y  := Delta_Entry.Y / Motion.Y;
+      Entry_Time := Float'Max(Fraction_Entry_X, Fraction_Entry_Y);
+      Exit_Time  := Float'Min(Fraction_Exit_X,  Fraction_Exit_Y);
+
+      -- No collision
+      if Entry_Time > Exit_Time
+         or else Entry_Time < 0.0
+         or else Entry_Time > 1.0
+      then
+         return Float'Last;
       end if;
 
-      -- Return the fraction for the axis that collided first
-      return Float'Min(Fraction_X, Fraction_Y);
+      return Entry_Time;
    end;
 end;
