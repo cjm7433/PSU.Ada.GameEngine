@@ -80,13 +80,14 @@ package body ECS.Systems_Movement is
             Index_M : constant Motion_Table.Index := S.Motion.Lookup (E);
             M : Motion_Component renames S.Motion.Data (Index_M);
 
-			-- Optional collider
-			Index_C : Collider_Table.Index;
+            -- Optional collider
+            Index_C : Collider_Table.Index;
 
-			-- Soonest fraction along motion which collision occurred and reflected motion
-			Motion_Fraction : Float := Float'Last;
-			Reflection : Vector2 := (0.0, 0.0);
-         
+            -- Soonest fraction along motion which collision occurred and reflected motion
+            Motion_Fraction : Float := Float'Last;
+            Reflection : Vector2 := (0.0, 0.0);
+            Collidee : Entity_ID;
+
          begin
 
             --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -101,9 +102,9 @@ package body ECS.Systems_Movement is
             if S.Has_Component(E, ECS.Components.Collider.Collider_Component'Tag) then
                Index_C := S.Collider.Lookup (E);
                C : Collider_Component renames S.Collider.Data (Index_C);
-               
+
                Colliders : Entity_ID_Array_Access := S.Get_Entities_With((0 => ECS.Components.Collider.Collider_Component'Tag));
-               
+
                for J in Colliders'Range loop
                   declare
                      F : constant Entity_ID := Colliders (J);
@@ -116,12 +117,17 @@ package body ECS.Systems_Movement is
                         -- Check for collision between this entity and the collider in world space along the motion path
                         New_Fraction := Collision_Sweep(C.Bounding_Box, D.Bounding_Box, M.Linear_Velocity * DT);
                         if New_Fraction <= 1.0 and New_Fraction < Motion_Fraction then
+                           Collidee := F;
                            Motion_Fraction := New_Fraction;
                            Reflection := Reflect(M.Linear_Velocity, Get_Aligned_Normal(D.Bounding_Box, C.Bounding_Box));
                         end if;
                      end if;
                   end;
                end loop;
+
+               if Motion_Fraction <= 1.0 then
+                  C.Collided_Entities.Append(Collidee);
+               end if;
             end if;
 
             -- Simulate bounce collision
