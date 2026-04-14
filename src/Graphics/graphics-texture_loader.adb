@@ -17,7 +17,7 @@ package body Graphics.Texture_Loader is
 
     Result : QOI_Image_Data;
   begin
-   Put_Line("Loading QOI file: " & Filename);
+   --Put_Line("Loading QOI file: " & Filename);
 
     FD := GNAT.OS_Lib.Open_Read (Filename, Binary);
 

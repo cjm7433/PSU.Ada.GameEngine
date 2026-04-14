@@ -13,6 +13,7 @@ package Win32 is
 
    WM_DESTROY        : constant := 16#2#;
    WM_PAINT          : constant := 16#f#;
+   WM_ERASEBKGND     : constant := 16#14#;
    WM_QUIT           : constant := 16#0012#;
    WM_SETCURSOR      : constant := 16#20#;  -- Define the set cursor message
    HTCLIENT          : constant := 16#01#;  -- Hit-test value for the client area

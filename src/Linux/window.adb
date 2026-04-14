@@ -108,8 +108,14 @@ package body Window is
    --  =========================================================
    --  Draws the provided buffer to the window
    --  =========================================================
-   procedure Draw_Buffer (Buffer : System.Address) is
+   procedure Draw_Buffer (
+      Buffer     : System.Address;
+      Src_Width  : Interfaces.C.int;
+      Src_Height : Interfaces.C.int) is
    begin
+      -- Wayland update path consumes the shared buffer directly; dimensions are
+      -- provided for API parity with Windows but are not needed here.
+      pragma Unreferenced (Src_Width, Src_Height);
       if Wayland_Context /= Wayland_Wrapper.Window_Context (System.Null_Address) then
          --  Copy the buffer to Wayland shared memory and commit
          Wayland_Wrapper.Wayland_Update_Buffer (Wayland_Context, Buffer);
