@@ -1,5 +1,7 @@
+with ECS.Entities;   use ECS.Entities;
 with Math.Physics;   use Math.Physics;
 with Math.Physics.AABBs;  use Math.Physics.AABBs;
+with Ada.Containers.Vectors;
 
 
 package ECS.Components.Collider is
@@ -21,11 +23,17 @@ package ECS.Components.Collider is
    type Collider_Type is (Solid, Area);
 
 
+   package Colliding_Entities is new Ada.Containers.Vectors
+      (Index_Type    => Natural,
+      Element_Type   => Entity_ID);
+
+
    type Collider_Component is new Component with record
-      Name           : String(1..4) := "None";   --DEBUG
-      Bounding_Box   : AABB;
-      Layer          : Collision_Layer := Layer_None;
-      Mask           : Collision_Mask  := (others => Layer_None);
-      Collider_Form  : Collider_Type;
+      Name              : String(1..4) := "None";   --DEBUG
+      Bounding_Box      : AABB;
+      Layer             : Collision_Layer := Layer_None;
+      Mask              : Collision_Mask  := (others => Layer_None);
+      Collider_Form     : Collider_Type;
+      Collided_Entities : Colliding_Entities.Vector;
    end record;
 end;
