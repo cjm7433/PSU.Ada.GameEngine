@@ -14,6 +14,7 @@
 with Ada.Containers.Vectors;
 with ECS.Store;
 with ECS.Systems; use ECS.Systems;
+with Performance;
 
 package ECS.Manager is
 
@@ -35,8 +36,37 @@ package ECS.Manager is
 
 
    ------------------------------------------------------------
+   -- System Performance Data
+   ------------------------------------------------------------
+   type System_Performance_Data is record
+      Total_Time    : Float := 0.0;
+      Min_Time      : Float := Float'Last;
+      Max_Time      : Float := 0.0;
+      Call_Count    : Natural := 0;
+   end record;
+
+   package Performance_Vectors is new Ada.Containers.Vectors
+     (Index_Type   => Positive,
+      Element_Type => System_Performance_Data);
+
+   subtype Performance_List is Performance_Vectors.Vector;
+
+
+   -- Equality for Timer (needed for Vector instantiation)
+   function Timer_Equal (Left, Right : Performance.Timer) return Boolean
+      is (True);  -- Dummy equality, not used for performance tracking
+   
+   package Timer_Vectors is new Ada.Containers.Vectors
+     (Index_Type   => Positive,
+      Element_Type => Performance.Timer,
+      "="          => Timer_Equal);
+
+   subtype Timer_List is Timer_Vectors.Vector;
+
+
+   ------------------------------------------------------------
    -- ECS Manager
-   -- Now with dynamic system ordering
+   -- Now with dynamic system ordering and performance tracking
    ------------------------------------------------------------
    type ECS_Manager is tagged limited record
       
@@ -45,6 +75,11 @@ package ECS.Manager is
 
       -- Dynamic system list (no size limit!)
       Systems : System_List;
+
+      -- Performance tracking
+      System_Timers : Timer_List;  -- One timer per system
+      Performance_Data : Performance_List;    -- Performance stats per system
+      Frame_Count : Natural := 0;
    
    end record;
 
@@ -119,5 +154,19 @@ package ECS.Manager is
    -- Return number of registered systems
    ------------------------------------------------------------
    function Get_System_Count (M : ECS_Manager) return Natural;
+
+
+   ------------------------------------------------------------
+   -- Performance Tracking Procedures
+   ------------------------------------------------------------
+
+   -- Get performance summary for all systems
+   procedure Get_Performance_Summary (M : in ECS_Manager);
+
+   -- Get detailed performance information
+   procedure Get_Performance_Details (M : in ECS_Manager);
+
+   -- Reset performance counters
+   procedure Reset_Performance_Data (M : in out ECS_Manager);
 
 end ECS.Manager;

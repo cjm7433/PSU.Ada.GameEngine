@@ -54,4 +54,11 @@ package ECS.Systems_Movement is
    function Components_Needed (Self : Movement_System) 
       return ECS.Components.Component_Tag_Array;
 
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Movement_System) return String;
+
 end ECS.Systems_Movement;

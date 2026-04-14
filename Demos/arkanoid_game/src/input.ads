@@ -29,6 +29,8 @@ package Input is
    VK_Right  : constant ECS.Event.Byte := 16#44#;   -- D
    VK_Space  : constant ECS.Event.Byte := 16#20#;   -- Spacebar
    VK_Escape : constant ECS.Event.Byte := 16#1B#;   -- Escape
+   VK_P      : constant ECS.Event.Byte := 16#50#;   -- P key
+   VK_F      : constant ECS.Event.Byte := 16#46#;   -- F key
 
    -- -----------------------------------------------------------------------
    -- Input_State
@@ -40,6 +42,8 @@ package Input is
       Right  : Boolean := False;   -- Right arrow held
       Space  : Boolean := False;   -- Spacebar pressed this frame (one-shot)
       Escape : Boolean := False;   -- Escape pressed this frame (one-shot)
+      P      : Boolean := False;   -- P pressed this frame (one-shot)
+      F      : Boolean := False;   -- F pressed this frame (one-shot)
    end record;
 
    -- Current input state; read directly by the game loop.

@@ -7,6 +7,8 @@ with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Numerics;            use Ada.Numerics;
 with Ada.Numerics.Float_Random; use Ada.Numerics.Float_Random;
 with Ada.Numerics.Elementary_Functions; use Ada.Numerics.Elementary_Functions;
+with Ada.Directories;         use Ada.Directories;
+with Ada.Command_Line;        use Ada.Command_Line;
 with Interfaces.C;            use Interfaces.C;
 with System;
 -- Game Engine ECS modules
@@ -46,6 +48,9 @@ with Win32;                   use Win32;
 -- Game-side input module
 with Input;
 
+-- Performance
+with Performance;
+
 procedure Arkanoid is
 
    Width        : constant Integer := 224;
@@ -57,8 +62,11 @@ procedure Arkanoid is
    Start_Time, Stop_Time : Time;
    Elapsed_Time          : Duration;
    
+   -- Get executable directory and construct asset paths
+   Exec_Dir : constant String := Containing_Directory(Command_Name);
+   
    -- Background Image (QOI)
-   Bkgrnd : constant String := "Data/bkgrd.qoi";
+   Bkgrnd : constant String := "../Data/bkgrd.qoi";
 
    -- Target frame rate and delta time
    Target_FPS : constant Float := 60.0;
@@ -66,6 +74,11 @@ procedure Arkanoid is
 
    -- ECS Manager with registered systems
    Manager : aliased ECS.Manager.ECS_Manager;
+
+   -- Performance
+   FPS_Tracker : Performance.FPS_Counter;
+   Current_FPS : Float;
+   Show_Performance : Boolean := False;  -- Toggle with P key
 
    -- Random number generator for ball-launch angle
    Gen : Generator;
@@ -113,6 +126,9 @@ procedure Arkanoid is
 
 begin
 
+   -- Change to executable directory so relative paths work
+   Set_Directory(Exec_Dir);
+
    Start_Time := Clock;
    Stop_Time  := Clock;
    GameWindow := New_Window (Interfaces.C.int (Width), Interfaces.C.int (Height), Title);
@@ -126,10 +142,15 @@ begin
    Put_Line ("   A/D = Move paddle");
    Put_Line ("   Space = Launch ball");
    Put_Line ("   Escape = Reset game");
+   Put_Line ("   P = Toggle performance summary");
+   Put_Line ("   F = Show full performance details");
    Put_Line ("#######################################");
    New_Line;
 
    ECS.Manager.Initialize (Manager);
+
+   -- Performance
+   Performance.Initialize(FPS_Tracker);
 
    -- Initialize random generator
    Reset (Gen);
@@ -188,9 +209,6 @@ begin
                   (Layer_Ball, Layer_None, Layer_None, Layer_None);
                S.Collider.Data (S.Collider.Lookup (E)).Collider_Form :=
                   Solid;
-               S.Collider.Data (S.Collider.Lookup (E)).Name :=
-                  "WALL";
-
                S.Render.Data (S.Render.Lookup (E)).Shape   := Rectangle;
                S.Render.Data (S.Render.Lookup (E)).Tint    := Grey;
                S.Render.Data (S.Render.Lookup (E)).Layer   := 0;
@@ -257,8 +275,6 @@ begin
             (Layer_Ball, Layer_Wall, Layer_None, Layer_None);
          S.Collider.Data (S.Collider.Lookup (Paddle_E)).Collider_Form :=
             Solid;
-         S.Collider.Data (S.Collider.Lookup (Paddle_E)).Name :=
-            "PADL";
 
          S.Render.Data (S.Render.Lookup (Paddle_E)).Shape   := Rectangle;
          S.Render.Data (S.Render.Lookup (Paddle_E)).Tint    :=
@@ -302,8 +318,6 @@ begin
             (Layer_Paddle, Layer_Brick, Layer_Wall, Layer_None);
          S.Collider.Data (S.Collider.Lookup (Ball_E)).Collider_Form :=
             Solid;
-         S.Collider.Data (S.Collider.Lookup (Ball_E)).Name :=
-            "BALL";
 
          S.Render.Data (S.Render.Lookup (Ball_E)).Shape   := Circle;
          S.Render.Data (S.Render.Lookup (Ball_E)).Tint    :=
@@ -377,8 +391,6 @@ begin
                      (Layer_Ball, Layer_None, Layer_None, Layer_None);
                   S.Collider.Data (S.Collider.Lookup (Brick_E)).Collider_Form :=
                      Solid;
-                  S.Collider.Data (S.Collider.Lookup (Brick_E)).Name :=
-                     "BRCK";
 
                   S.Render.Data (S.Render.Lookup (Brick_E)).Shape   := Rectangle;
                   S.Render.Data (S.Render.Lookup (Brick_E)).Tint    := Tint;
@@ -399,18 +411,20 @@ begin
 
    begin
       Audio.Initialize;
+      
       -- Register systems in execution order.
       -- Systems are allocated on the heap so they persist across resets.
-      ECS.Manager.Add_System (Manager, new Collision_System);
+      
       ECS.Manager.Add_System (Manager, new Movement_System);
       ECS.Manager.Add_System (Manager, new Ball_Physics_System);
+      ECS.Manager.Add_System (Manager, new Collision_System);
       ECS.Manager.Add_System (Manager, new Brick_Destruction_System);
       ECS.Manager.Add_System (Manager, new Paddle_Control_System);
 
       -- Build the initial scene
       Reset_World;
       Background_Image := Load_QOI (Bkgrnd);
-      Play_Audio("sfx/ost.wav", True);
+      Play_Audio("../sfx/ost.wav", True);
 
       -- =====================================================================
       -- Game loop
@@ -471,6 +485,17 @@ begin
             Reset_World;
          end if;
 
+         -- P: toggle performance display
+         if Input.State.P then
+            Show_Performance := not Show_Performance;
+         end if;
+
+         -- F: show full performance details
+         if Input.State.F then
+            ECS.Manager.Get_Performance_Details (Manager);
+            New_Line;
+         end if;
+
          -- Clear one-shot flags now that game logic has consumed them
          Input.Clear_Frame_Flags;
 
@@ -478,6 +503,20 @@ begin
          -- Update ECS systems
          -- -----------------------------------------------------------------
          ECS.Manager.Update (Manager, DT);
+
+         -- -----------------------------------------------------------------
+         -- Performance display (toggle with P key)
+         -- -----------------------------------------------------------------
+         if Show_Performance then
+            -- Show system performance summary every 300 frames (5 seconds at 60 FPS)
+            if Manager.Frame_Count mod 300 = 0 then
+               ECS.Manager.Get_Performance_Summary (Manager);
+               New_Line;
+            end if;
+         end if;
+
+         -- Track FPS
+         Current_FPS := Performance.Update (FPS_Tracker);
 
          -- -----------------------------------------------------------------
          -- Render pass
@@ -579,6 +618,19 @@ begin
          Audio.Update;
              Draw_String (Buffer.all, 10, 10, 0, 0, "SCORE: " & Trim (Integer'Image (Get_Score), Left),
                   (255, 255, 255, 255), Width, Height);
+             Draw_String (Buffer.all, 145, 10, 0, 0, "FPS: " & Trim (Integer'Image (Integer (Current_FPS)), Left),
+                  (255, 255, 255, 255), Width, Height);
+             
+             -- Show performance hint if enabled
+             if Show_Performance then
+                Draw_String (Buffer.all, 10, 30, 0, 0, "Performance: ON (P=summary, F=details)",
+                     (255, 255, 0, 255), Width, Height);
+                Draw_String (Buffer.all, 10, 50, 0, 0, "Entities: " & Trim (Integer'Image (Integer (Manager.World.Entities.Length)), Left),
+                     (255, 255, 255, 255), Width, Height);
+             else
+                Draw_String (Buffer.all, 10, 30, 0, 0, "Press P for performance",
+                     (128, 128, 128, 255), Width, Height);
+             end if;
          Draw_Buffer (Buffer.all'Address);
 
          -- Frame rate limiting (~60 FPS)

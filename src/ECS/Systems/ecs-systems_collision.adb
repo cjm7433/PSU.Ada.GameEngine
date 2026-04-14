@@ -414,20 +414,20 @@ package body ECS.Systems_Collision is
          return;
       end if;
 
-      for I in Entities'Range loop
-         declare
-            E : constant Entity_ID := Entities (I);
-         begin
-            Index_C : constant Natural := S.Collider.Lookup (E);
-            C : Collider_Component renames S.Collider.Data (Index_C);
-            Index_T : constant Natural := S.Transform.Lookup (E);
-            T : Transform_Component renames S.Transform.Data (Index_T);
+      --  for I in Entities'Range loop
+      --     declare
+      --        E : constant Entity_ID := Entities (I);
+      --     begin
+      --        Index_C : constant Natural := S.Collider.Lookup (E);
+      --        C : Collider_Component renames S.Collider.Data (Index_C);
+      --        Index_T : constant Natural := S.Transform.Lookup (E);
+      --        T : Transform_Component renames S.Transform.Data (Index_T);
 
-            C.Bounding_Box.Center := T.Position;
-         end;
-      end loop;
+      --        C.Bounding_Box.Center := T.Position;
+      --     end;
+      --  end loop;
 
-      return; --HACK; Movement system does collision sweep. This just snaps colliders
+      -- return; --HACK; Movement system does collision sweep. This just snaps colliders
 
       -- ================================================================
       -- Pass 1: Ball collisions — resolve deepest non-dying hit only
@@ -541,7 +541,7 @@ package body ECS.Systems_Collision is
                                M_Ball      => M_Ball);
                         end;
                         B.Hit_Paddle := True;
-                        Audio.Play_Audio("sfx/ball_hit.wav", False);
+                        Audio.Play_Audio("../sfx/ball_hit.wav", False);
                      else
                         -- General resolver for bricks and walls
                         Resolve_With_Motion
@@ -552,7 +552,7 @@ package body ECS.Systems_Collision is
                         if Best_Is_Brick then
                            Apply_Brick_Damage (S, E_Best);
                            Update_Score (S.Brick.Data (S.Brick.Lookup (E_Best)).Points);
-                           Audio.Play_Audio("sfx/ball_hit.wav", False);
+                           Audio.Play_Audio("../sfx/ball_hit.wav", False);
                         end if;
 
                      end if;
@@ -614,5 +614,16 @@ package body ECS.Systems_Collision is
       end loop;
 
    end Update;
+
+
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Collision_System) return String is
+   begin
+      return "Collision";
+   end Name;
 
 end ECS.Systems_Collision;
