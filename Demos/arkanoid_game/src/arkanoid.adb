@@ -115,7 +115,8 @@ begin
 
    Start_Time := Clock;
    Stop_Time  := Clock;
-   GameWindow := New_Window (Interfaces.C.int (Width), Interfaces.C.int (Height), Title);
+   --GameWindow := New_Window (Interfaces.C.int (Width), Interfaces.C.int (Height), Title);
+   GameWindow := New_Window (1920, 1080, Title);
 
    -- Welcome message on startup
    New_Line;
@@ -188,8 +189,6 @@ begin
                   (Layer_Ball, Layer_None, Layer_None, Layer_None);
                S.Collider.Data (S.Collider.Lookup (E)).Collider_Form :=
                   Solid;
-               S.Collider.Data (S.Collider.Lookup (E)).Name :=
-                  "WALL";
 
                S.Render.Data (S.Render.Lookup (E)).Shape   := Rectangle;
                S.Render.Data (S.Render.Lookup (E)).Tint    := Grey;
@@ -257,8 +256,6 @@ begin
             (Layer_Ball, Layer_Wall, Layer_None, Layer_None);
          S.Collider.Data (S.Collider.Lookup (Paddle_E)).Collider_Form :=
             Solid;
-         S.Collider.Data (S.Collider.Lookup (Paddle_E)).Name :=
-            "PADL";
 
          S.Render.Data (S.Render.Lookup (Paddle_E)).Shape   := Rectangle;
          S.Render.Data (S.Render.Lookup (Paddle_E)).Tint    :=
@@ -302,8 +299,6 @@ begin
             (Layer_Paddle, Layer_Brick, Layer_Wall, Layer_None);
          S.Collider.Data (S.Collider.Lookup (Ball_E)).Collider_Form :=
             Solid;
-         S.Collider.Data (S.Collider.Lookup (Ball_E)).Name :=
-            "BALL";
 
          S.Render.Data (S.Render.Lookup (Ball_E)).Shape   := Circle;
          S.Render.Data (S.Render.Lookup (Ball_E)).Tint    :=
@@ -377,8 +372,6 @@ begin
                      (Layer_Ball, Layer_None, Layer_None, Layer_None);
                   S.Collider.Data (S.Collider.Lookup (Brick_E)).Collider_Form :=
                      Solid;
-                  S.Collider.Data (S.Collider.Lookup (Brick_E)).Name :=
-                     "BRCK";
 
                   S.Render.Data (S.Render.Lookup (Brick_E)).Shape   := Rectangle;
                   S.Render.Data (S.Render.Lookup (Brick_E)).Tint    := Tint;
@@ -401,9 +394,9 @@ begin
       Audio.Initialize;
       -- Register systems in execution order.
       -- Systems are allocated on the heap so they persist across resets.
-      ECS.Manager.Add_System (Manager, new Collision_System);
       ECS.Manager.Add_System (Manager, new Movement_System);
       ECS.Manager.Add_System (Manager, new Ball_Physics_System);
+      ECS.Manager.Add_System (Manager, new Collision_System);
       ECS.Manager.Add_System (Manager, new Brick_Destruction_System);
       ECS.Manager.Add_System (Manager, new Paddle_Control_System);
 
@@ -579,7 +572,12 @@ begin
          Audio.Update;
              Draw_String (Buffer.all, 10, 10, 0, 0, "SCORE: " & Trim (Integer'Image (Get_Score), Left),
                   (255, 255, 255, 255), Width, Height);
-         Draw_Buffer (Buffer.all'Address);
+          -- Present the fixed internal framebuffer (224x240) into the current
+          -- OS window; the window layer handles scaling/letterboxing.
+         Draw_Buffer (
+            Buffer     => Buffer.all'Address,
+            Src_Width  => Interfaces.C.int (Width),
+            Src_Height => Interfaces.C.int (Height));
 
          -- Frame rate limiting (~60 FPS)
          delay until Start_Time + Milliseconds (16);
