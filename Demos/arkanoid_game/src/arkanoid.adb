@@ -411,7 +411,7 @@ begin
       -- Build the initial scene
       Reset_World;
       Background_Image := Load_QOI (Bkgrnd);
-      Play_Audio("sfx/ost.wav", True);
+      Play_Audio("sfx/ost.wav", True, 0.5);
 
       -- =====================================================================
       -- Game loop

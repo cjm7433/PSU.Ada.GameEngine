@@ -166,7 +166,12 @@ package body Audio is
    GetFilterParameters         : System.Address;
    SetOutputFilterParameters   : System.Address;
    GetOutputFilterParameters   : System.Address;
-   SetVolume                   : System.Address;
+   SetVolume :
+      access function
+         (This   : IXAudio2Source_Access;
+         Volume : FLOAT;
+         OpSet  : UINT32)
+      return HRESULT;
 
    GetVolume :
      access procedure
@@ -288,7 +293,7 @@ pragma Convention (C, IXAudio2SourceVtbl);
 
    end Initialize;
 
-   procedure Play_Audio (Filename : String; Looping : Boolean) is
+   procedure Play_Audio (Filename : String; Looping : Boolean; Volume   : Float := 1.0) is
 
    File : Ada.Streams.Stream_IO.File_Type;
    Str  : access Ada.Streams.Root_Stream_Type'Class;
@@ -421,6 +426,11 @@ begin
 
    if HR /= S_OK then
       raise Program_Error with "CreateSourceVoice failed";
+   end if;
+
+   HR := Voice.lpVtbl.SetVolume (Voice, Volume, 0);
+   if HR /= S_OK then
+      raise Program_Error with "SetVolume failed";
    end if;
 
    Buffer :=
