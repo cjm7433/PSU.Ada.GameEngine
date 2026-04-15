@@ -26,6 +26,8 @@ package body Input is
                State.Space := True;
             elsif Code = VK_Escape then
                State.Escape := True;
+            elsif Code = VK_Q then
+               State.Q := True;
             end if;
 
          when ECS.Event.KeyUp =>
