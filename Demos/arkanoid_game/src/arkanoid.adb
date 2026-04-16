@@ -88,7 +88,7 @@ procedure Arkanoid is
    -- -----------------------------------------------------------------------
    Paddle_W       : constant Integer := 40;
    Paddle_H       : constant Integer := 2;
-   Paddle_Start_X : constant Float   := 112.0;   -- horizontal centre
+   Paddle_Start_X : constant Float   := 112.0;   -- horizontal center
    Paddle_Start_Y : constant Float   := 228.0;   -- near bottom
 
    -- -----------------------------------------------------------------------
@@ -103,7 +103,7 @@ procedure Arkanoid is
    -- -----------------------------------------------------------------------
    -- Wall layout constants
    -- 4 px thick; left/right span full height, top spans full width.
-   -- Positions are centres of each wall rectangle.
+   -- Positions are centers of each wall rectangle.
    -- -----------------------------------------------------------------------
    Wall_Thickness : constant Integer := 4;
    Wall_Half      : constant Float   := Float (Wall_Thickness) / 2.0;
@@ -191,7 +191,7 @@ begin
             Grey : constant ECS.Components.Render.Color :=
                (R => 0.55, G => 0.55, B => 0.55, A => 1.0);
 
-            -- Helper to configure a single wall given its centre/half-extents
+            -- Helper to configure a single wall given its center/half-extents
             procedure Make_Wall
                (E  : Entity_ID;
                 CX : Float; CY : Float;
@@ -414,7 +414,6 @@ begin
       
       -- Register systems in execution order.
       -- Systems are allocated on the heap so they persist across resets.
-      
       ECS.Manager.Add_System (Manager, new Movement_System);
       ECS.Manager.Add_System (Manager, new Ball_Physics_System);
       ECS.Manager.Add_System (Manager, new Collision_System);
@@ -510,7 +509,7 @@ begin
          if Show_Performance then
             -- Show system performance summary every 300 frames (5 seconds at 60 FPS)
             if Manager.Frame_Count mod 300 = 0 then
-               ECS.Manager.Get_Performance_Summary (Manager);
+               ECS.Manager.Get_Performance_Summary (Manager, FPS_Tracker);
                New_Line;
             end if;
          end if;
@@ -562,7 +561,7 @@ begin
                          B => Color_Int (Integer (R.Tint.B * 255.0)),
                          A => Color_Int (Integer (R.Tint.A * 255.0)));
 
-                     -- Centre position from Transform
+                     -- Center position from Transform
                      PX : constant Integer := Integer (T.Position.X);
                      PY : constant Integer := Integer (T.Position.Y);
 
@@ -616,20 +615,18 @@ begin
             end if;
          end;
          Audio.Update;
+
              Draw_String (Buffer.all, 10, 10, 0, 0, "SCORE: " & Trim (Integer'Image (Get_Score), Left),
-                  (255, 255, 255, 255), Width, Height);
-             Draw_String (Buffer.all, 145, 10, 0, 0, "FPS: " & Trim (Integer'Image (Integer (Current_FPS)), Left),
                   (255, 255, 255, 255), Width, Height);
              
              -- Show performance hint if enabled
              if Show_Performance then
-                Draw_String (Buffer.all, 10, 30, 0, 0, "Performance: ON (P=summary, F=details)",
-                     (255, 255, 0, 255), Width, Height);
-                Draw_String (Buffer.all, 10, 50, 0, 0, "Entities: " & Trim (Integer'Image (Integer (Manager.World.Entities.Length)), Left),
+               -- Draw FPS
+                Draw_String (Buffer.all, 145, 10, 0, 0, "FPS: " & Trim (Integer'Image (Integer (Current_FPS)), Left),
+                  (255, 255, 255, 255), Width, Height);
+               -- Draw Entity Count
+                Draw_String (Buffer.all, 10, 150, 0, 0, "ENTITIES: " & Trim (Integer'Image (Integer (Manager.World.Entities.Length)), Left),
                      (255, 255, 255, 255), Width, Height);
-             else
-                Draw_String (Buffer.all, 10, 30, 0, 0, "Press P for performance",
-                     (128, 128, 128, 255), Width, Height);
              end if;
          Draw_Buffer (Buffer.all'Address);
 

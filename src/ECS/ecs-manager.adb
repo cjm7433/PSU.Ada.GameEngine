@@ -171,34 +171,87 @@ package body ECS.Manager is
 
    ------------------------------------------------------------
    -- Get_Performance_Summary
-   -- Display a summary of system performance
+   -- Display a summary of System performance (in a table)
    ------------------------------------------------------------
-   procedure Get_Performance_Summary (M : in ECS_Manager) is
-      System_Index : Positive := 1;
+   procedure Get_Performance_Summary (M : in ECS_Manager; FPS_Tracker : in Performance.FPS_Counter) is
+   System_Index : Positive := 1;
+
    begin
+      Ada.Text_IO.New_Line;
       Ada.Text_IO.Put_Line ("=== ECS System Performance Summary ===");
       Ada.Text_IO.Put_Line ("Frames processed:" & M.Frame_Count'Image);
+      
+      -- FPS Information
+      Ada.Text_IO.Put_Line ("Average FPS: " & Integer (Performance.Get_Average_FPS (FPS_Tracker))'Image);
+      Ada.Text_IO.Put_Line ("Min FPS:     " & Integer (Performance.Get_Min_FPS (FPS_Tracker))'Image);
+      Ada.Text_IO.Put_Line ("Max FPS:     " & Integer (Performance.Get_Max_FPS (FPS_Tracker))'Image);
+      
+      Ada.Text_IO.New_Line;
 
+      -- Header
+      Ada.Text_IO.Set_Col (3);
+      Ada.Text_IO.Put ("System");
+
+      Ada.Text_IO.Set_Col (28);
+      Ada.Text_IO.Put ("Avg (ms)");
+
+      Ada.Text_IO.Set_Col (42);
+      Ada.Text_IO.Put ("Min (ms)");
+
+      Ada.Text_IO.Set_Col (56);
+      Ada.Text_IO.Put ("Max (ms)");
+
+      Ada.Text_IO.New_Line;
+
+      -- Separator
+      Ada.Text_IO.Set_Col (3);
+      Ada.Text_IO.Put ("------------------------");
+
+      Ada.Text_IO.Set_Col (28);
+      Ada.Text_IO.Put ("----------");
+
+      Ada.Text_IO.Set_Col (42);
+      Ada.Text_IO.Put ("----------");
+
+      Ada.Text_IO.Set_Col (56);
+      Ada.Text_IO.Put ("----------");
+
+      Ada.Text_IO.New_Line;
+
+      -- Data rows
       for Sys of M.Systems loop
          declare
-            Perf_Data : System_Performance_Data renames M.Performance_Data(System_Index);
+            Perf_Data : System_Performance_Data renames
+            M.Performance_Data (System_Index);
+
             Avg_Time : Float := 0.0;
          begin
             if Perf_Data.Call_Count > 0 then
-               Avg_Time := Perf_Data.Total_Time / Float(Perf_Data.Call_Count);
+               Avg_Time := Perf_Data.Total_Time / Float (Perf_Data.Call_Count);
             end if;
 
-            Ada.Text_IO.Put ("  " & Sys.Name & ": ");
-            Ada.Text_IO.Put ("Avg=" & Integer(Avg_Time * 1000.0)'Image & "ms");
-            Ada.Text_IO.Put (", Min=" & Integer(Perf_Data.Min_Time * 1000.0)'Image & "ms");
-            Ada.Text_IO.Put (", Max=" & Integer(Perf_Data.Max_Time * 1000.0)'Image & "ms");
+            -- Name
+            Ada.Text_IO.Set_Col (3);
+            Ada.Text_IO.Put (Sys.Name);
+
+            -- Avg
+            Ada.Text_IO.Set_Col (28);
+            Ada.Text_IO.Put (Integer (Avg_Time * 1000.0)'Image);
+
+            -- Min
+            Ada.Text_IO.Set_Col (42);
+            Ada.Text_IO.Put (Integer (Perf_Data.Min_Time * 1000.0)'Image);
+
+            -- Max
+            Ada.Text_IO.Set_Col (56);
+            Ada.Text_IO.Put (Integer (Perf_Data.Max_Time * 1000.0)'Image);
+
             Ada.Text_IO.New_Line;
          end;
 
          System_Index := System_Index + 1;
       end loop;
    end Get_Performance_Summary;
-
 
    ------------------------------------------------------------
    -- Get_Performance_Details

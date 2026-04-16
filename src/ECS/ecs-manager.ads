@@ -161,7 +161,7 @@ package ECS.Manager is
    ------------------------------------------------------------
 
    -- Get performance summary for all systems
-   procedure Get_Performance_Summary (M : in ECS_Manager);
+   procedure Get_Performance_Summary (M : in ECS_Manager; FPS_Tracker : in Performance.FPS_Counter);
 
    -- Get detailed performance information
    procedure Get_Performance_Details (M : in ECS_Manager);
