@@ -16,6 +16,7 @@ package body Window is
    W_Instance   : Window_Access;
    --  Declare the event manager
    Manager : aliased ECS.Event_Manager.Platform_Event_Handler;
+   Need_Background_Clear : Boolean := True;
 
    --  Return the lower 16 bits of LPARAM
    function LOWORD (Value : LPARAM) return WORD is
@@ -41,13 +42,29 @@ package body Window is
          when WM_DESTROY =>
             Post_Quit_Message (0);
 
+         when WM_ERASEBKGND =>
+            -- We draw the full frame ourselves; suppress default background wipe.
+            return 1;
+
          when WM_PAINT =>
-            null;
+            -- Validate the invalid region so WM_PAINT does not continuously requeue.
+            declare
+               Paint_Struct : aliased PAINTSTRUCT;
+               Paint_DC     : HDC;
+               Paint_Result : Boolean;
+            begin
+               Paint_DC := Begin_Paint (H_Wnd, Paint_Struct'Access);
+               Paint_Result := End_Paint (H_Wnd, Paint_Struct'Access);
+               if Paint_DC = Null_Address or else not Paint_Result then
+                  null;
+               end if;
+            end;
 
          when WM_SIZE =>
             W_Instance.Current_Width   := IC.int (LOWORD (L_Param));
             W_Instance.Current_Height  := IC.int (HIWORD (L_Param));
             ECS.WindowWidth := Integer (LOWORD (L_Param));
+            Need_Background_Clear := True;
 
          when WM_KEYDOWN =>
          declare
@@ -304,14 +321,17 @@ package body Window is
       Bmi.bmiHeader.biClrUsed         := 0;
       Bmi.bmiHeader.biClrImportant    := 0;
 
-      -- Fill the full client first so letterbox/pillarbox bars are stable.
-      Full_Client_Rect.Left := 0;
-      Full_Client_Rect.Top := 0;
-      Full_Client_Rect.Right := Interfaces.C.long (Client_Width);
-      Full_Client_Rect.Bottom := Interfaces.C.long (Client_Height);
-      Fill_Result := Fill_Rect (Handle_DC, Full_Client_Rect'Address, Background_Brush);
-      if Fill_Result = 0 then
-         null;
+      -- Clear letterbox/pillarbox bars only when needed (startup/resize).
+      if Need_Background_Clear then
+         Full_Client_Rect.Left := 0;
+         Full_Client_Rect.Top := 0;
+         Full_Client_Rect.Right := Interfaces.C.long (Client_Width);
+         Full_Client_Rect.Bottom := Interfaces.C.long (Client_Height);
+         Fill_Result := Fill_Rect (Handle_DC, Full_Client_Rect'Address, Background_Brush);
+         if Fill_Result = 0 then
+            null;
+         end if;
+         Need_Background_Clear := False;
       end if;
 
       Result := Stretch_DIBits (

@@ -27,6 +27,7 @@ package Win32 is
 
    BI_RGB            : constant := 0;
    DIB_RGB_COLORS    : constant := 0;
+   PM_REMOVE         : constant := 16#0001#;
 
    --  Key constants
    WM_KEYDOWN        : constant := 16#100#; -- Define the key-down message
@@ -386,6 +387,12 @@ package Win32 is
                          W_Msg_Filter_Min : IC.unsigned;
                          W_Msg_Filter_Max : IC.unsigned) return Boolean
    with Import => True, Convention => C, External_Name => "GetMessageA";
+
+   function Peek_Message (Lp_Msg : MSG_Access; H_Wnd : HWND;
+                          W_Msg_Filter_Min : IC.unsigned;
+                          W_Msg_Filter_Max : IC.unsigned;
+                          W_Remove_Msg     : IC.unsigned) return Boolean
+   with Import => True, Convention => C, External_Name => "PeekMessageA";
 
    function Dispatch_Message (Lp_Msg : MSG_Access) return LRESULT
    with Import => True, Convention => C, External_Name => "DispatchMessageA";
