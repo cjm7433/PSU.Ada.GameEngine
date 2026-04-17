@@ -514,73 +514,190 @@ package body ECS.Store is
    -- Get_Entity_IDs
    -- Return a dynamically allocated array containing all entity IDs
    --    that own a specific component type.
-   -- This function iterates through all entities in the store and
-   --    checks if they have the specified component tag.
+   -- 
+   -- OPTIMIZATION (4/17): 
+   --    Directly iterates the component table's lookup map instead
+   --    of scanning all entities. This changes complexity from O(n)
+   --    to O(m) where m = entities with this component (m << n).
+   --
+   -- TODO: Component types needs to be manually added.
    -------------------------------------------------------------------------------
    function Get_Entity_IDs
-  (   S   : Store;
+   (  S   : Store;
       Tag : Component_Tag) return Entity_ID_Array_Access is
 
-      Count  : Natural := 0;
-      Cursor : Entity_Maps.Cursor := S.Entities.First;
+      use type Ada.Tags.Tag;
 
    begin
 
-      -- First pass: count matches
-      -- While there are entities in Entity_Map ...
-      while Entity_Maps.Has_Element (Cursor) loop
-
+      -- Get the component table and iterate its lookup map directly
+      if Tag = Transform_Component'Tag then
          declare
-            -- E is the entity cursor points to
-            E : constant Entity_ID := Entity_Maps.Key (Cursor);
-
+            Count : constant Natural := Natural (S.Transform.Lookup.Length);
          begin
-            if Has_Component (S, E, Tag) then
-               Count := Count + 1;
+            if Count = 0 then
+               return null;
             end if;
+            
+            declare
+               Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+               Index  : Natural := 0;
+               Cursor : Transform_Table.Lookup_Map.Cursor := S.Transform.Lookup.First;
+            begin
+               while Transform_Table.Lookup_Map.Has_Element (Cursor) loop
+                  Result (Index) := Transform_Table.Lookup_Map.Key (Cursor);
+                  Index := Index + 1;
+                  Cursor := Transform_Table.Lookup_Map.Next (Cursor);
+               end loop;
+               
+               return Result;
+            end;
          end;
 
-         Cursor := Entity_Maps.Next (Cursor);
+      elsif Tag = Motion_Component'Tag then
+         declare
+            Count : constant Natural := Natural (S.Motion.Lookup.Length);
+         begin
+            if Count = 0 then
+               return null;
+            end if;
+            
+            declare
+               Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+               Index  : Natural := 0;
+               Cursor : Motion_Table.Lookup_Map.Cursor := S.Motion.Lookup.First;
+            begin
+               while Motion_Table.Lookup_Map.Has_Element (Cursor) loop
+                  Result (Index) := Motion_Table.Lookup_Map.Key (Cursor);
+                  Index := Index + 1;
+                  Cursor := Motion_Table.Lookup_Map.Next (Cursor);
+               end loop;
+               
+               return Result;
+            end;
+         end;
 
-      end loop;
+      elsif Tag = Collider_Component'Tag then
+         declare
+            Count : constant Natural := Natural (S.Collider.Lookup.Length);
+         begin
+            if Count = 0 then
+               return null;
+            end if;
+            
+            declare
+               Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+               Index  : Natural := 0;
+               Cursor : Collider_Table.Lookup_Map.Cursor := S.Collider.Lookup.First;
+            begin
+               while Collider_Table.Lookup_Map.Has_Element (Cursor) loop
+                  Result (Index) := Collider_Table.Lookup_Map.Key (Cursor);
+                  Index := Index + 1;
+                  Cursor := Collider_Table.Lookup_Map.Next (Cursor);
+               end loop;
+               
+               return Result;
+            end;
+         end;
 
-      -- If there are no matches, return null, do nothing
-      if Count = 0 then
-         return null;
+      elsif Tag = Render_Component'Tag then
+         declare
+            Count : constant Natural := Natural (S.Render.Lookup.Length);
+         begin
+            if Count = 0 then
+               return null;
+            end if;
+            
+            declare
+               Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+               Index  : Natural := 0;
+               Cursor : Render_Table.Lookup_Map.Cursor := S.Render.Lookup.First;
+            begin
+               while Render_Table.Lookup_Map.Has_Element (Cursor) loop
+                  Result (Index) := Render_Table.Lookup_Map.Key (Cursor);
+                  Index := Index + 1;
+                  Cursor := Render_Table.Lookup_Map.Next (Cursor);
+               end loop;
+               
+               return Result;
+            end;
+         end;
+
+      elsif Tag = Paddle_Component'Tag then
+         declare
+            Count : constant Natural := Natural (S.Paddle.Lookup.Length);
+         begin
+            if Count = 0 then
+               return null;
+            end if;
+            
+            declare
+               Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+               Index  : Natural := 0;
+               Cursor : Paddle_Table.Lookup_Map.Cursor := S.Paddle.Lookup.First;
+            begin
+               while Paddle_Table.Lookup_Map.Has_Element (Cursor) loop
+                  Result (Index) := Paddle_Table.Lookup_Map.Key (Cursor);
+                  Index := Index + 1;
+                  Cursor := Paddle_Table.Lookup_Map.Next (Cursor);
+               end loop;
+               
+               return Result;
+            end;
+         end;
+
+      elsif Tag = Ball_Component'Tag then
+         declare
+            Count : constant Natural := Natural (S.Ball.Lookup.Length);
+         begin
+            if Count = 0 then
+               return null;
+            end if;
+            
+            declare
+               Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+               Index  : Natural := 0;
+               Cursor : Ball_Table.Lookup_Map.Cursor := S.Ball.Lookup.First;
+            begin
+               while Ball_Table.Lookup_Map.Has_Element (Cursor) loop
+                  Result (Index) := Ball_Table.Lookup_Map.Key (Cursor);
+                  Index := Index + 1;
+                  Cursor := Ball_Table.Lookup_Map.Next (Cursor);
+               end loop;
+               
+               return Result;
+            end;
+         end;
+
+      elsif Tag = Brick_Component'Tag then
+         declare
+            Count : constant Natural := Natural (S.Brick.Lookup.Length);
+         begin
+            if Count = 0 then
+               return null;
+            end if;
+            
+            declare
+               Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+               Index  : Natural := 0;
+               Cursor : Brick_Table.Lookup_Map.Cursor := S.Brick.Lookup.First;
+            begin
+               while Brick_Table.Lookup_Map.Has_Element (Cursor) loop
+                  Result (Index) := Brick_Table.Lookup_Map.Key (Cursor);
+                  Index := Index + 1;
+                  Cursor := Brick_Table.Lookup_Map.Next (Cursor);
+               end loop;
+               
+               return Result;
+            end;
+         end;
+
+      else
+         return null;  -- Unknown component type
       end if;
 
-      -- Allocate result array
-      declare
-         -- Result is a new array of Entity_IDs with size equal to the count of matches
-         Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
-
-         Index  : Natural := 0;
-
-         Cursor2 : Entity_Maps.Cursor := S.Entities.First;
-
-      begin
-
-         -- Second pass: fill array
-         while Entity_Maps.Has_Element (Cursor2) loop
-
-            declare
-               -- E is the entity cursor points to
-               E : constant Entity_ID := Entity_Maps.Key (Cursor2);
-
-            begin
-               if Has_Component (S, E, Tag) then
-                  Result (Index) := E;
-                  Index := Index + 1;
-               end if;
-            end;
-
-            Cursor2 := Entity_Maps.Next (Cursor2);
-         end loop;
-
-         return Result;
-      end;
-
    end Get_Entity_IDs;
+
 
 
    -------------------------------------------------------------------------------
