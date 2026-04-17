@@ -5,7 +5,7 @@ package ECS.Components.Ball is
       -- Speed limits
       Min_Speed   : Float  := 100.0;          -- Minimum speed (prevent ball from stopping)
       Max_Speed   : Float  := 500.0;          -- Maximum speed (prevent ball from going too fast)
-      Base_Speed  : Float  := 200.0;          -- Standard speed after launch
+      Base_Speed  : Float  := 125.0;          -- Standard speed after launch
 
       -- Bounce behavior
       Bounce_Damping : Float  := 1.0;        -- Speed multiplier after bounce (1.0 = no damping)
