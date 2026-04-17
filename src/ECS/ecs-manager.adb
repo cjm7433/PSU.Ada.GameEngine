@@ -91,7 +91,7 @@ package body ECS.Manager is
 
             -- Log if system is slow (> 5ms)
             if Time_Taken > 0.005 then
-               Ada.Text_IO.Put_Line ("WARNING: Slow system '" & Sys.Name &
+               Ada.Text_IO.Put_Line ("WARNING: Slow system (> 5ms) '" & Sys.Name &
                                    "' took" & Time_Taken'Image & " seconds");
             end if;
          end;

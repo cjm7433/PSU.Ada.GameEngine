@@ -11,7 +11,9 @@
 -- Additional Component types and their corresponding tables + lookups can be added as needed.
 --   - Search for "TODO" to find where!
 
-with Ada.Tags; use type Ada.Tags.Tag;
+
+with Ada.Text_IO;    use Ada.Text_IO;     -- printing exceptions instead of crashing
+with Ada.Tags;       use type Ada.Tags.Tag;
 
 
 package body ECS.Store is
@@ -582,7 +584,7 @@ package body ECS.Store is
 
 
    -------------------------------------------------------------------------------
-   -- Get_Component_Table_Size (NEW HELPER FUNCTION)
+   -- Get_Component_Table_Size
    -- Returns the number of entities that have the specified component type
    -- Used for optimization: selecting smallest table for Get_Entities_With
    -- TODO: Make generic for any Component type
@@ -626,7 +628,9 @@ package body ECS.Store is
       --     return Natural (S.Render.Lookup.Length);
          
       else
+         Put_Line("Warning: Get_Component_Table_Size: no Entities have this Component type or unknown Component tag");
          return 0;  -- Unknown component type
+         
       end if;
       
    end Get_Component_Table_Size;

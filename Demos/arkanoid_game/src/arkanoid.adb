@@ -62,11 +62,11 @@ procedure Arkanoid is
    Start_Time, Stop_Time : Time;
    Elapsed_Time          : Duration;
    
-   -- Get executable directory and construct asset paths
+   -- Get executable directory and set working directory to project root
    Exec_Dir : constant String := Containing_Directory(Command_Name);
    
    -- Background Image (QOI)
-   Bkgrnd : constant String := "../Data/bkgrd.qoi";
+   Bkgrnd : constant String := "Data/bkgrd.qoi";
 
    -- Target frame rate and delta time
    Target_FPS : constant Float := 60.0;
@@ -126,8 +126,8 @@ procedure Arkanoid is
 
 begin
 
-   -- Change to executable directory so relative paths work
-   Set_Directory(Exec_Dir);
+   -- Set working directory to project root so asset paths work
+   Set_Directory(Containing_Directory(Exec_Dir));
 
    Start_Time := Clock;
    Stop_Time  := Clock;
