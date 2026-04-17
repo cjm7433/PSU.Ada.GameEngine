@@ -16,6 +16,7 @@ package body Window is
    W_Instance   : Window_Access;
    --  Declare the event manager
    Manager : aliased ECS.Event_Manager.Platform_Event_Handler;
+   Need_Background_Clear : Boolean := True;
 
    --  Return the lower 16 bits of LPARAM
    function LOWORD (Value : LPARAM) return WORD is
@@ -41,13 +42,29 @@ package body Window is
          when WM_DESTROY =>
             Post_Quit_Message (0);
 
+         when WM_ERASEBKGND =>
+            -- We draw the full frame ourselves; suppress default background wipe.
+            return 1;
+
          when WM_PAINT =>
-            null;
+            -- Validate the invalid region so WM_PAINT does not continuously requeue.
+            declare
+               Paint_Struct : aliased PAINTSTRUCT;
+               Paint_DC     : HDC;
+               Paint_Result : Boolean;
+            begin
+               Paint_DC := Begin_Paint (H_Wnd, Paint_Struct'Access);
+               Paint_Result := End_Paint (H_Wnd, Paint_Struct'Access);
+               if Paint_DC = Null_Address or else not Paint_Result then
+                  null;
+               end if;
+            end;
 
          when WM_SIZE =>
             W_Instance.Current_Width   := IC.int (LOWORD (L_Param));
             W_Instance.Current_Height  := IC.int (HIWORD (L_Param));
             ECS.WindowWidth := Integer (LOWORD (L_Param));
+            Need_Background_Clear := True;
 
          when WM_KEYDOWN =>
          declare
@@ -230,15 +247,71 @@ package body Window is
 
    end New_Window;
 
-   procedure Draw_Buffer (Buffer : System.Address) is
+   procedure Draw_Buffer (
+      Buffer     : System.Address;
+      Src_Width  : Interfaces.C.int;
+      Src_Height : Interfaces.C.int) is
       Bmi_Reset : Byte_Array (0 .. BITMAPINFO'Size / 8 - 1) := (others => 0);
       Bmi : aliased BITMAPINFO with Address => Bmi_Reset'Address;
       Result : Interfaces.C.int;
       Handle_DC : HDC := GetDC (W_Instance.Handle);
+      Source_Width  : Integer := Integer (Src_Width);
+      Source_Height : Integer := Integer (Src_Height);
+      Client_Width  : Integer := Integer (W_Instance.Current_Width);
+      Client_Height : Integer := Integer (W_Instance.Current_Height);
+      Scale_X       : Float;
+      Scale_Y       : Float;
+      Scale         : Float;
+      Scaled_Width  : Integer;
+      Scaled_Height : Integer;
+      Dest_X        : Integer;
+      Dest_Y        : Integer;
+      Full_Client_Rect : aliased RECT;
+      Fill_Result      : Interfaces.C.int;
+      Background_Brush : HBRUSH := HBRUSH (Get_Stock_Object (BLACK_BRUSH));
    begin
+      if Handle_DC = Null_Address then
+         return;
+      end if;
+
+      if Source_Width <= 0 or else Source_Height <= 0 or else Client_Width <= 0 or else Client_Height <= 0 then
+         declare
+            Result_Release : Boolean := ReleaseDC (W_Instance.Handle, Handle_DC);
+         begin
+            if not Result_Release then
+               Put_Line ("Failed to release HDC.");
+            end if;
+         end;
+         return;
+      end if;
+
+      -- Preserve aspect ratio by using the smaller axis scale.
+      Scale_X := Float (Client_Width) / Float (Source_Width);
+      Scale_Y := Float (Client_Height) / Float (Source_Height);
+      Scale := Float'Min (Scale_X, Scale_Y);
+
+      Scaled_Width := Integer (Float (Source_Width) * Scale);
+      Scaled_Height := Integer (Float (Source_Height) * Scale);
+
+      if Scaled_Width <= 0 or else Scaled_Height <= 0 then
+         declare
+            Result_Release : Boolean := ReleaseDC (W_Instance.Handle, Handle_DC);
+         begin
+            if not Result_Release then
+               Put_Line ("Failed to release HDC.");
+            end if;
+         end;
+         return;
+      end if;
+
+      -- Center the scaled image to produce letterbox/pillarbox bars.
+      Dest_X := (Client_Width - Scaled_Width) / 2;
+      Dest_Y := (Client_Height - Scaled_Height) / 2;
+
       Bmi.bmiHeader.biSize            := BITMAPINFOHEADER'Size / 8;
-      Bmi.bmiHeader.biWidth           := W_Instance.Width;
-      Bmi.bmiHeader.biHeight          := -W_Instance.Height;
+      -- Use framebuffer dimensions, not window dimensions, for source bitmap metadata.
+      Bmi.bmiHeader.biWidth           := Src_Width;
+      Bmi.bmiHeader.biHeight          := -Src_Height;
       Bmi.bmiHeader.biPlanes          := 1;
       Bmi.bmiHeader.biBitCount        := 32;
       Bmi.bmiHeader.biCompression     := BI_RGB;
@@ -248,16 +321,29 @@ package body Window is
       Bmi.bmiHeader.biClrUsed         := 0;
       Bmi.bmiHeader.biClrImportant    := 0;
 
+      -- Clear letterbox/pillarbox bars only when needed (startup/resize).
+      if Need_Background_Clear then
+         Full_Client_Rect.Left := 0;
+         Full_Client_Rect.Top := 0;
+         Full_Client_Rect.Right := Interfaces.C.long (Client_Width);
+         Full_Client_Rect.Bottom := Interfaces.C.long (Client_Height);
+         Fill_Result := Fill_Rect (Handle_DC, Full_Client_Rect'Address, Background_Brush);
+         if Fill_Result = 0 then
+            null;
+         end if;
+         Need_Background_Clear := False;
+      end if;
+
       Result := Stretch_DIBits (
          H_Dc           => Handle_DC,
-         X_Dest         => 0,
-         Y_Dest         => 0,
-         Dest_Width     => W_Instance.Current_Width,
-         Dest_Height    => W_Instance.Current_Height,
+         X_Dest         => Interfaces.C.int (Dest_X),
+         Y_Dest         => Interfaces.C.int (Dest_Y),
+         Dest_Width     => Interfaces.C.int (Scaled_Width),
+         Dest_Height    => Interfaces.C.int (Scaled_Height),
          X_Src          => 0,
          Y_Src          => 0,
-         Src_Width      => W_Instance.Width,
-         Src_Height     => W_Instance.Height,
+         Src_Width      => Src_Width,
+         Src_Height     => Src_Height,
          Bits           => Buffer,
          Bitmap_Info    => Bmi'Unchecked_Access,
          Usage          => DIB_RGB_COLORS,
@@ -276,9 +362,8 @@ package body Window is
          end;
       end if;
 
-      --  Check for drawing failure, for debug only,
-      --  remove or comment out for production or handle it more gracefully
-      if Result = 0 then
+      -- Draw returns negative on true GDI error; zero can occur for no-op cases.
+      if Result < 0 then
          Put_Line ("StretchDIBits failed.");
       end if;
    end Draw_Buffer;

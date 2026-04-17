@@ -131,7 +131,8 @@ begin
 
    Start_Time := Clock;
    Stop_Time  := Clock;
-   GameWindow := New_Window (Interfaces.C.int (Width), Interfaces.C.int (Height), Title);
+   --GameWindow := New_Window (Interfaces.C.int (Width), Interfaces.C.int (Height), Title);
+   GameWindow := New_Window (1920, 1080, Title);
 
    -- Welcome message on startup
    New_Line;
@@ -168,6 +169,7 @@ begin
       Message   : MSG_Access := new MSG;
       Lp_Result : LRESULT;
       Running   : Boolean := True;
+      Next_Frame_Time : Time := Clock;
       Background_Image : QOI_Image_Data;
 
       -- =====================================================================
@@ -210,6 +212,9 @@ begin
                   (Layer_Ball, Layer_None, Layer_None, Layer_None);
                S.Collider.Data (S.Collider.Lookup (E)).Collider_Form :=
                   Solid;
+               S.Collider.Data (S.Collider.Lookup (E)).Name :=
+                  "WALL";
+
                S.Render.Data (S.Render.Lookup (E)).Shape   := Rectangle;
                S.Render.Data (S.Render.Lookup (E)).Tint    := Grey;
                S.Render.Data (S.Render.Lookup (E)).Layer   := 0;
@@ -433,8 +438,17 @@ begin
          Stop_Time    := Clock;
          Elapsed_Time := To_Duration (Stop_Time - Start_Time);
          Start_Time   := Stop_Time;
-         Running   := Get_Message (Message, System.Null_Address, 0, 0);
-         Lp_Result := Dispatch_Message (Message);
+
+         -- Drain all pending platform messages without blocking render/update.
+         while Peek_Message (Message, System.Null_Address, 0, 0, PM_REMOVE) loop
+            if Message.Message = WM_QUIT then
+               Running := False;
+               exit;
+            end if;
+            Lp_Result := Dispatch_Message (Message);
+         end loop;
+
+         exit when not Running;
 
          -- Process platform events (Windows MSG or Wayland events)
          Window.Process_Events;
@@ -634,10 +648,14 @@ begin
                 Draw_String (Buffer.all, 10, 150, 0, 0, "ENTITIES: " & Trim (Integer'Image (Integer (Manager.World.Entities.Length)), Left),
                      (255, 255, 255, 255), Width, Height);
              end if;
-         Draw_Buffer (Buffer.all'Address);
+         Draw_Buffer (Buffer.all'Address, Interfaces.C.int (Width), Interfaces.C.int (Height));
 
          -- Frame rate limiting (~60 FPS)
-         delay until Start_Time + Milliseconds (16);
+         Next_Frame_Time := Next_Frame_Time + Milliseconds (16);
+         if Clock > Next_Frame_Time + Milliseconds (250) then
+            Next_Frame_Time := Clock;
+         end if;
+         delay until Next_Frame_Time;
       end loop;
       Audio.Finalize;
    end;

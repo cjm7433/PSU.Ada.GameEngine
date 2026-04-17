@@ -21,7 +21,12 @@ package Window is
 
    type Window_Access is access all Window_T'Class;
 
-   procedure Draw_Buffer (Buffer : System.Address);
+   --  Present a fixed-size game buffer to the current window.
+   --  Src_Width/Src_Height must match the actual backing framebuffer size.
+   procedure Draw_Buffer (
+      Buffer     : System.Address;
+      Src_Width  : Interfaces.C.int;
+      Src_Height : Interfaces.C.int);
    procedure Process_Events;  --  Process platform-specific window events
    function New_Window (Width : Interfaces.C.int; Height : Interfaces.C.int;
       Title : Unbounded_String) return Window_Access;
