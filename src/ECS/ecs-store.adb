@@ -402,12 +402,16 @@ package body ECS.Store is
    --------------------------------------------------------------------------------
    -- Get_Entities_With
    -- Gets an array of Entity IDs that have all the specified component tags
+   -- Selects the smallest component table as the base to minimize the number of 
+   --    entities that need to be checked.
    --------------------------------------------------------------------------------
    function Get_Entities_With
   (   S    : Store;
       Tags : Component_Tag_Array) return Entity_ID_Array_Access is
 
       Base_List : Entity_ID_Array_Access;
+      Base_Tag_Index : Natural;
+      Smallest_Count : Natural := Natural'Last;
 
    begin
 
@@ -416,12 +420,35 @@ package body ECS.Store is
          return null;
       end if;
 
-      -- Use first tag as base
-      Base_List := Get_Entity_IDs (S, Tags (Tags'First));
+      -- Find the smallest component table to use as base
+      -- This minimizes the number of entities we need to check
+      for I in Tags'Range loop
+         declare
+            Table_Size : constant Natural := Get_Component_Table_Size (S, Tags (I));
+         begin
+            if Table_Size < Smallest_Count then
+               Smallest_Count := Table_Size;
+               Base_Tag_Index := I;
+            end if;
+         end;
+      end loop;
+
+      -- If smallest table is empty, no entities can have all components
+      if Smallest_Count = 0 then
+         return null;
+      end if;
+
+      -- Get entities from the smallest table
+      Base_List := Get_Entity_IDs (S, Tags (Base_Tag_Index));
 
       -- If list is empty, do nothing
       if Base_List = null then
          return null;
+      end if;
+
+      -- If only one tag, we're done (base list is the result)
+      if Tags'Length = 1 then
+         return Base_List;
       end if;
 
       declare
@@ -439,15 +466,14 @@ package body ECS.Store is
 
             begin
 
-               -- Check remaining tags
-               for J in Tags'First + 1
-                        .. Tags'Last
-               loop
-                  if not Has_Component
-                  (S, E, Tags (J))
-                  then
-                     Match := False;
-                     exit;
+               -- Check all tags EXCEPT the base tag (we know it has that one)
+               for J in Tags'Range loop
+                  -- Skip the base tag (we already know entity has it)
+                  if J /= Base_Tag_Index then
+                     if not Has_Component (S, E, Tags (J)) then
+                        Match := False;
+                        exit;
+                     end if;
                   end if;
                end loop;
 
@@ -460,7 +486,7 @@ package body ECS.Store is
 
          end loop;
 
-         -- If there are no matches, return null, do nothing
+         -- If there are no matches, return null
          if Count = 0 then
             return null;
          end if;
@@ -553,5 +579,57 @@ package body ECS.Store is
       end;
 
    end Get_Entity_IDs;
+
+
+   -------------------------------------------------------------------------------
+   -- Get_Component_Table_Size (NEW HELPER FUNCTION)
+   -- Returns the number of entities that have the specified component type
+   -- Used for optimization: selecting smallest table for Get_Entities_With
+   -- TODO: Make generic for any Component type
+   -------------------------------------------------------------------------------
+   function Get_Component_Table_Size
+  (   S   : Store;
+      Tag : Component_Tag) return Natural is
+      
+      use type Ada.Tags.Tag;
+   
+   begin
+      -- Check each component type and return its table size
+
+      -- TODO: This needs to be generic
+      if Tag = Transform_Component'Tag then
+         return Natural (S.Transform.Lookup.Length);
+         
+      elsif Tag = Motion_Component'Tag then
+         return Natural (S.Motion.Lookup.Length);
+         
+      elsif Tag = Collider_Component'Tag then
+         return Natural (S.Collider.Lookup.Length);
+         
+      elsif Tag = Paddle_Component'Tag then
+         return Natural (S.Paddle.Lookup.Length);
+         
+      elsif Tag = Ball_Component'Tag then
+         return Natural (S.Ball.Lookup.Length);
+         
+      elsif Tag = Brick_Component'Tag then
+         return Natural (S.Brick.Lookup.Length);
+
+      elsif Tag = Render_Component'Tag then
+         return Natural (S.Render.Lookup.Length);
+
+      -- TODO: Add Component Types here
+      
+      -- Is AABB type used anywhere?
+      -- What about rigidbody? Quad? Texture?
+      --  elsif Tag = AABB_Component'Tag then
+      --     return Natural (S.Render.Lookup.Length);
+         
+      else
+         return 0;  -- Unknown component type
+      end if;
+      
+   end Get_Component_Table_Size;
+
 
 end ECS.Store;

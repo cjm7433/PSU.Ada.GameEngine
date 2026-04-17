@@ -2,7 +2,7 @@
 
 -- Central ECS storage structure - holds all entities and components.
 --    - The Store is the "database" of the ECS.
---    - Everything the game knows about entities lives here:
+--    - Everything that knows about entities lives here:
 --       * Entity map (ID → Entity record)
 --       * Component tables (one per component type). Includes:
 --          - Component tables for each component type.
@@ -11,7 +11,7 @@
 --    - This structure allows for efficient storage and retrieval of entities and their components.
 --    - No logic is implemented here -- only the data structure definitions.
 --
--- * Additional component types and their corresponding tables and lookups can be added as needed.
+-- * Additional component types and their corresponding tables and lookups need to be added as needed.
 
 with Ada.Containers;
 with Ada.Containers.Hashed_Maps;
@@ -91,13 +91,14 @@ package ECS.Store is
       -- Component tables (Vectors and Lookups)
       Transform   : Transform_Table.Table;
       Motion      : Motion_Table.Table;
-      Collider   : Collider_Table.Table;
-      Render  : Render_Table.Table;
+      Collider    : Collider_Table.Table;
+      Render      : Render_Table.Table;
       Paddle      : Paddle_Table.Table;
       Ball        : Ball_Table.Table;
       Brick       : Brick_Table.Table;
 
-      -- TODO: Add Component tables for each Component type!
+      -- TODO: Add Component tables for each Component type here!
+
    end record;
 
 
@@ -149,6 +150,7 @@ package ECS.Store is
    --------------------------------------------------------------------------------
    -- Get_Entities_With
    -- Gets an array of Entity IDs that have all the specified component tags
+   -- Selects smallest component table first for better performance
    --------------------------------------------------------------------------------
    function Get_Entities_With
   (   S    : Store;
@@ -165,6 +167,16 @@ package ECS.Store is
    function Get_Entity_IDs
    (  S   : Store;
       Tag : Component_Tag) return Entity_ID_Array_Access;
+
+
+      -------------------------------------------------------------------------------
+   -- Get_Component_Table_Size
+   -- Returns the number of entities that have the specified component type
+   -- Used by Get_Entities_With to select the smallest Component table as base (optimization)
+   -------------------------------------------------------------------------------
+   function Get_Component_Table_Size
+   (  S   : Store;
+      Tag : Component_Tag) return Natural;
 
 
 end ECS.Store;
