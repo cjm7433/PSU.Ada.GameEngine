@@ -164,6 +164,8 @@ package body Audio is
       Cursor          : Natural := 1;
       Channels        : Natural := 1;
       Bits_Per_Sample : Natural := 16;
+      Looping         : Boolean := False;
+      Volume          : Float   := 1.0;
    end record;
 
    package Sound_List is new Ada.Containers.Vectors
@@ -187,6 +189,20 @@ package body Audio is
                Snd.Channels * (Snd.Bits_Per_Sample / 8);
          begin
             if Snd.Audio /= null then
+
+               if Snd.Cursor + Frame_Size - 1 > Snd.Audio'Length then
+
+                  if Snd.Looping then
+                     -- Wrap back to start
+                     Snd.Cursor := 1;
+                  else
+                     Snd.Cursor := Snd.Audio'Length + 1;
+                     Active_Sounds.Replace_Element (I, Snd);
+                     Left  := Interfaces.C.short (Sample_L);
+                     Right := Interfaces.C.short (Sample_R);
+                     return;
+                  end if;
+               end if;
 
                -- Ensure full frame is available
                if Snd.Cursor + Frame_Size - 1 <= Snd.Audio'Length then
@@ -219,8 +235,12 @@ package body Audio is
                            R := L;
                         end if;
 
-                        Sample_L := Sample_L + L;
-                        Sample_R := Sample_R + R;
+                        declare
+                           V : constant Float := Snd.Volume;
+                        begin
+                           Sample_L := Sample_L + Integer (Float (L) * V);
+                           Sample_R := Sample_R + Integer (Float (R) * V);
+                        end;
                      end;
                   end if;
 
@@ -403,7 +423,7 @@ package body Audio is
       end if;
    end Audio_Thread;
 
-   procedure Play_Audio (Filename : String; Looping : Boolean) is
+   procedure Play_Audio (Filename : String; Looping : Boolean; Volume   : Float := 1.0) is
       File : Ada.Streams.Stream_IO.File_Type;
       Str  : access Ada.Streams.Root_Stream_Type'Class;
 
@@ -497,10 +517,12 @@ package body Audio is
 
       Active_Sounds.Append
       (Active_Sound'(
-      Audio => Audio,
-      Cursor => 1,
-      Channels => Natural (FMT.Channels),
-      Bits_Per_Sample => Natural (FMT.Bits)
+         Audio => Audio,
+         Cursor => 1,
+         Channels => Natural (FMT.Channels),
+         Bits_Per_Sample => Natural (FMT.Bits),
+         Looping         => Looping,
+         Volume          => Volume
       ));
 
    end Play_Audio;

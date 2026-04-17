@@ -127,6 +127,7 @@ begin
    Put_Line ("   A/D = Move paddle");
    Put_Line ("   Space = Launch ball");
    Put_Line ("   Escape = Reset game");
+   Put_Line ("   Q = Quit game");
    Put_Line ("#######################################");
    New_Line;
 
@@ -403,7 +404,7 @@ begin
       -- Build the initial scene
       Reset_World;
       Background_Image := Load_QOI (Bkgrnd);
-      Play_Audio("sfx/ost.wav", True);
+      Play_Audio("sfx/ost.wav", True, 0.5);
 
       -- =====================================================================
       -- Game loop
@@ -462,6 +463,11 @@ begin
          -- Escape: reset the entire scene to its initial state
          if Input.State.Escape then
             Reset_World;
+         end if;
+
+         -- Q: Quit game
+         if Input.State.Q then
+            Running := False;
          end if;
 
          -- Clear one-shot flags now that game logic has consumed them
