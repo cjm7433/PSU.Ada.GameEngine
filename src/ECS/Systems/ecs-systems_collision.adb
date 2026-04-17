@@ -27,6 +27,7 @@
 --     which is correct for a flat horizontal surface and eliminates
 --     the corner-sticking behaviour entirely.
 
+with Ada.Containers;
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Transform;      use ECS.Components.Transform;
@@ -39,6 +40,7 @@ with Math.Linear_Algebra;           use Math.Linear_Algebra;
 with Math.Physics;                  use Math.Physics;
 with Audio;                         use Audio;
 with Ada.Text_IO;                   use Ada.Text_IO;     -- DEBUG
+use type Ada.Containers.Count_Type;
 
 package body ECS.Systems_Collision is
 
@@ -110,7 +112,7 @@ package body ECS.Systems_Collision is
 
          if B.Health = 0 then
             B.Is_Dying := True;
-            Play_Audio("sfx/Arkanoid SFX (2).wav", False);
+            Play_Audio("sfx/Arkanoid SFX (2).wav", False, 0.1);
          end if;
       end if;
 
@@ -132,26 +134,7 @@ package body ECS.Systems_Collision is
 
    ------------------------------------------------------------
    -- Update
-   -- Two-pass collision resolution:
-   --
-   -- Pass 1 (ball collisions):
-   --   For each entity that has a Ball component, scan all other
-   --   collidable entities and record every overlapping hit.
-   --   Dying bricks are excluded from the scan so the ball passes
-   --   through them cleanly after the killing hit.
-   --   Resolve only the single deepest overlap so that grazing a
-   --   corner shared by two adjacent bricks causes exactly one
-   --   bounce and damages exactly one brick.
-   --   Paddle hits use Resolve_Ball_Paddle (Y-axis only) to avoid
-   --   corner sticking.  All other hits use Resolve_With_Motion.
-   --
-   -- Pass 2 (non-ball solid pairs):
-   --   Resolve all remaining solid-vs-solid overlaps that do not
-   --   involve the ball (e.g. paddle sliding into a wall).
-   --   These are low-frequency and safe to resolve all at once.
-   --
-   -- In both passes, separation is absorbed entirely by whichever
-   -- entity is moving; static entities (walls, bricks) never move.
+   -- Signal entities that collided this frame and snap collider AABBs to transforms
    ------------------------------------------------------------
    overriding
    procedure Update
@@ -183,7 +166,7 @@ package body ECS.Systems_Collision is
             -- Signal brick destruction
             if S.Has_Component(E, ECS.Components.Ball.Ball_Component'Tag) then
                if not C.Collided_Entities.Is_Empty then
-                  Play_Audio ("sfx/ball_hit.wav", False);
+                    Play_Audio ("sfx/ball_hit.wav", False, 0.1);
                end if;
 
                for J of C.Collided_Entities loop

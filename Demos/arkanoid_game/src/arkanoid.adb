@@ -281,6 +281,8 @@ begin
             (Layer_Ball, Layer_Wall, Layer_None, Layer_None);
          S.Collider.Data (S.Collider.Lookup (Paddle_E)).Collider_Form :=
             Solid;
+         S.Collider.Data (S.Collider.Lookup (Paddle_E)).Name :=
+            "PADL";
 
          S.Render.Data (S.Render.Lookup (Paddle_E)).Shape   := Rectangle;
          S.Render.Data (S.Render.Lookup (Paddle_E)).Tint    :=
@@ -324,6 +326,8 @@ begin
             (Layer_Paddle, Layer_Brick, Layer_Wall, Layer_None);
          S.Collider.Data (S.Collider.Lookup (Ball_E)).Collider_Form :=
             Solid;
+         S.Collider.Data (S.Collider.Lookup (Ball_E)).Name :=
+            "BALL";
 
          S.Render.Data (S.Render.Lookup (Ball_E)).Shape   := Circle;
          S.Render.Data (S.Render.Lookup (Ball_E)).Tint    :=
@@ -397,6 +401,8 @@ begin
                      (Layer_Ball, Layer_None, Layer_None, Layer_None);
                   S.Collider.Data (S.Collider.Lookup (Brick_E)).Collider_Form :=
                      Solid;
+                  S.Collider.Data (S.Collider.Lookup (Brick_E)).Name :=
+                     "BRCK";
 
                   S.Render.Data (S.Render.Lookup (Brick_E)).Shape   := Rectangle;
                   S.Render.Data (S.Render.Lookup (Brick_E)).Tint    := Tint;
@@ -429,7 +435,7 @@ begin
       -- Build the initial scene
       Reset_World;
       Background_Image := Load_QOI (Bkgrnd);
-      Play_Audio("sfx/ost.wav", True, 0.5);
+      Play_Audio("sfx/ost.wav", True, 0.1);
 
       -- =====================================================================
       -- Game loop
