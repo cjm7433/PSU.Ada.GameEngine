@@ -39,4 +39,11 @@ package ECS.Systems_Ball_Physics is
    function Components_Needed (Self : Ball_Physics_System) 
       return ECS.Components.Component_Tag_Array;
 
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Ball_Physics_System) return String;
+
 end ECS.Systems_Ball_Physics;

@@ -38,4 +38,11 @@ package ECS.Systems_Brick_Destruction is
    function Components_Needed (Self : Brick_Destruction_System) 
       return ECS.Components.Component_Tag_Array;
 
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Brick_Destruction_System) return String;
+
 end ECS.Systems_Brick_Destruction;

@@ -600,4 +600,15 @@ package body ECS.Systems_Collision is
 
    end Update;
 
+
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Collision_System) return String is
+   begin
+      return "Collision";
+   end Name;
+
 end ECS.Systems_Collision;

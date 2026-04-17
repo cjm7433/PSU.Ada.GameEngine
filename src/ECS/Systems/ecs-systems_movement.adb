@@ -152,4 +152,15 @@ package body ECS.Systems_Movement is
       end loop;
    end Update;
 
+
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Movement_System) return String is
+   begin
+      return "Movement";
+   end Name;
+
 end ECS.Systems_Movement;
