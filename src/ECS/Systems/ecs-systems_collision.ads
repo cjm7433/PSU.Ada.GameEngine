@@ -31,6 +31,7 @@ package ECS.Systems_Collision is
 
    procedure Reset_Score;
    function Get_Score return Integer;
+   procedure Update_Score (Points : Integer);
 
    ---------------------------------------------------------
    -- Update
@@ -51,6 +52,14 @@ package ECS.Systems_Collision is
    overriding 
    function Components_Needed (Self : Collision_System) 
       return ECS.Components.Component_Tag_Array;
+
+
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Collision_System) return String;
 
 
    -- TODO: Do all the helper functions need to be in this .ads?

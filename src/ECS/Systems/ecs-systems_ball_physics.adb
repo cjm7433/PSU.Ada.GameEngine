@@ -210,4 +210,15 @@ package body ECS.Systems_Ball_Physics is
 
    end Update;
 
+
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Ball_Physics_System) return String is
+   begin
+      return "Ball Physics";
+   end Name;
+
 end ECS.Systems_Ball_Physics;

@@ -168,14 +168,14 @@ package body ECS.Systems_Collision is
          return;
       end if;
 
-      for I in Entities'Range loop
-         declare
-            E : constant Entity_ID := Entities (I);
-         begin
-            Index_C : constant Natural := S.Collider.Lookup (E);
-            C : Collider_Component renames S.Collider.Data (Index_C);
-            Index_T : constant Natural := S.Transform.Lookup (E);
-            T : Transform_Component renames S.Transform.Data (Index_T);
+      --  for I in Entities'Range loop
+      --     declare
+      --        E : constant Entity_ID := Entities (I);
+      --     begin
+      --        Index_C : constant Natural := S.Collider.Lookup (E);
+      --        C : Collider_Component renames S.Collider.Data (Index_C);
+      --        Index_T : constant Natural := S.Transform.Lookup (E);
+      --        T : Transform_Component renames S.Transform.Data (Index_T);
 
             -- Snap collider to transform
             C.Bounding_Box.Center := T.Position;
@@ -200,5 +200,16 @@ package body ECS.Systems_Collision is
          end;
       end loop;
    end Update;
+
+
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Collision_System) return String is
+   begin
+      return "Collision";
+   end Name;
 
 end ECS.Systems_Collision;

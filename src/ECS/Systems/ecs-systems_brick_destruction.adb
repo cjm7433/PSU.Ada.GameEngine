@@ -112,4 +112,15 @@ package body ECS.Systems_Brick_Destruction is
 
    end Update;
 
+
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Brick_Destruction_System) return String is
+   begin
+      return "Brick Destruction";
+   end Name;
+
 end ECS.Systems_Brick_Destruction;

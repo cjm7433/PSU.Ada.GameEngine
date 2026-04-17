@@ -38,6 +38,9 @@ package ECS.Systems is
    function Components_Needed (Self : System) 
       return ECS.Components.Component_Tag_Array is abstract;
 
+   -- Get system name for performance tracking
+   function Name (Self : System) return String is abstract;
+
    -- Olivier's suggested function (changed to above ^)
    -- TODO: Remove once filters are working
    -- function Components_Needed (Self : System) return Component_Tag is abstract;

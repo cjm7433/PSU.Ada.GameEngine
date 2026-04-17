@@ -26,6 +26,10 @@ package body Input is
                State.Space := True;
             elsif Code = VK_Escape then
                State.Escape := True;
+            elsif Code = VK_P then
+               State.P := True;
+            elsif Code = VK_F then
+               State.F := True;
             elsif Code = VK_Q then
                State.Q := True;
             end if;
@@ -53,6 +57,7 @@ package body Input is
    begin
       State.Space  := False;
       State.Escape := False;
+      State.P      := False;
    end Clear_Frame_Flags;
 
 

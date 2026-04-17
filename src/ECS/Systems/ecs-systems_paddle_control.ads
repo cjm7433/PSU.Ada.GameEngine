@@ -38,4 +38,11 @@ package ECS.Systems_Paddle_Control is
    function Components_Needed (Self : Paddle_Control_System) 
       return ECS.Components.Component_Tag_Array;
 
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Paddle_Control_System) return String;
+
 end ECS.Systems_Paddle_Control;

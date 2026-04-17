@@ -119,4 +119,15 @@ package body ECS.Systems_Paddle_Control is
 
    end Update;
 
+
+   ---------------------------------------------------------------------------
+   -- Name
+   -- Return system name for performance tracking
+   ---------------------------------------------------------------------------
+   overriding
+   function Name (Self : Paddle_Control_System) return String is
+   begin
+      return "Paddle Control";
+   end Name;
+
 end ECS.Systems_Paddle_Control;
