@@ -113,12 +113,10 @@ package body Window is
       Src_Width  : Interfaces.C.int;
       Src_Height : Interfaces.C.int) is
    begin
-      -- Wayland update path consumes the shared buffer directly; dimensions are
-      -- provided for API parity with Windows but are not needed here.
-      pragma Unreferenced (Src_Width, Src_Height);
+      -- Pass source dimensions so the Wayland wrapper can safely copy
+      -- the source into the shared buffer when the sizes differ.
       if Wayland_Context /= Wayland_Wrapper.Window_Context (System.Null_Address) then
-         --  Copy the buffer to Wayland shared memory and commit
-         Wayland_Wrapper.Wayland_Update_Buffer (Wayland_Context, Buffer);
+         Wayland_Wrapper.Wayland_Update_Buffer (Wayland_Context, Buffer, Src_Width, Src_Height);
       end if;
    end Draw_Buffer;
 

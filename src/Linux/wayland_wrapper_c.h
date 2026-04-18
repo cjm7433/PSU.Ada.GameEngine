@@ -328,14 +328,18 @@ void wayland_paint_gradient(wayland_window_context* ctx);
  * Copies pixel data from the provided buffer to the Wayland window
  * and commits the surface to display the changes.
  * 
+ * This variant accepts the source width/height so the implementation
+ * can safely copy (and optionally center) when the source size differs
+ * from the window size. It performs row-wise copies to avoid
+ * out-of-bounds memcpy.
+ *
  * Parameters:
- *   ctx    - Window context from wayland_create_window()
- *   buffer - Source pixel buffer (ARGB32 format, width*height*4 bytes)
- * 
- * The buffer must contain width * height * 4 bytes in ARGB32 format
- * (4 bytes per pixel: Blue, Green, Red, Alpha in that order).
+ *   ctx       - Window context from wayland_create_window()
+ *   buffer    - Source pixel buffer (ARGB32 format)
+ *   src_width - Source buffer width in pixels
+ *   src_height- Source buffer height in pixels
  */
-void wayland_update_buffer(wayland_window_context* ctx, const void* buffer);
+void wayland_update_buffer(wayland_window_context* ctx, const void* buffer, int src_width, int src_height);
 
 /*
  * wayland_set_key_callback

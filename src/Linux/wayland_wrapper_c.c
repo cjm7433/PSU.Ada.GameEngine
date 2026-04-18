@@ -9,6 +9,17 @@
 #include <errno.h>
 #include <poll.h>
 #include <wayland-util.h>
+#include "wayland_wrapper_c.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <poll.h>
+#include <wayland-util.h>
 
 // * XDG Shell Protocol Implementation
 
@@ -1019,26 +1030,51 @@ int wayland_dispatch_pending(wayland_window_context* ctx)
  * Note: This performs a memcpy, so for best performance ensure
  * your source buffer matches the window dimensions exactly.
  */
-void wayland_update_buffer(wayland_window_context* ctx, const void* buffer)
+void wayland_update_buffer(wayland_window_context* ctx, const void* buffer, int src_width, int src_height)
 {
     if (!ctx || !ctx->shm_data || !buffer) {
         return;
     }
-    
-    /* Copy pixel data to shared memory */
-    int size = ctx->width * ctx->height * 4;
-    memcpy(ctx->shm_data, buffer, size);
-    
-    /* Attach buffer to surface */
+
+    /* Basic sanity checks */
+    if (src_width <= 0 || src_height <= 0 || ctx->width <= 0 || ctx->height <= 0) {
+        return;
+    }
+
+    /* Scale the source framebuffer to the destination window using
+     * nearest-neighbor sampling. This stretches the small game buffer
+     * to the full window size.
+     */
+    int dest_w = ctx->width;
+    int dest_h = ctx->height;
+
+    uint8_t* dst = (uint8_t*)ctx->shm_data;
+    const uint8_t* src = (const uint8_t*)buffer;
+
+    if (src_width == dest_w && src_height == dest_h) {
+        size_t size = (size_t)dest_w * dest_h * 4;
+        memcpy(dst, src, size);
+    } else {
+        for (int y = 0; y < dest_h; ++y) {
+            int src_y = (int)((long long)y * src_height / dest_h);
+            if (src_y >= src_height) src_y = src_height - 1;
+            for (int x = 0; x < dest_w; ++x) {
+                int src_x = (int)((long long)x * src_width / dest_w);
+                if (src_x >= src_width) src_x = src_width - 1;
+                const uint8_t* src_px = src + (src_y * src_width + src_x) * 4;
+                uint8_t* dst_px = dst + (y * dest_w + x) * 4;
+                dst_px[0] = src_px[0];
+                dst_px[1] = src_px[1];
+                dst_px[2] = src_px[2];
+                dst_px[3] = src_px[3];
+            }
+        }
+    }
+
+    /* Attach buffer to surface and commit full surface */
     wl_surface_attach(ctx->surface, ctx->buffer, 0, 0);
-    
-    /* Mark entire surface as damaged (needs redraw) */
     wl_surface_damage(ctx->surface, 0, 0, ctx->width, ctx->height);
-    
-    /* Commit changes to display */
     wl_surface_commit(ctx->surface);
-    
-    /* Flush to ensure the frame is sent to the compositor */
     wl_display_flush(ctx->display);
 }
 
