@@ -192,9 +192,7 @@ package body ECS.Store is
 
             S.Paddle.Data.Append
             (Paddle_Component'
-               (  Min_X      => 50.0,
-                  Max_X      => 750.0,
-                  Move_Left  => False,
+               (  Move_Left  => False,
                   Move_Right => False,
                   others     => <>));
          end if;

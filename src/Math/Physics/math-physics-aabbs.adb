@@ -132,11 +132,22 @@ package body Math.Physics.AABBs is
       end if;
 
       -- Compute entry/exit times
-      if not Is_Equal_Approximate(Motion.X, 0.0) then
+      -- X axis
+      if Is_Equal_Approximate(Motion.X, 0.0) then
+         if Max1.X < Min2.X or else Min1.X > Max2.X then
+            return Float'Last; -- no overlap, no collision possible
+         end if;
+      else
          Fraction_Entry_X := Entry_Pos.X / Motion.X;
          Fraction_Exit_X  := Exit_Pos.X  / Motion.X;
       end if;
-      if not Is_Equal_Approximate(Motion.Y, 0.0) then
+
+      -- Y axis
+      if Is_Equal_Approximate(Motion.Y, 0.0) then
+         if Max1.Y < Min2.Y or else Min1.Y > Max2.Y then
+            return Float'Last;
+         end if;
+      else
          Fraction_Entry_Y := Entry_Pos.Y / Motion.Y;
          Fraction_Exit_Y  := Exit_Pos.Y  / Motion.Y;
       end if;

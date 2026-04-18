@@ -18,6 +18,7 @@ with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Transform;      use ECS.Components.Transform;
 with ECS.Components.Motion;         use ECS.Components.Motion;
 with ECS.Components.Collider;       use ECS.Components.Collider;
+with ECS.Components.Paddle;         use ECS.Components.Paddle;
 with Math.Linear_Algebra;           use Math.Linear_Algebra;
 with Math.Physics.AABBs;            use Math.Physics.AABBs;
 with Ada.Numerics;                  use Ada.Numerics;
@@ -138,8 +139,58 @@ package body ECS.Systems_Movement is
                -- Translate up to moment of collision
                -- Integrate velocity --> transform
                T.Position  :=   T.Position + M.Linear_Velocity * DT * Motion_Fraction;
+               -- Consume motion
+               Motion_Fraction := (1.0 - Motion_Fraction);
+
+               -- HACK pseudo-multi-collision. (Just one extra pass for demo)
+               Second_Collision : Boolean := False;
+               Old_Fraction : Float := Motion_Fraction;                  Index_C := S.Collider.Lookup (E);
+               C : Collider_Component renames S.Collider.Data (Index_C);
+
+               Colliders : Entity_ID_Array_Access := S.Get_Entities_With((0 => ECS.Components.Collider.Collider_Component'Tag));
+
+               -- Snap collider to transform
+               C.Bounding_Box.Center := T.Position;
+
+               for J in Colliders'Range loop
+                  declare
+                     F : constant Entity_ID := Colliders (J);
+                     New_Fraction: Float := Float'Last;
+                  begin
+                     if E /= F then
+                        Index_D : constant Collider_Table.Index := S.Collider.Lookup (F);
+                        D : Collider_Component renames S.Collider.Data (Index_D);
+
+                        -- Check for collision between this entity and the collider in world space along the motion path
+                        New_Fraction := Collision_Sweep(C.Bounding_Box, D.Bounding_Box, Reflection * DT * Old_Fraction);
+                        if New_Fraction <= 1.0 and New_Fraction < Motion_Fraction then
+                           Second_Collision := True;
+                           Collidee := F;
+                           Motion_Fraction := New_Fraction;
+                           Reflection := Reflect(M.Linear_Velocity, Get_Aligned_Normal(D.Bounding_Box, C.Bounding_Box));
+                        end if;
+                     end if;
+                  end;
+               end loop;
+
+               if Second_Collision then
+                  C.Collided_Entities.Append(Collidee);
+
+                  -- Translate up to moment of collision
+                  -- Integrate velocity --> transform
+                  T.Position  :=   T.Position + M.Linear_Velocity * DT * Motion_Fraction;
+               else
+                  Motion_Fraction := 0.0;
+               end if;
+
+               if S.Has_Component(E, ECS.Components.Paddle.Paddle_Component'Tag) then
+                  Motion_Fraction := 1.0;
+                  Old_Fraction := 0.0;
+               end if;
+               -- HACK end
+
                -- Then translate remainder using reflection
-               T.Position := T.Position + Reflection * DT * (1.0 - Motion_Fraction);
+               T.Position := T.Position + Reflection * DT * ((1.0 - Motion_Fraction) - Old_Fraction);
                M.Linear_Velocity := Reflection;
             else
                -- Integrate velocity --> transform

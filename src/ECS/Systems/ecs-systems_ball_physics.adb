@@ -31,37 +31,6 @@ with Ada.Numerics.Elementary_Functions; use Ada.Numerics.Elementary_Functions;
 
 package body ECS.Systems_Ball_Physics is
 
-   ------------------------------------------------------------
-   -- Paddle_Zone_Angle
-   -- Helper: Return the outgoing angle (radians, measured
-   --   clockwise from straight up / negative-Y) for a given
-   --   normalised hit position on the paddle (0.0 = left edge,
-   --   1.0 = right edge).
-   --
-   -- Zone boundaries and angles:
-   --   0.00 - 0.20  ->  -60 deg  (-Pi/3)
-   --   0.20 - 0.40  ->  -30 deg  (-Pi/6)
-   --   0.40 - 0.60  ->    0 deg  (straight up)
-   --   0.60 - 0.80  ->  +30 deg  (+Pi/6)
-   --   0.80 - 1.00  ->  +60 deg  (+Pi/3)
-   ------------------------------------------------------------
-   function Paddle_Zone_Angle (Hit_T : Float) return Float is
-      -- Clamp to [0, 1] for safety
-      T : constant Float := Float'Min (1.0, Float'Max (0.0, Hit_T));
-   begin
-      if T < 0.20 then
-         return -Pi / 3.0;       -- -60 degrees: sharp left
-      elsif T < 0.40 then
-         return -Pi / 6.0;       -- -30 degrees: shallow left
-      elsif T < 0.60 then
-         return 0.0;             --   0 degrees: straight up
-      elsif T < 0.80 then
-         return Pi / 6.0;        -- +30 degrees: shallow right
-      else
-         return Pi / 3.0;        -- +60 degrees: sharp right
-      end if;
-   end Paddle_Zone_Angle;
-
 
    ------------------------------------------------------------
    -- Components_Needed
@@ -137,72 +106,6 @@ package body ECS.Systems_Ball_Physics is
                      M.Linear_Velocity := (X => 0.0, Y => 0.0);
                   end;
                end if;
-
-            else
-
-               --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-               -- Paddle deflection (zone-based)
-               -- Fires exactly once per paddle hit,
-               -- then Hit_Paddle is cleared.
-               --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-               if B.Hit_Paddle then
-                  B.Hit_Paddle := False;
-
-                  if Paddle_Entities /= null and then Paddle_Entities'Length > 0 then
-                     declare
-                        Paddle_E : constant Entity_ID := Paddle_Entities (0);
-
-                        Index_Paddle_T : constant Natural :=
-                           S.Transform.Lookup (Paddle_E);
-                        Paddle_T : Transform_Component renames
-                           S.Transform.Data (Index_Paddle_T);
-
-                        Index_Paddle_C : constant Natural :=
-                           S.Collider.Lookup (Paddle_E);
-                        Paddle_C : Collider_Component renames
-                           S.Collider.Data (Index_Paddle_C);
-
-                        -- Normalised hit position: 0.0 = left edge, 1.0 = right edge
-                        Paddle_Left  : constant Float :=
-                           Paddle_T.Position.X - Paddle_C.Bounding_Box.Half_Size.X;
-                        Paddle_Width : constant Float :=
-                           Paddle_C.Bounding_Box.Half_Size.X * 2.0;
-                        Hit_T        : constant Float :=
-                           (T.Position.X - Paddle_Left) / Paddle_Width;
-
-                        -- Zone angle and current speed
-                        Angle        : constant Float := Paddle_Zone_Angle (Hit_T);
-                        Speed        : constant Float := Length (M.Linear_Velocity);
-                        Use_Speed    : constant Float :=
-                           (if Speed < B.Min_Speed then B.Base_Speed else Speed);
-
-                     begin
-                        -- Apply outgoing direction: angle is from straight up (-Y)
-                        -- so X = sin(angle), Y = -cos(angle)
-                        M.Linear_Velocity :=
-                           (X =>  Sin (Angle) * Use_Speed,
-                            Y => -Cos (Angle) * Use_Speed);
-                     end;
-                  end if;
-
-               end if;
-
-               --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-               -- Clamp speed to min/max limits
-               --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-               declare
-                  Current_Speed : constant Float := Length (M.Linear_Velocity);
-               begin
-                  if Current_Speed > B.Max_Speed then
-                     M.Linear_Velocity :=
-                        Normalize (M.Linear_Velocity) * B.Max_Speed;
-
-                  elsif Current_Speed < B.Min_Speed and Current_Speed > 0.01 then
-                     M.Linear_Velocity :=
-                        Normalize (M.Linear_Velocity) * B.Min_Speed;
-                  end if;
-               end;
-
             end if;
 
          end;

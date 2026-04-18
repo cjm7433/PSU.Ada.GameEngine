@@ -1,11 +1,11 @@
 -- Ada Libraries
+with Ada.Numerics.Discrete_Random;
 with Ada.Real_Time;           use Ada.Real_Time;
 with Ada.Strings;             use Ada.Strings;
 with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Numerics;            use Ada.Numerics;
-with Ada.Numerics.Float_Random; use Ada.Numerics.Float_Random;
 with Ada.Numerics.Elementary_Functions; use Ada.Numerics.Elementary_Functions;
 with Ada.Directories;         use Ada.Directories;
 with Ada.Command_Line;        use Ada.Command_Line;
@@ -81,7 +81,10 @@ procedure Arkanoid is
    Show_Performance : Boolean := False;  -- Toggle with P key
 
    -- Random number generator for ball-launch angle
-   Gen : Generator;
+   subtype Launch_Angle_Index is Integer range 0 .. 3;
+   package Rand_Launch_Angle_Index is new Ada.Numerics.Discrete_Random(Launch_Angle_Index);
+
+   Gen : Rand_Launch_Angle_Index.Generator;
 
    -- -----------------------------------------------------------------------
    -- Paddle layout constants
@@ -155,7 +158,7 @@ begin
    Performance.Initialize(FPS_Tracker);
 
    -- Initialize random generator
-   Reset (Gen);
+   Rand_Launch_Angle_Index.Reset (Gen);
 
    declare
       S : ECS.Store.Store renames Manager.World;
@@ -289,11 +292,6 @@ begin
             (R => 1.0, G => 1.0, B => 1.0, A => 1.0);   -- White
          S.Render.Data (S.Render.Lookup (Paddle_E)).Layer   := 1;
          S.Render.Data (S.Render.Lookup (Paddle_E)).Visible := True;
-
-         S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Min_X :=
-            Float (Paddle_W / 2);
-         S.Paddle.Data (S.Paddle.Lookup (Paddle_E)).Max_X :=
-            Float (Width - Paddle_W / 2);
 
          -- Home_Y is the fixed row the paddle lives on.  Paddle_Control_System
          -- clamps T.Position.Y to this value every frame to prevent the paddle
@@ -488,14 +486,13 @@ begin
          if Input.State.Space then
             if S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached then
                S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached := False;
-               -- Launch at a random diagonal angle (between -30 and +30 degrees)
                declare
                   Base_Speed : constant Float := S.Ball.Data (S.Ball.Lookup (Ball_E)).Base_Speed;
-                  Angle : constant Float := Random (Gen) * (Pi / 3.0) - (Pi / 6.0);  -- -30 to +30 degrees
+                  Launch_Angles : constant array (0 .. 3) of Float := (-Pi / 4.0, -Pi / 6.0, Pi / 6.0, Pi / 4.0);
+                  Angle : constant Float := Launch_Angles(Rand_Launch_Angle_Index.Random(Gen)) - Pi / 2.0;
                begin
-                  S.Motion.Data (S.Motion.Lookup (Ball_E)).Linear_Velocity :=
-                     (X => Base_Speed * Sin (Angle),
-                      Y => -Base_Speed * Cos (Angle));
+                  Put_Line(Angle'Image);
+                  S.Motion.Data (S.Motion.Lookup (Ball_E)).Linear_Velocity := Vector2_From_Polar(Pi / 4.0 - Pi / 2.0, Base_Speed);
                end;
             end if;
          end if;
