@@ -488,11 +488,11 @@ begin
                S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached := False;
                declare
                   Base_Speed : constant Float := S.Ball.Data (S.Ball.Lookup (Ball_E)).Base_Speed;
-                  Launch_Angles : constant array (0 .. 3) of Float := (-Pi / 4.0, -Pi / 6.0, Pi / 6.0, Pi / 4.0);
+                  Launch_Angles : constant array (0 .. 3) of Float := (-Pi / 5.0, -Pi / 7.0, Pi / 6.0, Pi / 4.0);
                   Angle : constant Float := Launch_Angles(Rand_Launch_Angle_Index.Random(Gen)) - Pi / 2.0;
                begin
                   Put_Line(Angle'Image);
-                  S.Motion.Data (S.Motion.Lookup (Ball_E)).Linear_Velocity := Vector2_From_Polar(Pi / 4.0 - Pi / 2.0, Base_Speed);
+                  S.Motion.Data (S.Motion.Lookup (Ball_E)).Linear_Velocity := Vector2_From_Polar(Angle, Base_Speed);
                end;
             end if;
          end if;
