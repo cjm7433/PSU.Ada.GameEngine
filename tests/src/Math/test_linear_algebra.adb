@@ -32,12 +32,12 @@ package body Test_Linear_Algebra is
    end;
 
 
-   procedure Test_Angle_Zero_Vector is
+   procedure Test_Zero_Vector is
       V :         constant Vector2  := (0.0, 0.0);
-      Is_Zero :  constant Boolean   := V.Angle = 0.0;
+      Is_Zero :  constant Boolean   := V.Angle = 0.0 and V.Length = 0.0;
       Status :    constant String   := (if Is_Zero then "PASS" else "FAIL");
    begin
-      Put_Line(Status & "    Test_Angle_Zero_Vector    " & V.Angle'Image);
+      Put_Line(Status & "    Test_Zero_Vector    " & V.Angle'Image & ", " & V.Length'Image);
    end;
 
 

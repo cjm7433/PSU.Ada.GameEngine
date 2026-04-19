@@ -6,7 +6,7 @@ begin
    Test_Linear_Algebra.Initialize;
    Test_Linear_Algebra.Test_Put;
    Test_Linear_Algebra.Test_Angle;
-   Test_Linear_Algebra.Test_Angle_Zero_Vector;
+   Test_Linear_Algebra.Test_Zero_Vector;
    Test_Linear_Algebra.Test_Comparison;
    Test_Linear_Algebra.Test_Distance;
    Test_Linear_Algebra.Test_Rotation;
