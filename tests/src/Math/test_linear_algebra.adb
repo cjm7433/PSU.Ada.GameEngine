@@ -1,4 +1,4 @@
-with Linear_Algebra; use Linear_Algebra;
+with Math.Linear_Algebra;  use Math.Linear_Algebra;
 with Ada.Numerics; use Ada.Numerics;
 with Ada.Numerics.Float_Random; use Ada.Numerics.Float_Random;
 with Ada.Text_IO; use Ada.Text_IO;

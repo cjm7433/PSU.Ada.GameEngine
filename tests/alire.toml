@@ -9,7 +9,5 @@ licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
 website = ""
 tags = []
 
-executables = ["tests"]
-
 [[pins]]
 psu_ada_gameengine = { path='../' }
