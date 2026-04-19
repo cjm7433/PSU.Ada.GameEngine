@@ -19,7 +19,7 @@ project Arkanoid is
    package Linker is
       case Arkanoid_Config.Alire_Host_OS is
          when "linux" =>
-            for Switches ("ada") use ("-lwayland-client", "-lpipewire-0.3", "-lpwformat");
+            for Switches ("ada") use ("-lwayland-client", "-lpipewire-0.3");
          when "windows" =>
             for Switches ("ada") use ("-lgdi32", "-llargeint", "-lwinmm", "-lole32", "-lxaudio2_8");
             for Switches ("c") use ("-lgdi32", "-llargeint", "-lwinmm", "-lole32", "-lxaudio2_8");
