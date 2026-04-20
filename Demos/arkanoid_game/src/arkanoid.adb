@@ -381,9 +381,19 @@ begin
                         when others => (R => 1.0, G => 1.0, B => 1.0, A => 1.0));
 
                   Kind   : constant Brick_Type :=
-                     (if Row = 0 then Strong else Normal);
+                     (case Row is
+                        when 0 => Strong,
+                        when 1 => Strong,
+                        when 2 => Special,
+                        when others => Normal
+                     );
                   Health : constant Natural :=
-                     (if Row = 0 then 2 else 1);
+                     (case Row is
+                        when 0 => 4,
+                        when 1 => 3,
+                        when 2 => 2,
+                        when others => 1
+                     );
 
                begin
                   S.Transform.Data (S.Transform.Lookup (Brick_E)).Position :=
@@ -411,7 +421,12 @@ begin
                   S.Brick.Data (S.Brick.Lookup (Brick_E)).Health     := Health;
                   S.Brick.Data (S.Brick.Lookup (Brick_E)).Max_Health := Health;
                   S.Brick.Data (S.Brick.Lookup (Brick_E)).Points     :=
-                     (if Row = 0 then 20 else 10);
+                     (case Row is
+                        when 0 => 80,
+                        when 1 => 40,
+                        when 2 => 20,
+                        when others => 10
+                     );
                end;
 
             end loop;
