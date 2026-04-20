@@ -353,82 +353,84 @@ begin
          -- ==================================================================
          for Row in 0 .. Brick_Rows - 1 loop
             for Col in 0 .. Brick_Cols - 1 loop
+               if not (Row = 2 and (Col = 1 or Col = 3 or Col = 4 or Col = 6)) then
+                  Brick_E := Create_Entity (S);
 
-               Brick_E := Create_Entity (S);
+                  Add_Component (S, Brick_E, Transform_Component'Tag);
+                  Add_Component (S, Brick_E, Collider_Component'Tag);
+                  Add_Component (S, Brick_E, Render_Component'Tag);
+                  Add_Component (S, Brick_E, Brick_Component'Tag);
 
-               Add_Component (S, Brick_E, Transform_Component'Tag);
-               Add_Component (S, Brick_E, Collider_Component'Tag);
-               Add_Component (S, Brick_E, Render_Component'Tag);
-               Add_Component (S, Brick_E, Brick_Component'Tag);
+                  declare
+                     BX : constant Integer :=
+                        Brick_Origin_X + Col * (Brick_W + Brick_Gap);
+                     BY : constant Integer :=
+                        Brick_Origin_Y + Row * (Brick_H + Brick_Gap);
 
-               declare
-                  BX : constant Integer :=
-                     Brick_Origin_X + Col * (Brick_W + Brick_Gap);
-                  BY : constant Integer :=
-                     Brick_Origin_Y + Row * (Brick_H + Brick_Gap);
+                     CX : constant Float := Float (BX) + Float (Brick_W) / 2.0;
+                     CY : constant Float := Float (BY) + Float (Brick_H) / 2.0;
 
-                  CX : constant Float := Float (BX) + Float (Brick_W) / 2.0;
-                  CY : constant Float := Float (BY) + Float (Brick_H) / 2.0;
+                     Tint : ECS.Components.Render.Color :=
+                        (case Row is
+                           when 0 => (R => 1.0,  G => 0.16, B => 0.16, A => 1.0), -- Red
+                           when 1 => (R => 1.0,  G => 0.55, B => 0.0,  A => 1.0), -- Orange
+                           when 2 => (R => 1.0,  G => 0.94, B => 0.0,  A => 1.0), -- Yellow
+                           when 3 => (R => 0.20, G => 0.86, B => 0.20, A => 1.0), -- Green
+                           when 4 => (R => 0.0,  G => 0.86, B => 0.86, A => 1.0), -- Cyan
+                           when 5 => (R => 0.24, G => 0.39, B => 1.0,  A => 1.0), -- Blue
+                           when others => (R => 1.0, G => 1.0, B => 1.0, A => 1.0));
 
-                  Tint : ECS.Components.Render.Color :=
-                     (case Row is
-                        when 0 => (R => 1.0,  G => 0.16, B => 0.16, A => 1.0), -- Red
-                        when 1 => (R => 1.0,  G => 0.55, B => 0.0,  A => 1.0), -- Orange
-                        when 2 => (R => 1.0,  G => 0.94, B => 0.0,  A => 1.0), -- Yellow
-                        when 3 => (R => 0.20, G => 0.86, B => 0.20, A => 1.0), -- Green
-                        when 4 => (R => 0.0,  G => 0.86, B => 0.86, A => 1.0), -- Cyan
-                        when 5 => (R => 0.24, G => 0.39, B => 1.0,  A => 1.0), -- Blue
-                        when others => (R => 1.0, G => 1.0, B => 1.0, A => 1.0));
+                     Kind   : constant Brick_Type :=
+                        (case Row is
+                           when 0 => Strong,
+                           when 1 => Strong,
+                           when 2 => Special,
+                           when others => Normal
+                        );
+                     Health : constant Natural :=
+                        (case Row is
+                           when 0 => 4,
+                           when 1 => 3,
+                           when 2 => 1,
+                           when 3 => 2,
+                           when others => 1
+                        );
 
-                  Kind   : constant Brick_Type :=
-                     (case Row is
-                        when 0 => Strong,
-                        when 1 => Strong,
-                        when 2 => Special,
-                        when others => Normal
-                     );
-                  Health : constant Natural :=
-                     (case Row is
-                        when 0 => 4,
-                        when 1 => 3,
-                        when 2 => 2,
-                        when others => 1
-                     );
+                  begin
+                     S.Transform.Data (S.Transform.Lookup (Brick_E)).Position :=
+                        (X => CX, Y => CY);
 
-               begin
-                  S.Transform.Data (S.Transform.Lookup (Brick_E)).Position :=
-                     (X => CX, Y => CY);
+                     S.Collider.Data (S.Collider.Lookup (Brick_E)).Bounding_Box :=
+                        (Center    => (X => CX, Y => CY),
+                        Half_Size => (X => Float (Brick_W) / 2.0,
+                                       Y => Float (Brick_H) / 2.0));
+                     S.Collider.Data (S.Collider.Lookup (Brick_E)).Layer :=
+                        Layer_Brick;
+                     S.Collider.Data (S.Collider.Lookup (Brick_E)).Mask :=
+                        (Layer_Ball, Layer_None, Layer_None, Layer_None);
+                     S.Collider.Data (S.Collider.Lookup (Brick_E)).Collider_Form :=
+                        Solid;
+                     S.Collider.Data (S.Collider.Lookup (Brick_E)).Name :=
+                        "BRCK";
 
-                  S.Collider.Data (S.Collider.Lookup (Brick_E)).Bounding_Box :=
-                     (Center    => (X => CX, Y => CY),
-                      Half_Size => (X => Float (Brick_W) / 2.0,
-                                    Y => Float (Brick_H) / 2.0));
-                  S.Collider.Data (S.Collider.Lookup (Brick_E)).Layer :=
-                     Layer_Brick;
-                  S.Collider.Data (S.Collider.Lookup (Brick_E)).Mask :=
-                     (Layer_Ball, Layer_None, Layer_None, Layer_None);
-                  S.Collider.Data (S.Collider.Lookup (Brick_E)).Collider_Form :=
-                     Solid;
-                  S.Collider.Data (S.Collider.Lookup (Brick_E)).Name :=
-                     "BRCK";
+                     S.Render.Data (S.Render.Lookup (Brick_E)).Shape   := Rectangle;
+                     S.Render.Data (S.Render.Lookup (Brick_E)).Tint    := Tint;
+                     S.Render.Data (S.Render.Lookup (Brick_E)).Layer   := 1;
+                     S.Render.Data (S.Render.Lookup (Brick_E)).Visible := True;
 
-                  S.Render.Data (S.Render.Lookup (Brick_E)).Shape   := Rectangle;
-                  S.Render.Data (S.Render.Lookup (Brick_E)).Tint    := Tint;
-                  S.Render.Data (S.Render.Lookup (Brick_E)).Layer   := 1;
-                  S.Render.Data (S.Render.Lookup (Brick_E)).Visible := True;
-
-                  S.Brick.Data (S.Brick.Lookup (Brick_E)).Brick_Kind := Kind;
-                  S.Brick.Data (S.Brick.Lookup (Brick_E)).Health     := Health;
-                  S.Brick.Data (S.Brick.Lookup (Brick_E)).Max_Health := Health;
-                  S.Brick.Data (S.Brick.Lookup (Brick_E)).Points     :=
-                     (case Row is
-                        when 0 => 80,
-                        when 1 => 40,
-                        when 2 => 20,
-                        when others => 10
-                     );
-               end;
-
+                     S.Brick.Data (S.Brick.Lookup (Brick_E)).Brick_Kind := Kind;
+                     S.Brick.Data (S.Brick.Lookup (Brick_E)).Health     := Health;
+                     S.Brick.Data (S.Brick.Lookup (Brick_E)).Max_Health := Health;
+                     S.Brick.Data (S.Brick.Lookup (Brick_E)).Points     :=
+                        (case Row is
+                           when 0 => 80,
+                           when 1 => 40,
+                           when 2 => 5,
+                           when 3 => 20,
+                           when others => 10
+                        );
+                  end;
+               end if;
             end loop;
          end loop;
 
@@ -506,7 +508,6 @@ begin
                   Launch_Angles : constant array (0 .. 3) of Float := (-Pi / 5.0, -Pi / 7.0, Pi / 6.0, Pi / 4.0);
                   Angle : constant Float := Launch_Angles(Rand_Launch_Angle_Index.Random(Gen)) - Pi / 2.0;
                begin
-                  Put_Line(Angle'Image);
                   S.Motion.Data (S.Motion.Lookup (Ball_E)).Linear_Velocity := Vector2_From_Polar(Angle, Base_Speed);
                end;
             end if;

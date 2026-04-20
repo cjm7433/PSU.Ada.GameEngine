@@ -1,4 +1,6 @@
 -- TODO: Migrate to Arkanoid. This is a game-specific component and should not be provided by the engine.
+with Math.Linear_Algebra;  use Math.Linear_Algebra;
+
 
 package ECS.Components.Brick is
    -- Brick types for different behaviors/visuals
@@ -25,5 +27,8 @@ package ECS.Components.Brick is
       -- Is this brick currently being destroyed? (for animation)
       Is_Dying      : Boolean   := False;
       Death_Timer   : Float     := 0.5;         -- Time remaining in death animation (seconds)
+
+      -- For special bricks
+      Spawn_Angle    : Vector2 := (0.0, 0.0);
    end record;
 end;

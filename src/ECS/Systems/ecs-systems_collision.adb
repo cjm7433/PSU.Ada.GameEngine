@@ -173,6 +173,15 @@ package body ECS.Systems_Collision is
                for J of C.Collided_Entities loop
                   begin
                      if S.Has_Component (J, ECS.Components.Brick.Brick_Component'Tag) then
+                        if S.Has_Component(E, ECS.Components.Motion.Motion_Component'Tag) then
+                           Idx : constant Natural := S.Brick.Lookup (J);
+                           B : Brick_Component renames S.Brick.Data (Idx);
+                           Index_M : constant Motion_Table.Index := S.Motion.Lookup(E);
+                           M : Motion_Component renames S.Motion.Data(Index_M);
+
+                           B.Spawn_Angle := M.Linear_Velocity.Normalize;
+                        end if;
+
                         Apply_Brick_Damage (S, J);
                      end if;
                   end;
