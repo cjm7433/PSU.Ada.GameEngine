@@ -593,7 +593,7 @@ begin
 
                      -- Scale ECS Render.Color (0.0-1.0) to
                      -- Graphics.Color.Color (0-255) for the drawing calls
-                     C : constant Graphics.Color.Color :=
+                     C : Graphics.Color.Color :=
                         (R => Color_Int (Integer (R.Tint.R * 255.0)),
                          G => Color_Int (Integer (R.Tint.G * 255.0)),
                          B => Color_Int (Integer (R.Tint.B * 255.0)),
@@ -610,6 +610,18 @@ begin
                               S.Collider.Data
                                  (S.Collider.Lookup (E)).Bounding_Box;
                         begin
+                           if S.Has_Component(E, ECS.Components.Brick.Brick_Component'Tag) then
+                              Idx : constant Natural := S.Brick.Lookup (E);
+                              B : Brick_Component renames S.Brick.Data (Idx);
+                              P : Float := Float(B.Health) / Float(B.Max_Health);
+                              C := (
+                                 R => Color_Int(Float(C.R) * P),
+                                 G => Color_Int(Float(C.G) * P),
+                                 B => Color_Int(Float(C.B) * P),
+                                 A => C.A
+                              );
+                           end if;
+
                            case R.Shape is
 
                               when Rectangle =>
