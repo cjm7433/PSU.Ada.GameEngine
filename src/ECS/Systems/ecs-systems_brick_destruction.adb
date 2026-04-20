@@ -19,6 +19,7 @@
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Brick;          use ECS.Components.Brick;
+with ECS.Systems_Collision;
 
 package body ECS.Systems_Brick_Destruction is
 
@@ -87,7 +88,7 @@ package body ECS.Systems_Brick_Destruction is
                   B.Death_Timer := B.Death_Timer - DT;
 
                   if B.Death_Timer <= 0.0 then
-                     -- TODO: award score from B.Points
+                     ECS.Systems_Collision.Update_Score (B.Points);
                      -- TODO: spawn power-up if B.Brick_Kind = Special
                      To_Destroy (Destroy_Count) := E;
                      Destroy_Count := Destroy_Count + 1;
