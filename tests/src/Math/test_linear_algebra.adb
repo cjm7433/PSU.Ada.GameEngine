@@ -1,4 +1,4 @@
-with Linear_Algebra; use Linear_Algebra;
+with Math.Linear_Algebra;  use Math.Linear_Algebra;
 with Ada.Numerics; use Ada.Numerics;
 with Ada.Numerics.Float_Random; use Ada.Numerics.Float_Random;
 with Ada.Text_IO; use Ada.Text_IO;
@@ -32,12 +32,12 @@ package body Test_Linear_Algebra is
    end;
 
 
-   procedure Test_Angle_Zero_Vector is
+   procedure Test_Zero_Vector is
       V :         constant Vector2  := (0.0, 0.0);
-      Is_Zero :  constant Boolean   := V.Angle = 0.0;
+      Is_Zero :  constant Boolean   := V.Angle = 0.0 and V.Length = 0.0;
       Status :    constant String   := (if Is_Zero then "PASS" else "FAIL");
    begin
-      Put_Line(Status & "    Test_Angle_Zero_Vector    " & V.Angle'Image);
+      Put_Line(Status & "    Test_Zero_Vector    " & V.Angle'Image & ", " & V.Length'Image);
    end;
 
 

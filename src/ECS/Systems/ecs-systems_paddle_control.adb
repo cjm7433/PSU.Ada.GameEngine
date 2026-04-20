@@ -2,6 +2,7 @@
 --
 -- Implementation of Paddle Control System
 -- Reads input state and updates paddle velocity
+with Ada.Text_IO;                   use Ada.Text_IO;
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Transform;      use ECS.Components.Transform;
@@ -84,20 +85,6 @@ package body ECS.Systems_Paddle_Control is
                M.Linear_Velocity.X := P.Move_Speed;
 
             -- If both pressed or neither pressed, velocity stays 0
-            end if;
-
-            --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            -- Enforce horizontal boundaries (keep paddle on screen)
-            -- This prevents the paddle from moving outside Min_X/Max_X
-            --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-            if T.Position.X < P.Min_X then
-               T.Position.X        := P.Min_X;
-               M.Linear_Velocity.X := 0.0;   -- Stop movement at boundary
-
-            elsif T.Position.X > P.Max_X then
-               T.Position.X        := P.Max_X;
-               M.Linear_Velocity.X := 0.0;   -- Stop movement at boundary
             end if;
 
             --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -18,6 +18,7 @@ with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Transform;      use ECS.Components.Transform;
 with ECS.Components.Motion;         use ECS.Components.Motion;
 with ECS.Components.Collider;       use ECS.Components.Collider;
+with ECS.Components.Paddle;         use ECS.Components.Paddle;
 with Math.Linear_Algebra;           use Math.Linear_Algebra;
 with Math.Physics.AABBs;            use Math.Physics.AABBs;
 with Ada.Numerics;                  use Ada.Numerics;
@@ -67,86 +68,146 @@ package body ECS.Systems_Movement is
       end if;
 
       for I in Entities'Range loop
-
          declare
+            E : constant Entity_ID := Entities(I);
 
-            -- Get the entity ID from the array of entities returned by the store's filtering function
-            E : constant Entity_ID := Entities (I);
+            Index_T : constant Transform_Table.Index := S.Transform.Lookup(E);
+            T : Transform_Component renames S.Transform.Data(Index_T);
 
-            -- Get the components for the entity (Transform and Motion )
-            Index_T : constant Transform_Table.Index := S.Transform.Lookup (E);
-            T : Transform_Component renames S.Transform.Data (Index_T);
+            Index_M : constant Motion_Table.Index := S.Motion.Lookup(E);
+            M : Motion_Component renames S.Motion.Data(Index_M);
 
-            Index_M : constant Motion_Table.Index := S.Motion.Lookup (E);
-            M : Motion_Component renames S.Motion.Data (Index_M);
-
-            -- Optional collider
-            Index_C : Collider_Table.Index;
-
-            -- Soonest fraction along motion which collision occurred and reflected motion
             Motion_Fraction : Float := Float'Last;
-            Reflection : Vector2 := (0.0, 0.0);
-            Collidee : Entity_ID;
+            Reflection      : Vector2 := (0.0, 0.0);
+            Collidee        : Entity_ID;
 
          begin
+            -- Integrate acceleration
+            M.Linear_Velocity  := M.Linear_Velocity + M.Linear_Acceleration * DT;
+            M.Angular_Velocity := M.Angular_Velocity + M.Angular_Acceleration * DT;
 
-            --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            -- DO THE LOGIC HERE!
-            --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            
-            -- Integrate acceleration --> velocity
-            M.Linear_Velocity    := M.Linear_Velocity + M.Linear_Acceleration * DT;
-            M.Angular_Velocity   := M.Angular_Velocity + M.Angular_Acceleration * DT;
-
-            -- Resolve collision if the entity has a collider
             if S.Has_Component(E, ECS.Components.Collider.Collider_Component'Tag) then
-               Index_C := S.Collider.Lookup (E);
-               C : Collider_Component renames S.Collider.Data (Index_C);
+               declare
+                  Index_C : constant Collider_Table.Index := S.Collider.Lookup(E);
+                  C : Collider_Component renames S.Collider.Data(Index_C);
 
-               Colliders : Entity_ID_Array_Access := S.Get_Entities_With((0 => ECS.Components.Collider.Collider_Component'Tag));
+                  Colliders : Entity_ID_Array_Access :=
+                  S.Get_Entities_With((0 => ECS.Components.Collider.Collider_Component'Tag));
+               begin
+                  -- ALWAYS sync collider before sweep
+                  C.Bounding_Box.Center := T.Position;
 
-               for J in Colliders'Range loop
-                  declare
-                     F : constant Entity_ID := Colliders (J);
-                     New_Fraction: Float := Float'Last;
-                  begin
-                     if E /= F then
-                        Index_D : constant Collider_Table.Index := S.Collider.Lookup (F);
-                        D : Collider_Component renames S.Collider.Data (Index_D);
+                  -- ===== FIRST SWEEP =====
+                  for J in Colliders'Range loop
+                     declare
+                        F : constant Entity_ID := Colliders(J);
+                        New_Fraction : Float := Float'Last;
+                     begin
+                        if E /= F then
+                           declare
+                              Index_D : constant Collider_Table.Index := S.Collider.Lookup(F);
+                              D : Collider_Component renames S.Collider.Data(Index_D);
+                           begin
+                              New_Fraction :=
+                              Collision_Sweep(C.Bounding_Box, D.Bounding_Box, M.Linear_Velocity * DT);
 
-                        -- Check for collision between this entity and the collider in world space along the motion path
-                        New_Fraction := Collision_Sweep(C.Bounding_Box, D.Bounding_Box, M.Linear_Velocity * DT);
-                        if New_Fraction <= 1.0 and New_Fraction < Motion_Fraction then
-                           Collidee := F;
-                           Motion_Fraction := New_Fraction;
-                           Reflection := Reflect(M.Linear_Velocity, Get_Aligned_Normal(D.Bounding_Box, C.Bounding_Box));
+                              if New_Fraction <= 1.0 and then New_Fraction < Motion_Fraction then
+                                 Motion_Fraction := New_Fraction;
+                                 Collidee := F;
+                                 Reflection :=
+                                 Reflect(M.Linear_Velocity,
+                                          Get_Aligned_Normal(D.Bounding_Box, C.Bounding_Box));
+                              end if;
+                           end;
                         end if;
-                     end if;
-                  end;
-               end loop;
+                     end;
+                  end loop;
 
-               if Motion_Fraction <= 1.0 then
-                  C.Collided_Entities.Append(Collidee);
-               end if;
-            end if;
+                  if Motion_Fraction <= 1.0 then
+                     C.Collided_Entities.Append(Collidee);
 
-            -- Simulate bounce collision
-            -- TODO:
-            --		Will need to be adapted to recursively do collision sweeps for the entirety of the motion path.
-            --		i.e. it currently can only bounce one time per frame.
-            if Motion_Fraction <= 1.0 then
-               -- Translate up to moment of collision
-               -- Integrate velocity --> transform
-               T.Position  :=   T.Position + M.Linear_Velocity * DT * Motion_Fraction;
-               -- Then translate remainder using reflection
-               T.Position := T.Position + Reflection * DT * (1.0 - Motion_Fraction);
-               M.Linear_Velocity := Reflection;
+                     -- Move to first collision
+                     T.Position := T.Position + M.Linear_Velocity * DT * Motion_Fraction;
+
+                     -- Remaining time
+                     declare
+                        Remaining : Float := 1.0 - Motion_Fraction;
+                     begin
+                        -- Apply first reflection immediately
+                        M.Linear_Velocity := Reflection;
+
+                        --TODO recursive collision sweeps to entities can collide more than once per frame
+                        -- HACK double sweep collision.
+                        -- Sync collider again
+                        C.Bounding_Box.Center := T.Position;
+                        declare
+                           Second_Fraction : Float := Float'Last;
+                           Second_Hit      : Boolean := False;
+                           Second_Target   : Entity_ID;
+                        begin
+                           for J in Colliders'Range loop
+                              declare
+                                 F : constant Entity_ID := Colliders(J);
+                                 New_Fraction : Float := Float'Last;
+                              begin
+                                 if E /= F then
+                                    declare
+                                       Index_D : constant Collider_Table.Index := S.Collider.Lookup(F);
+                                       D : Collider_Component renames S.Collider.Data(Index_D);
+                                    begin
+                                       New_Fraction :=
+                                       Collision_Sweep(
+                                          C.Bounding_Box,
+                                          D.Bounding_Box,
+                                          M.Linear_Velocity * DT * Remaining
+                                       );
+
+                                       if New_Fraction <= 1.0 and then New_Fraction < Second_Fraction then
+                                          Second_Fraction := New_Fraction;
+                                          Second_Target   := F;
+                                          Second_Hit      := True;
+                                       end if;
+                                    end;
+                                 end if;
+                              end;
+                           end loop;
+
+                           if Second_Hit then
+                              C.Collided_Entities.Append(Second_Target);
+
+                              -- Move to second collision
+                              T.Position :=
+                              T.Position + M.Linear_Velocity * DT * (Remaining * Second_Fraction);
+
+                              -- Reflect AGAIN using current velocity
+                              declare
+                                 Index_D : constant Collider_Table.Index := S.Collider.Lookup(Second_Target);
+                                 D : Collider_Component renames S.Collider.Data(Index_D);
+                              begin
+                                 M.Linear_Velocity :=
+                                 Reflect(M.Linear_Velocity,
+                                          Get_Aligned_Normal(D.Bounding_Box, C.Bounding_Box));
+                              end;
+
+                              Remaining := Remaining * (1.0 - Second_Fraction);
+                           end if;
+
+                           -- Final movement
+                           T.Position := T.Position + M.Linear_Velocity * DT * Remaining;
+                        end;
+                        -- HACK end
+                     end;
+                  else
+                     -- No collision
+                     T.Position := T.Position + M.Linear_Velocity * DT;
+                  end if;
+               end;
             else
-               -- Integrate velocity --> transform
-               T.Position  :=   T.Position + M.Linear_Velocity * DT;
+               -- No collider
+               T.Position := T.Position + M.Linear_Velocity * DT;
             end if;
 
-            -- Integrate and normalize rotation
+            -- Rotation
             T.Rotation := Rotate(T.Rotation, M.Angular_Velocity * DT);
          end;
       end loop;

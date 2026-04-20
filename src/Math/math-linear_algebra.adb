@@ -193,12 +193,24 @@ package body Math.Linear_Algebra is
          N   : Float;
          Min : Float;
          Max : Float
-   )return Float is
+   ) return Float is
       R : constant Float := Max - Min;
       D : constant Float := N - Min;
    begin
       return Min + R * Float'Floor(D / R) * (-1.0) + D;
    end Wrap;
+
+
+   -- Float sign
+   function Sign (
+         N    : Float
+   ) return Float is
+   begin
+      if    N > 0.0 then   return  1.0;
+      elsif N < 0.0 then   return -1.0;
+      else                 return  0.0;
+      end if;
+   end Sign;
 
 
    -- Normalization

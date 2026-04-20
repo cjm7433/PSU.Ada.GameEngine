@@ -141,6 +141,12 @@ package Math.Linear_Algebra is
    ) return Float;
 
 
+   -- Float sign
+   function Sign (
+         N     : Float
+   ) return Float;
+
+
    -- Normalization
    function Normalize (
          V : Vector2
