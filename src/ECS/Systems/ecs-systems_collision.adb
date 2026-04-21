@@ -166,8 +166,7 @@ package body ECS.Systems_Collision is
             -- Signal brick destruction
             if S.Has_Component(E, ECS.Components.Ball.Ball_Component'Tag) then
                if not C.Collided_Entities.Is_Empty then
-                     Update_Score (1);
-                     Play_Audio ("sfx/ball_hit.wav", False, 0.1);
+                    Play_Audio ("sfx/ball_hit.wav", False, 0.1);
                end if;
 
                for J of C.Collided_Entities loop
