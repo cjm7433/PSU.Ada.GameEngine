@@ -193,7 +193,7 @@ package body Window is
 
    function Peek_Message return Boolean is
    begin
-      null;
+    return True;
    end Peek_Message;
 begin
    --  Note: Event manager doesn't need initialization
