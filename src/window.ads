@@ -33,4 +33,6 @@ package Window is
    procedure Free_Window is new Ada.Unchecked_Deallocation
       (Window_T'Class, Window_Access);
 
+   function Peek_Message return Boolean; -- drain all pending platform messages without blocking
+
 end Window;

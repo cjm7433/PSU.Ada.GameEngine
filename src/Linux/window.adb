@@ -191,6 +191,10 @@ package body Window is
       end if;
    end Process_Events;
 
+   function Peek_Message return Boolean is
+   begin
+      null;
+   end Peek_Message;
 begin
    --  Note: Event manager doesn't need initialization
    --  Window context will be initialized when New_Window is called

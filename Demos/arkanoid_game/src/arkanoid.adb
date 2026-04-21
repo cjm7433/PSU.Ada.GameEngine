@@ -453,7 +453,7 @@ begin
          --end loop;
 
          --exit when not Running;
-
+         Running := Peek_Message;
          -- Process platform events (Windows MSG or Wayland events)
          Window.Process_Events;
 
