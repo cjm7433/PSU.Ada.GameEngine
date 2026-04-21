@@ -425,9 +425,9 @@ begin
                         (case Row is
                            when 0 => 80,
                            when 1 => 40,
-                           when 2 => 5,
+                           when 2 => 10,
                            when 3 => 20,
-                           when others => 10
+                           when others => 5
                         );
                   end;
                end if;
