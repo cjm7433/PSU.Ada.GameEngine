@@ -221,7 +221,9 @@ package body ECS.Store is
                   Max_Health  => 1,
                   Points      => 10,
                   Is_Dying    => False,
-                  Death_Timer => 0.0));
+                  Death_Timer => 0.0,
+                  Spawn_Angle => (0.0, 0.0)
+               ));
          end if;
 
       elsif Tag = Render_Component'Tag then

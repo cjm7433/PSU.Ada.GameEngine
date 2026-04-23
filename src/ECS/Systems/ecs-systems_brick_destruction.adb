@@ -19,6 +19,12 @@
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Brick;          use ECS.Components.Brick;
+with ECS.Systems_Collision;
+with ECS.Components.Transform;      use ECS.Components.Transform;
+with ECS.Components.Motion;         use ECS.Components.Motion;
+with ECS.Components.Collider;       use ECS.Components.Collider;
+with ECS.Components.Render;         use ECS.Components.Render;
+with ECS.Components.Ball;           use ECS.Components.Ball;
 
 package body ECS.Systems_Brick_Destruction is
 
@@ -87,8 +93,47 @@ package body ECS.Systems_Brick_Destruction is
                   B.Death_Timer := B.Death_Timer - DT;
 
                   if B.Death_Timer <= 0.0 then
-                     -- TODO: award score from B.Points
-                     -- TODO: spawn power-up if B.Brick_Kind = Special
+                     ECS.Systems_Collision.Update_Score (B.Points);
+
+                     -- Spawn extra ball
+                     if B.Brick_Kind = Special and S.Has_Component (E, ECS.Components.Transform.Transform_Component'Tag) and not Is_Equal_Approximate (B.Spawn_Angle.Length_Squared, 0.0) then
+                        Index_T : constant Transform_Table.Index := S.Transform.Lookup(E);
+                        T : constant Transform_Component := S.Transform.Data(Index_T);
+
+                        Ball_E : Entity_ID := Create_Entity (S);
+
+                        Add_Component (S, Ball_E, Transform_Component'Tag);
+                        Add_Component (S, Ball_E, Motion_Component'Tag);
+                        Add_Component (S, Ball_E, Collider_Component'Tag);
+                        Add_Component (S, Ball_E, Render_Component'Tag);
+                        Add_Component (S, Ball_E, Ball_Component'Tag);
+
+                        S.Transform.Data (S.Transform.Lookup (Ball_E)).Position := T.Position;
+
+                        S.Collider.Data (S.Collider.Lookup (Ball_E)).Bounding_Box :=
+                           (Center    => T.Position,
+                           Half_Size => (X => Float (3),
+                                          Y => Float (3)));
+                        S.Collider.Data (S.Collider.Lookup (Ball_E)).Layer :=
+                           Layer_Ball;
+                        S.Collider.Data (S.Collider.Lookup (Ball_E)).Mask :=
+                           (Layer_Paddle, Layer_Brick, Layer_Wall, Layer_None);
+                        S.Collider.Data (S.Collider.Lookup (Ball_E)).Collider_Form :=
+                           Solid;
+                        S.Collider.Data (S.Collider.Lookup (Ball_E)).Name :=
+                           "BALL";
+
+                        S.Render.Data (S.Render.Lookup (Ball_E)).Shape   := Circle;
+                        S.Render.Data (S.Render.Lookup (Ball_E)).Tint    :=
+                           (R => 0.8, G => 0.8, B => 0.8, A => 1.0);   -- Light Gray
+                        S.Render.Data (S.Render.Lookup (Ball_E)).Layer   := 1;
+                        S.Render.Data (S.Render.Lookup (Ball_E)).Visible := True;
+
+                        S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached     := False;
+                        S.Ball.Data (S.Ball.Lookup (Ball_E)).Attach_Offset_X := 0.0;
+                        S.Motion.Data (S.Motion.Lookup (Ball_E)).Linear_Velocity := -B.Spawn_Angle * S.Ball.Data (S.Ball.Lookup (Ball_E)).Base_Speed / 2.0;
+                     end if;
+
                      To_Destroy (Destroy_Count) := E;
                      Destroy_Count := Destroy_Count + 1;
                   end if;
