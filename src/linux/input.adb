@@ -12,33 +12,42 @@ package body Input is
    -----------------------------------------------------
    procedure Handle_Event (Event : ECS.Event.Event_T) is
       Code : constant ECS.Event.Byte := Event.Data.KeyCode;
+
+      -- Linux keycodes emitted by the Wayland wrapper
+      VK_Left   : constant ECS.Event.Byte := 38;   -- A (endev 30 + 8)
+      VK_Right  : constant ECS.Event.Byte := 40;   -- D (endev 32 + 8)
+      VK_Q      : constant ECS.Event.Byte := 24;   -- Q (endev 16 + 8)
+      VK_Space  : constant ECS.Event.Byte := 64;   -- Spacebar (endev 57 + 8)
+      VK_Escape : constant ECS.Event.Byte := 9;   -- Escape (endev 1 + 8)
+      VK_P      : constant ECS.Event.Byte := 33;   -- P key (endev 25 + 8)
+      VK_F      : constant ECS.Event.Byte := 41;   -- F key (endev 33 + 8)
    begin
       case Event.EventType is
 
          when ECS.Event.KeyDown =>
             -- Held keys: set flag on; cleared by KeyUp
-            if Code in VK_Left | LK_Left then
+            if Code = VK_Left then
                State.Left := True;
-            elsif Code in VK_Right | LK_Right then
+            elsif Code = VK_Right then
                State.Right := True;
             -- One-shot keys: set flag on; cleared by Clear_Frame_Flags
-            elsif Code in VK_Space | LK_Space then
+            elsif Code = VK_Space then
                State.Space := True;
-            elsif Code in VK_Escape | LK_Space then
+            elsif Code = VK_Escape then
                State.Escape := True;
-            elsif Code in VK_P | LK_P then
+            elsif Code = VK_P then
                State.P := True;
-            elsif Code in VK_F | LK_F then
+            elsif Code = VK_F then
                State.F := True;
-            elsif Code in VK_Q | LK_Q then
+            elsif Code = VK_Q then
                State.Q := True;
             end if;
 
          when ECS.Event.KeyUp =>
             -- Only held keys need clearing on release
-            if Code in VK_Left | LK_Left then
+            if Code = VK_Left then
                State.Left := False;
-            elsif Code in VK_Right | LK_Right then
+            elsif Code = VK_Right then
                State.Right := False;
             end if;
 
