@@ -44,7 +44,7 @@ with Graphics.Texture_Loader; use Graphics.Texture_Loader;
 
 -- Window interface (platform-agnostic)
 with Window;                  use Window;
-with Win32;                   use Win32;
+--with Win32;                   use Win32;
 -- Game-side input module
 with Input;
 
@@ -169,8 +169,8 @@ begin
       Brick_E   : Entity_ID;
       Wall_E    : Entity_ID;
 
-      Message   : MSG_Access := new MSG;
-      Lp_Result : LRESULT;
+      --Message   : MSG_Access := new MSG;
+      --Lp_Result : LRESULT;
       Running   : Boolean := True;
       Next_Frame_Time : Time := Clock;
       Background_Image : QOI_Image_Data;
@@ -461,16 +461,16 @@ begin
          Start_Time   := Stop_Time;
 
          -- Drain all pending platform messages without blocking render/update.
-         while Peek_Message (Message, System.Null_Address, 0, 0, PM_REMOVE) loop
-            if Message.Message = WM_QUIT then
-               Running := False;
-               exit;
-            end if;
-            Lp_Result := Dispatch_Message (Message);
-         end loop;
+         --while Peek_Message (Message, System.Null_Address, 0, 0, PM_REMOVE) loop
+         --   if Message.Message = WM_QUIT then
+         --      Running := False;
+         --      exit;
+         --   end if;
+         --   Lp_Result := Dispatch_Message (Message);
+         --end loop;
 
-         exit when not Running;
-
+         --exit when not Running;
+         Running := Peek_Message;
          -- Process platform events (Windows MSG or Wayland events)
          Window.Process_Events;
 

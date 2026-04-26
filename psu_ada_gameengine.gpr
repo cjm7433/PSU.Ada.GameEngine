@@ -20,24 +20,25 @@ project Psu_Ada_Gameengine is
    --  Platform-specific source directories
    case Psu_Ada_Gameengine_Config.Alire_Host_OS is
       when "linux" =>
-         for Source_Dirs use ("src/", "src/ECS/**", "src/Game Config/", 
-                               "src/Graphics/", "src/Math/**",
-                               "src/Linux/", "src/win32/");
+         for Source_Dirs use ("src/", "src/ecs/**", 
+                               "src/graphics/", "src/math/**",
+                               "src/linux/");
       when "windows" =>
-         for Source_Dirs use ("src/", "src/ECS/**", "src/Game Config/", 
-                               "src/Graphics", "src/Math/**", 
-                               "src/Windows/", "src/win32/");
+         for Source_Dirs use ("src/", "src/ECS/**",  
+                               "src/graphics", "src/math/**", 
+                               "src/windows/", "src/win32/");
    end case;
 
    package Compiler is
       for Default_Switches ("Ada") use ("-Og" ,"-gnat2022", "-gnatX0");
+      for Default_Switches ("C") use ("-I/usr/include/spa-0.2");
       --  for Default_Switches ("Ada") use psu_ada_gameengine_config.Ada_Compiler_Switches;
    end Compiler;
 
    package Linker is 
       case Psu_Ada_Gameengine_Config.Alire_Host_OS is
          when "linux" =>
-            for Switches ("ada") use ("-lwayland-client", "-lpipewire-0.3", "-lpwformat");
+            for Switches ("ada") use ("-lwayland-client", "-lpipewire-0.3");
          when "windows" =>
             for Switches ("ada") use ("-lgdi32", "-llargeint", "-lwinmm","-lole32", "-lxaudio2_9");
             for Switches ("c") use ("-lgdi32", "-llargeint", "-lwinmm","-lole32", "-lxaudio2_9");

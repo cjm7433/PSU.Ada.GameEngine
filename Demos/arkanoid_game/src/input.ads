@@ -21,17 +21,13 @@ with ECS.Event; use ECS.Event;
 
 package Input is
 
-   -- -----------------------------------------------------------------------
-   -- Win32 Virtual Key constants for the keys Arkanoid cares about.
-   -- Source: https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-   -- -----------------------------------------------------------------------
-   VK_Left   : constant ECS.Event.Byte := 16#41#;   -- A
-   VK_Right  : constant ECS.Event.Byte := 16#44#;   -- D
-   VK_Q      : constant ECS.Event.Byte := 16#51#;   -- Q
-   VK_Space  : constant ECS.Event.Byte := 16#20#;   -- Spacebar
-   VK_Escape : constant ECS.Event.Byte := 16#1B#;   -- Escape
-   VK_P      : constant ECS.Event.Byte := 16#50#;   -- P key
-   VK_F      : constant ECS.Event.Byte := 16#46#;   -- F key
+   VK_Left   : constant ECS.Event.Byte := 0;
+   VK_Right  : constant ECS.Event.Byte := 0;
+   VK_Q      : constant ECS.Event.Byte := 0; 
+   VK_Space  : constant ECS.Event.Byte := 0;
+   VK_Escape : constant ECS.Event.Byte := 0;
+   VK_P      : constant ECS.Event.Byte := 0;
+   VK_F      : constant ECS.Event.Byte := 0;
 
    -- -----------------------------------------------------------------------
    -- Input_State

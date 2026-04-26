@@ -1,9 +1,3 @@
---  ============================================================
---  Wayland Wrapper - Ada Bindings
---  ============================================================
---  Simple Ada interface to the C Wayland wrapper
---  ============================================================
-
 with Interfaces.C;
 with Interfaces.C.Strings;
 with System;
@@ -56,10 +50,13 @@ package Wayland_Wrapper is
    --  Wayland_Update_Buffer
    --  =========================================================
    --  Copies pixel data from source buffer to Wayland window
-   --  and commits the surface to display changes.
-   --  =========================================================
+   --  and commits the surface to display changes. Accepts source
+   --  dimensions to allow safe copying when source and window sizes
+   --  differ.
    procedure Wayland_Update_Buffer (Ctx : Window_Context; 
-                                     Buffer : System.Address);
+                                     Buffer : System.Address;
+                                     Src_Width : int;
+                                     Src_Height : int);
    pragma Import (C, Wayland_Update_Buffer,
                   "wayland_update_buffer");
 

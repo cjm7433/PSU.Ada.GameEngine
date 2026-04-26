@@ -379,4 +379,17 @@ package body Window is
       null;  --  Windows processes events through Get_Message/Dispatch_Message
    end Process_Events;
 
+   function Peek_Message return Boolean is
+      Message : MSG_Access := new MSG;
+      Lp_Result : LRESULT;
+   begin
+      while Win32.Peek_Message(Message, System.Null_Address, 0, 0, PM_REMOVE) loop
+         if Message.Message = WM_QUIT then
+            return False;
+         end if;
+         Lp_Result := Win32.Dispatch_Message (Message);
+      end loop;
+      return True;
+   end Peek_Message;
+
 end Window;

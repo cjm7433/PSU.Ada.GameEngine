@@ -3,6 +3,7 @@ with Ada.Containers.Vectors;
 with Ada.Unchecked_Deallocation;
 with Ada.Text_IO;
 with Ada.Exceptions;
+with Ada.Real_Time; use Ada.Real_Time;
 with Interfaces.C;
 with System;
 with System.Address_To_Access_Conversions;
@@ -147,6 +148,8 @@ package body Audio is
    Events : aliased pw_stream_events;
    Format : System.Address;
    PW_VERSION_STREAM_EVENTS : constant := 2;
+   Last_Play_Time : Time := Clock - Milliseconds (100);
+   Max_Sounds : constant Natural := 4;
 
    task Audio_Thread is
       pragma Priority (System.Priority'Last); -- High priority
@@ -196,8 +199,7 @@ package body Audio is
                      -- Wrap back to start
                      Snd.Cursor := 1;
                   else
-                     Snd.Cursor := Snd.Audio'Length + 1;
-                     Active_Sounds.Replace_Element (I, Snd);
+                     Active_Sounds.Delete(I);
                      Left  := Interfaces.C.short (Sample_L);
                      Right := Interfaces.C.short (Sample_R);
                      return;
@@ -323,7 +325,7 @@ package body Audio is
          Data_Ptr.chunk.size   := Unsigned_32 (Actual_Frames * 4);
          Data_Ptr.chunk.stride := 4;
       end;
-
+      
       Dummy := pw_stream_queue_buffer (Stream, Buf);
    exception
       when E : others =>
@@ -477,6 +479,20 @@ package body Audio is
       end Align2;
 
    begin
+      declare
+         Now : constant Time := Clock;
+      begin
+         if Now - Last_Play_Time < Milliseconds (100) then
+            return;
+         end if;
+
+         Last_Play_Time := Now;
+      end;
+
+      if Natural (Active_Sounds.Length) >= Max_Sounds then
+         return;
+      end if;
+
       Ada.Streams.Stream_IO.Open
         (File, Ada.Streams.Stream_IO.In_File, Filename);
 
