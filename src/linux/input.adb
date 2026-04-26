@@ -17,7 +17,7 @@ package body Input is
       VK_Left   : constant ECS.Event.Byte := 38;   -- A (endev 30 + 8)
       VK_Right  : constant ECS.Event.Byte := 40;   -- D (endev 32 + 8)
       VK_Q      : constant ECS.Event.Byte := 24;   -- Q (endev 16 + 8)
-      VK_Space  : constant ECS.Event.Byte := 64;   -- Spacebar (endev 57 + 8)
+      VK_Space  : constant ECS.Event.Byte := 65;   -- Spacebar (endev 57 + 8)
       VK_Escape : constant ECS.Event.Byte := 9;   -- Escape (endev 1 + 8)
       VK_P      : constant ECS.Event.Byte := 33;   -- P key (endev 25 + 8)
       VK_F      : constant ECS.Event.Byte := 41;   -- F key (endev 33 + 8)
