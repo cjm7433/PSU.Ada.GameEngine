@@ -1,2 +1,0 @@
-package Math is
-end;
