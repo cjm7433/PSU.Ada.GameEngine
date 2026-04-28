@@ -25,6 +25,7 @@ with ECS.Systems_Ball_Physics; use ECS.Systems_Ball_Physics;
 with ECS.Systems_Collision;   use ECS.Systems_Collision;
 with ECS.Systems_Brick_Destruction; use ECS.Systems_Brick_Destruction;
 with ECS.Systems_Paddle_Control; use ECS.Systems_Paddle_Control;
+with ECS.Systems_Audio;        use ECS.Systems_Audio;
 -- Component types (needed for direct field access through Store)
 with ECS.Components.Transform; use ECS.Components.Transform;
 with ECS.Components.Motion;    use ECS.Components.Motion;
@@ -335,6 +336,10 @@ begin
          S.Render.Data (S.Render.Lookup (Ball_E)).Layer   := 1;
          S.Render.Data (S.Render.Lookup (Ball_E)).Visible := True;
 
+         S.Audio.Data (S.Audio.Lookup (Ball_E)).File_Path := To_Unbounded_String("sfx/ball_hit.wav");
+         S.Audio.Data (S.Audio.Lookup (Ball_E)).Volume := 0.1;
+         S.Audio.Data (S.Audio.Lookup (Ball_E)).Playing := False;
+
          -- Ball starts attached; velocity is zero until Space is pressed
          S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached     := True;
          S.Ball.Data (S.Ball.Lookup (Ball_E)).Attach_Offset_X := 0.0;
@@ -432,6 +437,10 @@ begin
                            when 3 => 20,
                            when others => 5
                         );
+                    
+                    S.Audio.Data (S.Audio.Lookup (Brick_E)).File_Path := To_Unbounded_String("sfx/Arkanoid SFX (2).wav");
+                    S.Audio.Data (S.Audio.Lookup (Brick_E)).Volume := 0.1;
+                    S.Audio.Data (S.Audio.Lookup (Brick_E)).Playing := False;
                   end;
                end if;
             end loop;
@@ -449,6 +458,7 @@ begin
       ECS.Manager.Add_System (Manager, new Collision_System);
       ECS.Manager.Add_System (Manager, new Brick_Destruction_System);
       ECS.Manager.Add_System (Manager, new Paddle_Control_System);
+      ECS.Manager.Add_System (Manager, new Audio_System);
 
       -- Build the initial scene
       Reset_World;

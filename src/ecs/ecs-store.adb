@@ -255,7 +255,8 @@ package body ECS.Store is
             S.Audio.Data.Append
             (Audio_Component'
                (  File_Path   => To_Unbounded_String ("sfx/"),
-                  Volume      => 0.1));
+                  Volume      => 0.1,
+                  Playing     => False));
          end if;
 
       -- TODO: Add Component Types here
