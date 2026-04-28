@@ -3,7 +3,6 @@ with Ada.Containers.Vectors;
 with Ada.Unchecked_Deallocation;
 with Ada.Text_IO;
 with Ada.Exceptions;
-with Ada.Real_Time; use Ada.Real_Time;
 with Interfaces.C;
 with System;
 with System.Address_To_Access_Conversions;
@@ -148,8 +147,8 @@ package body Audio is
    Events : aliased pw_stream_events;
    Format : System.Address;
    PW_VERSION_STREAM_EVENTS : constant := 2;
-   Last_Play_Time : Time := Clock - Milliseconds (100);
-   Max_Sounds : constant Natural := 4;
+   Max_Sounds : constant Natural := 16;
+   Max : constant Natural := 256;
 
    task Audio_Thread is
       pragma Priority (System.Priority'Last); -- High priority
@@ -170,6 +169,52 @@ package body Audio is
       Looping         : Boolean := False;
       Volume          : Float   := 1.0;
    end record;
+
+   type Sound_Request is record
+      Audio           : Byte_Array_Access;
+      Channels        : Natural;
+      Bits_Per_Sample : Natural;
+      Looping         : Boolean;
+      Volume          : Float;
+   end record;
+
+   type Request_Array is array (Natural range 0 .. Max - 1) of Sound_Request;
+
+   protected Sound_Queue is
+      procedure Push (S : Sound_Request);
+      procedure Pop (S : out Sound_Request; Success : out Boolean);
+   private
+      Buffer : Request_Array;
+      Head   : Natural := 0;
+      Tail   : Natural := 0;
+      Count  : Natural := 0;
+   end Sound_Queue;
+
+   protected body Sound_Queue is
+
+      procedure Push (S : Sound_Request) is
+      begin
+         if Count < Max then
+            Buffer (Tail) := S;
+            Tail := (Tail + 1) mod Max;
+            Count := Count + 1;
+         end if;
+      end Push;
+
+      procedure Pop (S : out Sound_Request; Success : out Boolean) is
+      begin
+         if Count = 0 then
+            Success := False;
+            return;
+         end if;
+
+         S := Buffer (Head);
+         Head := (Head + 1) mod Max;
+         Count := Count - 1;
+         Success := True;
+      end Pop;
+
+   end Sound_Queue;
 
    package Sound_List is new Ada.Containers.Vectors
       (Index_Type   => Natural,
@@ -308,6 +353,26 @@ package body Audio is
 
          Samples : Sample_Conv.Object_Pointer := Sample_Conv.To_Pointer (Data_Ptr.data);
       begin
+         declare
+            Req     : Sound_Request;
+            Success : Boolean;
+         begin
+            loop
+               Sound_Queue.Pop (Req, Success);
+               exit when not Success;
+
+               Active_Sounds.Append
+               (Active_Sound'(
+                  Audio           => Req.Audio,
+                  Cursor          => 1,
+                  Channels        => Req.Channels,
+                  Bits_Per_Sample => Req.Bits_Per_Sample,
+                  Looping         => Req.Looping,
+                  Volume          => Req.Volume
+                  ));
+            end loop;
+         end;
+
          if Actual_Frames > 0 then
             for Frame in 0 .. Actual_Frames - 1 loop
                declare
@@ -319,6 +384,12 @@ package body Audio is
                end;
             end loop;
          end if;
+         
+         for I in reverse Active_Sounds.First_Index .. Active_Sounds.Last_Index loop
+            if Active_Sounds (I).Audio = null then
+               Active_Sounds.Delete (I);
+            end if;
+         end loop;
 
          -- Update chunk metadata
          Data_Ptr.chunk.offset := 0;
@@ -479,16 +550,6 @@ package body Audio is
       end Align2;
 
    begin
-      declare
-         Now : constant Time := Clock;
-      begin
-         if Now - Last_Play_Time < Milliseconds (100) then
-            return;
-         end if;
-
-         Last_Play_Time := Now;
-      end;
-
       if Natural (Active_Sounds.Length) >= Max_Sounds then
          return;
       end if;
@@ -531,15 +592,17 @@ package body Audio is
          raise Program_Error with "Only PCM WAV supported";
       end if;
 
-      Active_Sounds.Append
-      (Active_Sound'(
-         Audio => Audio,
-         Cursor => 1,
-         Channels => Natural (FMT.Channels),
-         Bits_Per_Sample => Natural (FMT.Bits),
-         Looping         => Looping,
-         Volume          => Volume
-      ));
+      declare
+         Req : Sound_Request;
+      begin
+         Req.Audio           := Audio;
+         Req.Channels        := Natural (FMT.Channels);
+         Req.Bits_Per_Sample := Natural (FMT.Bits);
+         Req.Looping         := Looping;
+         Req.Volume          := Volume;
+
+         Sound_Queue.Push (Req);
+      end;
 
    end Play_Audio;
 
