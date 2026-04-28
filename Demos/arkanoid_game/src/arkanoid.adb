@@ -344,10 +344,10 @@ begin
          -- 8 columns x 6 rows; each row has a distinct color and strength.
          --
          -- Row colors and health (top to bottom):
-         --   Row 0 - Red,    Strong (2 hp)
-         --   Row 1 - Orange, Normal (1 hp)
-         --   Row 2 - Yellow, Normal (1 hp)
-         --   Row 3 - Green,  Normal (1 hp)
+         --   Row 0 - Red,    Strong (4 hp)
+         --   Row 1 - Orange, Strong (3 hp)
+         --   Row 2 - Yellow, Special (1 hp)
+         --   Row 3 - Green,  Normal (2 hp)
          --   Row 4 - Cyan,   Normal (1 hp)
          --   Row 5 - Blue,   Normal (1 hp)
          -- ==================================================================
