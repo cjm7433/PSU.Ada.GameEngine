@@ -14,6 +14,7 @@
 
 with Ada.Text_IO;    use Ada.Text_IO;     -- printing exceptions instead of crashing
 with Ada.Tags;       use type Ada.Tags.Tag;
+with Ada.Strings.Unbounded;      use Ada.Strings.Unbounded;
 
 
 package body ECS.Store is
@@ -54,6 +55,9 @@ package body ECS.Store is
 
       S.Brick.Data.Clear;
       S.Brick.Lookup.Clear;
+
+      S.Audio.Data.Clear;
+      S.Audio.Lookup.Clear;
 
       -- TODO: Add Component Types here
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
@@ -116,6 +120,10 @@ package body ECS.Store is
 
       if S.Render.Lookup.Contains (ID) then
          Render_Table.Remove (S.Render, ID);
+      end if;
+
+      if S.Audio.Lookup.Contains (ID) then
+         Audio_Table.Remove (S.Audio, ID);
       end if;
 
       -- TODO: Add Component Types here
@@ -238,6 +246,17 @@ package body ECS.Store is
                   Layer   => 0,
                   Visible => True));
          end if;
+      
+      elsif Tag = Audio_Component'Tag then
+         if not S.Audio.Lookup.Contains (E) then
+            S.Audio.Lookup.Insert
+               (E, Audio_Table.Index (S.Audio.Data.Length));
+
+            S.Audio.Data.Append
+            (Audio_Component'
+               (  File_Path   => To_Unbounded_String ("sfx/"),
+                  Volume      => 0.1));
+         end if;
 
       -- TODO: Add Component Types here
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
@@ -307,6 +326,11 @@ package body ECS.Store is
          if S.Render.Lookup.Contains (E) then
             Render_Table.Remove (S.Render, E);
          end if;
+      
+      elsif Tag = Audio_Component'Tag then
+         if S.Audio.Lookup.Contains (E) then
+            Audio_Table.Remove (S.Audio, E);
+         end if;
 
       -- TODO: Add other Component types here!
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
@@ -350,6 +374,9 @@ package body ECS.Store is
       elsif Tag = Render_Component'Tag then
          return S.Render.Lookup.Contains (E);
 
+      elsif Tag = Audio_Component'Tag then
+         return S.Audio.Lookup.Contains (E);
+
       -- TODO: Add other Component types here!
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
 
@@ -391,6 +418,9 @@ package body ECS.Store is
 
       elsif Tag = Render_Component'Tag then
          return S.Render.Data(S.Render.Lookup (E));
+
+      elsif Tag = Audio_Component'Tag then
+         return S.Audio.Data(S.Audio.Lookup (E));
 
       -- TODO: Add other Component types here!
       -- TODO: Can we avoid this manual Component Type input? (generic/automate?)
@@ -691,6 +721,29 @@ package body ECS.Store is
                return Result;
             end;
          end;
+      
+      elsif Tag = Audio_Component'Tag then
+         declare
+            Count : constant Natural := Natural (S.Audio.Lookup.Length);
+         begin
+            if Count = 0 then
+               return null;
+            end if;
+            
+            declare
+               Result : Entity_ID_Array_Access := new Entity_ID_Array (0 .. Count - 1);
+               Index  : Natural := 0;
+               Cursor : Audio_Table.Lookup_Map.Cursor := S.Audio.Lookup.First;
+            begin
+               while Audio_Table.Lookup_Map.Has_Element (Cursor) loop
+                  Result (Index) := Audio_Table.Lookup_Map.Key (Cursor);
+                  Index := Index + 1;
+                  Cursor := Audio_Table.Lookup_Map.Next (Cursor);
+               end loop;
+               
+               return Result;
+            end;
+         end;
 
       else
          return null;  -- Unknown component type
@@ -736,6 +789,9 @@ package body ECS.Store is
 
       elsif Tag = Render_Component'Tag then
          return Natural (S.Render.Lookup.Length);
+
+      elsif Tag = Audio_Component'Tag then
+         return Natural (S.Audio.Lookup.Length);
 
       -- TODO: Add Component Types here
       

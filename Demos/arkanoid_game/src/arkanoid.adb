@@ -33,6 +33,7 @@ with ECS.Components.Render;    use ECS.Components.Render;
 with ECS.Components.Paddle;    use ECS.Components.Paddle;
 with ECS.Components.Ball;      use ECS.Components.Ball;
 with ECS.Components.Brick;     use ECS.Components.Brick;
+with ECS.Components.Audio;     use ECS.Components.Audio;
 
 with Audio;                   use Audio;
 with Math.Linear_Algebra;     use Math.Linear_Algebra;
@@ -310,6 +311,7 @@ begin
          Add_Component (S, Ball_E, Collider_Component'Tag);
          Add_Component (S, Ball_E, Render_Component'Tag);
          Add_Component (S, Ball_E, Ball_Component'Tag);
+         Add_Component (S, Ball_E, Audio_Component'Tag);
 
          S.Transform.Data (S.Transform.Lookup (Ball_E)).Position :=
             (X => Ball_Start_X, Y => Ball_Start_Y);
@@ -360,6 +362,7 @@ begin
                   Add_Component (S, Brick_E, Collider_Component'Tag);
                   Add_Component (S, Brick_E, Render_Component'Tag);
                   Add_Component (S, Brick_E, Brick_Component'Tag);
+                  Add_Component (S, Brick_E, Audio_Component'Tag);
 
                   declare
                      BX : constant Integer :=

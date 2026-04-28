@@ -27,6 +27,7 @@ with ECS.Components.Render;         use ECS.Components.Render;
 with ECS.Components.Paddle;         use ECS.Components.Paddle;
 with ECS.Components.Ball;           use ECS.Components.Ball;
 with ECS.Components.Brick;          use ECS.Components.Brick;
+with ECS.Components.Audio;          use ECS.Components.Audio;
 
 
 package ECS.Store is
@@ -72,6 +73,10 @@ package ECS.Store is
       (Component_Type   => Brick_Component,
       Hash           => Hash_Entity_ID);
 
+   package Audio_Table is new Component_Table
+      (Component_Type   => Audio_Component,
+      Hash           => Hash_Entity_ID);
+
    -- Tables for each Component type need to be added here
    -- TODO: Add other Component Types here!
 
@@ -96,6 +101,7 @@ package ECS.Store is
       Paddle      : Paddle_Table.Table;
       Ball        : Ball_Table.Table;
       Brick       : Brick_Table.Table;
+      Audio       : Audio_Table.Table;
 
       -- TODO: Add Component tables for each Component type here!
 
