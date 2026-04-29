@@ -28,6 +28,7 @@
 --     the corner-sticking behaviour entirely.
 
 with Ada.Containers;
+with ECS.Components.Audio;
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Transform;      use ECS.Components.Transform;
@@ -36,6 +37,7 @@ with ECS.Components.Collider;       use ECS.Components.Collider;
 with ECS.Components.Ball;           use ECS.Components.Ball;
 with ECS.Components.Brick;          use ECS.Components.Brick;
 with ECS.Components.Paddle;         use ECS.Components.Paddle;
+with ECS.Components.Audio;          use ECS.Components.Audio;
 with Math.Linear_Algebra;           use Math.Linear_Algebra;
 with Math.Physics;                  use Math.Physics;
 with Audio;                         use Audio;
@@ -112,7 +114,12 @@ package body ECS.Systems_Collision is
 
          if B.Health = 0 then
             B.Is_Dying := True;
-            Play_Audio("sfx/Arkanoid SFX (2).wav", False, 0.1);
+
+            if S.Has_Component(Brick_Entity, ECS.Components.Audio.Audio_Component'Tag) then
+               Index_A : constant Natural := S.Audio.Lookup (Brick_Entity);
+               A : Audio_Component renames S.Audio.Data (Index_A);
+               A.Playing := True;
+            end if;
          end if;
       end if;
 
@@ -165,8 +172,10 @@ package body ECS.Systems_Collision is
 
             -- Signal brick destruction
             if S.Has_Component(E, ECS.Components.Ball.Ball_Component'Tag) then
-               if not C.Collided_Entities.Is_Empty then
-                    Play_Audio ("sfx/ball_hit.wav", False, 0.1);
+               if not C.Collided_Entities.Is_Empty and S.Has_Component(E, ECS.Components.Audio.Audio_Component'Tag) then
+                  Index_A : constant Natural := S.Audio.Lookup (E);
+                  A : Audio_Component renames S.Audio.Data (Index_A);
+                  A.Playing := True;
                end if;
 
                for J of C.Collided_Entities loop

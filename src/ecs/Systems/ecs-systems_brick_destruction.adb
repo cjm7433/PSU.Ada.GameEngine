@@ -15,7 +15,7 @@
 --             whose timers have expired into a local To_Destroy array.
 --     Pass 2: after the loop finishes (all renames released), destroy
 --             each collected entity.
-
+with Ada.Strings.Unbounded;         use Ada.Strings.Unbounded;
 with ECS.Store;                     use ECS.Store;
 with ECS.Entities;                  use ECS.Entities;
 with ECS.Components.Brick;          use ECS.Components.Brick;
@@ -25,6 +25,7 @@ with ECS.Components.Motion;         use ECS.Components.Motion;
 with ECS.Components.Collider;       use ECS.Components.Collider;
 with ECS.Components.Render;         use ECS.Components.Render;
 with ECS.Components.Ball;           use ECS.Components.Ball;
+with ECS.Components.Audio;          use ECS.Components.Audio;
 
 package body ECS.Systems_Brick_Destruction is
 
@@ -107,6 +108,7 @@ package body ECS.Systems_Brick_Destruction is
                         Add_Component (S, Ball_E, Collider_Component'Tag);
                         Add_Component (S, Ball_E, Render_Component'Tag);
                         Add_Component (S, Ball_E, Ball_Component'Tag);
+                        Add_Component (S, Ball_E, Audio_Component'Tag);
 
                         S.Transform.Data (S.Transform.Lookup (Ball_E)).Position := T.Position;
 
@@ -128,6 +130,10 @@ package body ECS.Systems_Brick_Destruction is
                            (R => 0.8, G => 0.8, B => 0.8, A => 1.0);   -- Light Gray
                         S.Render.Data (S.Render.Lookup (Ball_E)).Layer   := 1;
                         S.Render.Data (S.Render.Lookup (Ball_E)).Visible := True;
+
+                        S.Audio.Data (S.Audio.Lookup (Ball_E)).File_Path := To_Unbounded_String("sfx/ball_hit.wav");
+                        S.Audio.Data (S.Audio.Lookup (Ball_E)).Volume := 0.075;
+                        S.Audio.Data (S.Audio.Lookup (Ball_E)).Playing := False;
 
                         S.Ball.Data (S.Ball.Lookup (Ball_E)).Is_Attached     := False;
                         S.Ball.Data (S.Ball.Lookup (Ball_E)).Attach_Offset_X := 0.0;
