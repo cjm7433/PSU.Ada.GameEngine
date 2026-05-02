@@ -1,3 +1,8 @@
+-- audio.adb
+--
+-- This package provides an interface for playing audio 
+-- using the PipeWire API on Linux.
+
 with Ada.Streams.Stream_IO;
 with Ada.Containers.Vectors;
 with Ada.Unchecked_Deallocation;
@@ -14,6 +19,8 @@ package body Audio is
    use Ada.Text_IO;
    use System;
 
+   -- Types for PipeWire structures
+
    type pw_main_loop is limited null record;
    type pw_loop      is limited null record;
    type pw_context   is limited null record;
@@ -23,6 +30,8 @@ package body Audio is
    type pw_loop_access      is access all pw_loop;
    type pw_context_access   is access all pw_context;
    type pw_stream_access    is access all pw_stream;
+
+   -- Structures for buffers and metadata
 
    type spa_chunk is record
       offset : Unsigned_32;
@@ -73,25 +82,33 @@ package body Audio is
 
    package Sample_Conv is new System.Address_To_Access_Conversions (Sample_Array_Unbounded);
 
+   -- C function imports for PipeWire API
+
+   -- pw_init initializes the PipeWire library
    function pw_init (argc : access Integer; argv : System.Address) return Integer;
    pragma Import (C, pw_init, "pw_init");
 
+   -- pw_main_loop_new creates a new main loop for PipeWire
    function pw_main_loop_new (props : System.Address) return pw_main_loop_access;
    pragma Import (C, pw_main_loop_new, "pw_main_loop_new");
 
+   -- pw_main_loop_get_loop retrieves the underlying loop from the main loop
    function pw_main_loop_get_loop (ml : pw_main_loop_access)
      return pw_loop_access;
    pragma Import (C, pw_main_loop_get_loop, "pw_main_loop_get_loop");
 
+   -- pw_context_new creates a new PipeWire context associated with the given loop
    function pw_context_new
      (ml    : pw_loop_access;
       props : System.Address;
       size  : Integer) return pw_context_access;
    pragma Import (C, pw_context_new, "pw_context_new");
 
+   -- Callback type for stream processing
    type Process_Callback is access procedure (userdata : System.Address);
    pragma Convention (C, Process_Callback);
 
+   -- pw_stream_events defines the callbacks for processing audio streams
    type pw_stream_events is record
       version        : Unsigned_32;
       destroy        : System.Address := System.Null_Address;
@@ -108,6 +125,7 @@ package body Audio is
    end record;
    pragma Convention (C, pw_stream_events);
 
+   -- pw_stream_new_simple creates a new audio stream
    function pw_stream_new_simple
       (pw_lp  : pw_loop_access;
       name   : System.Address;
@@ -117,6 +135,7 @@ package body Audio is
       return pw_stream_access;
    pragma Import (C, pw_stream_new_simple, "pw_stream_new_simple");
 
+   -- pw_stream_connect connects the stream to the audio server
    function pw_stream_connect
       (stream    : pw_stream_access;
       direction : Integer;
@@ -126,18 +145,22 @@ package body Audio is
       n_params  : Integer) return Integer;
    pragma Import (C, pw_stream_connect, "pw_stream_connect");
 
+   -- pw_stream_dequeue_buffer retrieves a buffer for writing audio data
    function pw_stream_dequeue_buffer (s : pw_stream_access)
      return pw_buffer_access;
    pragma Import (C, pw_stream_dequeue_buffer, "pw_stream_dequeue_buffer");
 
+   -- pw_stream_queue_buffer submits a filled buffer back to the stream for playback
    function pw_stream_queue_buffer
       (s : pw_stream_access;
       b : pw_buffer_access) return Integer;
    pragma Import (C, pw_stream_queue_buffer, "pw_stream_queue_buffer");
 
+   -- pw_main_loop_run starts the main loop, processing events and audio callbacks
    function pw_main_loop_run (ml : pw_main_loop_access) return Integer;
    pragma Import (C, pw_main_loop_run, "pw_main_loop_run");
 
+   -- Build_Audio_Format constructs the audio format description for the stream
    function Build_Audio_Format return System.Address;
    pragma Import (C, Build_Audio_Format, "build_audio_format");
 
@@ -170,6 +193,8 @@ package body Audio is
       Volume          : Float   := 1.0;
    end record;
 
+   -- Main loop requests sounds to play by pushing them into a thread-safe queue,
+   -- which the audio thread will consume in its callback
    type Sound_Request is record
       Audio           : Byte_Array_Access;
       Channels        : Natural;
@@ -180,6 +205,8 @@ package body Audio is
 
    type Request_Array is array (Natural range 0 .. Max - 1) of Sound_Request;
 
+   -- Sound_Queue is a simple circular buffer for passing sound requests
+   -- from the main thread to the audio thread
    protected Sound_Queue is
       procedure Push (S : Sound_Request);
       procedure Pop (S : out Sound_Request; Success : out Boolean);
@@ -222,6 +249,8 @@ package body Audio is
 
    Active_Sounds : Sound_List.Vector;
 
+   -- Mix_Sample reads the current sample from all active sounds, mixes them together,
+   -- and outputs the final left and right sample values
    procedure Mix_Sample
    (Left  : out Interfaces.C.short;
    Right : out Interfaces.C.short) is
@@ -238,12 +267,14 @@ package body Audio is
          begin
             if Snd.Audio /= null then
 
+               -- Check if we've reached the end of the audio data
                if Snd.Cursor + Frame_Size - 1 > Snd.Audio'Length then
 
                   if Snd.Looping then
                      -- Wrap back to start
                      Snd.Cursor := 1;
                   else
+                     -- Sound finished, remove from active list
                      Active_Sounds.Delete(I);
                      Left  := Interfaces.C.short (Sample_L);
                      Right := Interfaces.C.short (Sample_R);
@@ -285,6 +316,7 @@ package body Audio is
                         declare
                            V : constant Float := Snd.Volume;
                         begin
+                           -- Apply volume and mix into final sample
                            Sample_L := Sample_L + Integer (Float (L) * V);
                            Sample_R := Sample_R + Integer (Float (R) * V);
                         end;
@@ -321,6 +353,8 @@ package body Audio is
    procedure On_Process (userdata : System.Address);
    pragma Convention (C, On_Process);
 
+   -- On_Process is the callback that gets called by PipeWire 
+   -- when it needs more audio data.
    procedure On_Process (userdata : System.Address) is
       Buf     : pw_buffer_access;
       SpaBuf  : access spa_buffer;
@@ -331,12 +365,14 @@ package body Audio is
       if Buf = null then return; end if;
 
       SpaBuf := Buf.buffer;
+      -- If the buffer has no data slots, just queue it back and wait
       if SpaBuf = null or else SpaBuf.n_datas = 0 then
          Dummy := pw_stream_queue_buffer (Stream, Buf);
          return;
       end if;
 
       Data_Ptr := SpaBuf.datas;
+      -- If the data pointer is null, we can't write audio, so just queue it back
       if Data_Ptr = null or else Data_Ptr.data = System.Null_Address then
          Dummy := pw_stream_queue_buffer (Stream, Buf);
          return;
@@ -373,6 +409,7 @@ package body Audio is
             end loop;
          end;
 
+         -- Mix audio samples from all active sounds into the output buffer
          if Actual_Frames > 0 then
             for Frame in 0 .. Actual_Frames - 1 loop
                declare
@@ -385,6 +422,7 @@ package body Audio is
             end loop;
          end if;
          
+         -- Remove any sounds that have finished playing (Audio = null)
          for I in reverse Active_Sounds.First_Index .. Active_Sounds.Last_Index loop
             if Active_Sounds (I).Audio = null then
                Active_Sounds.Delete (I);
@@ -397,12 +435,15 @@ package body Audio is
          Data_Ptr.chunk.stride := 4;
       end;
       
+      -- Queue the filled buffer back to PipeWire for playback
       Dummy := pw_stream_queue_buffer (Stream, Buf);
    exception
       when E : others =>
          Put_Line ("Exception in On_Process: " & Ada.Exceptions.Exception_Information (E));
    end On_Process;
 
+   -- Initialize sets up the PipeWire context, main loop, 
+   -- and audio stream, and starts the audio thread
    procedure Initialize is
       Argc  : aliased Integer := 0;
       Dummy : Integer;
@@ -485,6 +526,8 @@ package body Audio is
 
    end Initialize;
 
+   -- Audio_Thread runs the PipeWire main loop, which will call the On_Process callback
+   -- whenever it needs more audio data to play
    task body Audio_Thread is
       Dummy : Integer;
    begin
@@ -496,6 +539,7 @@ package body Audio is
       end if;
    end Audio_Thread;
 
+   -- Play_Audio is called by the main thread to request a sound to be played
    procedure Play_Audio (Filename : String; Looping : Boolean; Volume   : Float := 1.0) is
       File : Ada.Streams.Stream_IO.File_Type;
       Str  : access Ada.Streams.Root_Stream_Type'Class;
@@ -529,6 +573,7 @@ package body Audio is
       FMT   : FMT_Header;
       Audio : Byte_Array_Access := null;
 
+      -- Helper procedure to skip over unwanted bytes in the stream
       procedure Skip_Bytes (Count : Natural) is
          use Ada.Streams;
          Dummy : Stream_Element_Array
@@ -540,6 +585,7 @@ package body Audio is
          end if;
       end Skip_Bytes;
 
+      -- Helper function to align chunk sizes to 2 bytes, as required by WAV
       function Align2 (V : Natural) return Natural is
       begin
          if (V mod 2) = 1 then
@@ -550,6 +596,7 @@ package body Audio is
       end Align2;
 
    begin
+      -- Prevent too many simultaneous sounds from being played
       if Natural (Active_Sounds.Length) >= Max_Sounds then
          return;
       end if;
@@ -606,8 +653,14 @@ package body Audio is
 
    end Play_Audio;
 
+   -- Update procedure for cleaning up finished sounds
+   -- Not necessary in Linux implementation since we 
+   -- remove finished sounds in the On_Process callback
    procedure Update is null;
 
+   -- Finalize procedure to clean up the PipeWire context and main loop
+   -- Not used in Linux implementation since we 
+   -- rely on the OS to clean up resources on exit
    procedure Finalize is null;
 
 end Audio;

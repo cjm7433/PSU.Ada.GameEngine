@@ -1,3 +1,8 @@
+-- audio.adb
+--
+-- This package provides an interface for playing audio 
+-- using the XAudio2 API on Windows.
+
 with Ada.Text_IO;
 with Ada.Streams.Stream_IO;
 with Ada.Containers.Vectors;
@@ -24,18 +29,21 @@ package body Audio is
    type Padding_Array is array (1 .. 18) of System.Address;
    pragma Convention (C, Padding_Array);
 
-   -- COM
+   -- COM initialization should be called before using any COM interfaces
    function CoInitializeEx
      (Reserved : System.Address;
       Flags    : UINT32) return HRESULT;
    pragma Import (Stdcall, CoInitializeEx, "CoInitializeEx");
 
+   -- COM uninitialization should be called when the program is done using COM interfaces
    procedure CoUninitialize;
    pragma Import (Stdcall, CoUninitialize, "CoUninitialize");
 
    COINIT_MULTITHREADED : constant UINT32 := 0;
 
    -- XAudio2 structs
+
+   -- WAVEFORMATEX describes the format of the PCM data being submitted
    type WAVEFORMATEX is record
       wFormatTag      : UINT16;
       nChannels       : UINT16;
@@ -47,6 +55,7 @@ package body Audio is
    end record;
    pragma Convention (C, WAVEFORMATEX);
 
+   -- XAUDIO2_BUFFER describes a single audio buffer to be played by a source voice
    type XAUDIO2_BUFFER is record
       Flags      : UINT32;
       AudioBytes : UINT32;
@@ -63,6 +72,7 @@ package body Audio is
    XAUDIO2_END_OF_STREAM : constant UINT32 := 16#0040#;
    XAUDIO2_DEFAULT_PROCESSOR : constant UINT32 := 1;
 
+   -- XAUDIO2_VOICE_STATE describes the current state of a voice
    type XAUDIO2_VOICE_STATE is record
       pContext      : System.Address;
       BuffersQueued : UINT32;
@@ -70,6 +80,8 @@ package body Audio is
    end record;
    pragma Convention (C, XAUDIO2_VOICE_STATE);
 
+   -- XAUDIO2_PERFORMANCE_DATA describes performance metrics for the XAudio2 engine
+   -- Included for completeness, not used
    type XAUDIO2_PERFORMANCE_DATA is record
       AudioCyclesSinceLastQuery  : UINT64;
       TotalCyclesSinceLastQuery  : UINT64;
@@ -89,14 +101,18 @@ package body Audio is
    pragma Convention (C, XAUDIO2_PERFORMANCE_DATA);
 
    -- COM interface shells
+
+   -- IXAudio2 is the main interface for interacting with the XAudio2 engine
    type IXAudio2 is limited record
       lpVtbl : access IXAudio2Vtbl;
    end record;
    pragma Convention (C, IXAudio2);
 
+   -- IXAudio2Voice is the base interface for all voices
    type IXAudio2Voice is limited null record;
    pragma Convention (C, IXAudio2Voice);
 
+   -- IXAudio2SourceVoice is the interface for source voices, which play audio buffers
    type IXAudio2SourceVoice is limited record
       lpVtbl : access IXAudio2SourceVtbl;
    end record;
@@ -106,17 +122,19 @@ package body Audio is
    type IXAudio2Voice_Access  is access all IXAudio2Voice;
    type IXAudio2Source_Access is access all IXAudio2SourceVoice;
 
-   -- Vtables
+   -- Vtables for COM interfaces
+
+   -- Vtable for IXAudio2, which includes methods for creating voices and retrieving performance data
    type IXAudio2Vtbl is record
       -- IUnknown
       QueryInterface : System.Address;
       AddRef         : System.Address;
       Release        : access function (This : IXAudio2_Access) return UINT32;
 
-      -- IXAudio2
       RegisterForCallbacks   : System.Address;
       UnregisterForCallbacks : System.Address;
 
+      -- CreateSourceVoice is the main method used to create a voice for playing audio
       CreateSourceVoice :
         access function
           (This        : IXAudio2_Access;
@@ -128,8 +146,11 @@ package body Audio is
            SendList    : System.Address;
            EffectChain : System.Address) return HRESULT;
 
+      -- CreateSubmixVoice is used to create a voice that can be used as an audio effect or for routing audio
+      -- Not used, but included for completeness
       CreateSubmixVoice : System.Address;
 
+      -- CreateMasteringVoice creates the final voice that outputs to the audio device
       CreateMasteringVoice :
          access function
             (This          : IXAudio2_Access;
@@ -144,6 +165,7 @@ package body Audio is
       StartEngine           : System.Address;
       StopEngine            : System.Address;
       CommitChanges         : System.Address;
+      -- GetPerformanceData is used to retrieve performance metrics from the XAudio2 engine, such as CPU usage and latency
       GetPerformanceData :
       access procedure
          (This : IXAudio2_Access;
@@ -152,8 +174,8 @@ package body Audio is
    end record;
    pragma Convention (C, IXAudio2Vtbl);
 
+   -- Vtable for IXAudio2SourceVoice, which includes methods for controlling playback and submitting audio buffers
    type IXAudio2SourceVtbl is record
-   -- IXAudio2Voice
    GetVoiceDetails             : System.Address;
    SetOutputVoices             : System.Address;
    SetEffectChain              : System.Address;
@@ -183,11 +205,13 @@ package body Audio is
    SetOutputMatrix             : System.Address;
    GetOutputMatrix             : System.Address;
 
+   -- DestroyVoice is used to clean up a voice after playback has finished
    DestroyVoice :
      access procedure
        (This : IXAudio2Source_Access);
 
-   -- IXAudio2SourceVoice
+   -- IXAudio2SourceVoice methods for controlling playback and submitting audio buffers
+
    Start :
      access function
        (This  : IXAudio2Source_Access;
@@ -237,6 +261,7 @@ end record;
 
 pragma Convention (C, IXAudio2SourceVtbl);
 
+   -- XAudio2Create is the main entry point for initializing the XAudio2 engine
    function XAudio2Create
      (Engine : out IXAudio2_Access;
       Flags  : UINT32;
@@ -264,6 +289,7 @@ pragma Convention (C, IXAudio2SourceVtbl);
 
    Active_Sounds : Sound_List.Vector;
 
+   -- Initialize the XAudio2 engine and create the mastering voice
    procedure Initialize is
       HR : HRESULT;
    begin
@@ -293,6 +319,7 @@ pragma Convention (C, IXAudio2SourceVtbl);
 
    end Initialize;
 
+   -- Load a WAV file, create a source voice, submit the audio buffer, and start playback
    procedure Play_Audio (Filename : String; Looping : Boolean; Volume   : Float := 1.0) is
 
    File : Ada.Streams.Stream_IO.File_Type;
@@ -333,6 +360,7 @@ pragma Convention (C, IXAudio2SourceVtbl);
    Buffer : aliased XAUDIO2_BUFFER;
    HR     : HRESULT;
 
+   -- Helper procedure to skip over bytes in the stream when we encounter unknown chunks
    procedure Skip_Bytes (Count : Natural) is
       use Ada.Streams;
       Dummy : Stream_Element_Array
@@ -344,6 +372,7 @@ pragma Convention (C, IXAudio2SourceVtbl);
       end if;
    end Skip_Bytes;
 
+   -- Helper function to align chunk sizes to 2 bytes, as required by the WAV format
    function Align2 (V : Natural) return Natural is
    begin
       if (V mod 2) = 1 then
@@ -414,6 +443,7 @@ begin
       wBitsPerSample  => FMT.Bits,
       cbSize          => 0);
 
+   -- Create a source voice for the audio data
    HR := Engine.lpVtbl.CreateSourceVoice
      (Engine,
       Voice,
@@ -440,9 +470,11 @@ begin
       LoopCount  => UINT32 (Loop_Count),
       others     => <>);
 
+   -- Submit the audio buffer to the source voice
    HR := Voice.lpVtbl.SubmitSourceBuffer
      (Voice, Buffer'Access, System.Null_Address);
 
+   -- Start playback of the source voice
    HR := Voice.lpVtbl.Start (Voice, 0, 0);
 
    Active_Sounds.Append
@@ -452,6 +484,7 @@ begin
 
 end Play_Audio;
 
+   -- Update procedure for cleaning up finished sounds
    procedure Update is
       State : XAUDIO2_VOICE_STATE;
    begin
@@ -470,6 +503,7 @@ end Play_Audio;
       end loop;
    end Update;
 
+   -- Finalize procedure to clean up the XAudio2 engine and release resources
    procedure Finalize is
       Dummy : UINT32;
    begin
