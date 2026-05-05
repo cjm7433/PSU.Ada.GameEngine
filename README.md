@@ -12,17 +12,17 @@
 ![alt text](readme_resources/readme_3.png)
 
 4. Add alr.exe to the PATH environment variables
-    a. Open the start menu and search for “advanced system settings.”
-    b. Select “View Advanced System Settings” in the control panel from the Start menu.
-    ![alt text](readme_resources/readme_4.png)
-    c. In the Advanced System Settings menu, click on “Environment Variables” in the bottom right of the window
-    ![alt text](readme_resources/readme_5.png)
-    d. Under system variables, select the “Path” variable and click “Edit.” 
-    ![alt text](readme_resources/readme_6.png)
-    e. Click “New” to add a new system variable and locate the file path for alr.exe.
-       (Ex: “C:\Program Files\Alire\bin”) 
-    ![alt text](readme_resources/readme_7.png)
-    f. Close out of any open terminals and VS Code for these changes to take effect
+a. Open the start menu and search for “advanced system settings.”
+b. Select “View Advanced System Settings” in the control panel from the Start menu.
+![alt text](readme_resources/readme_4.png)
+c. In the Advanced System Settings menu, click on “Environment Variables” in the bottom right of the window
+![alt text](readme_resources/readme_5.png)
+d. Under system variables, select the “Path” variable and click “Edit.” 
+![alt text](readme_resources/readme_6.png)
+e. Click “New” to add a new system variable and locate the file path for alr.exe.
+   (Ex: “C:\Program Files\Alire\bin”) 
+![alt text](readme_resources/readme_7.png)
+f. Close out of any open terminals and VS Code for these changes to take effect
 
 #### Install VS Code
 1. Download from https://code.visualstudio.com/ and install
